@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>ByGagoos-Trans - Chauffeur</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="../b-trans.png">
+</head>
+<body>
+    <div class="container">
+        <div id="app"></div>
+        
+        <div class="mobile-nav" id="mobileNav" style="display: none;">
+            <button class="nav-btn" data-page="accueil" onclick="chargerPage('accueil')">
+                <i class="fas fa-home"></i>
+                <span>Accueil</span>
+            </button>
+            <button class="nav-btn" data-page="courses" onclick="chargerPage('courses')">
+                <i class="fas fa-list"></i>
+                <span>Courses</span>
+            </button>
+            <button class="nav-btn" data-page="stats" onclick="chargerPage('stats')">
+                <i class="fas fa-chart-line"></i>
+                <span>Stats</span>
+            </button>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+    <script>
+        // Afficher/masquer la navigation selon la page
+        const observer = new MutationObserver(function() {
+            const nav = document.getElementById('mobileNav');
+            if (nav) {
+                if (localStorage.getItem('chauffeur_token')) {
+                    nav.style.display = 'flex';
+                } else {
+                    nav.style.display = 'none';
+                }
+            }
+        });
+        observer.observe(document.getElementById('app'), { childList: true, subtree: true });
+    </script>
+</body>
+</html>

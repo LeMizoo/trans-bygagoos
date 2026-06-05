@@ -1,0 +1,255 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000;
+    color: #fff;
+    padding: 16px;
+    padding-bottom: 70px;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 60px;
+    margin-bottom: 10px;
+}
+
+.header h1 {
+    color: #FFD700;
+    font-size: 24px;
+}
+
+.header p {
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* Cartes */
+.card {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #FFD700;
+}
+
+.card h3 {
+    color: #FFD700;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+/* Formulaire de connexion */
+.login-card {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.code-input {
+    width: 100%;
+    padding: 14px;
+    font-size: 24px;
+    text-align: center;
+    letter-spacing: 8px;
+    background: #2a2a2a;
+    border: 2px solid #FFD700;
+    border-radius: 10px;
+    color: #FFD700;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    background: #FFD700;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    background: #DAA520;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #333;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #2a2a2a;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-card .value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.stat-card .label {
+    font-size: 10px;
+    color: #aaa;
+}
+
+/* Formulaire course */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #FFD700;
+    font-size: 12px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #FFD700;
+}
+
+/* Liste des courses */
+.course-item {
+    background: #2a2a2a;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-date {
+    font-size: 11px;
+    color: #aaa;
+}
+
+.course-distance {
+    font-size: 14px;
+}
+
+.course-price {
+    font-size: 16px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+/* Message */
+.message {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.message.success {
+    background: #27ae60;
+    display: block;
+}
+
+.message.error {
+    background: #e74c3c;
+    display: block;
+}
+
+.message.info {
+    background: #3498db;
+    display: block;
+}
+
+/* Navigation mobile */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a1a1a;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #333;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.nav-btn.active {
+    color: #FFD700;
+}
+
+.nav-btn i {
+    font-size: 20px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #FFD700;
+}
+
+/* Déconnexion */
+.logout-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    width: 100%;
+}

@@ -1,0 +1,20 @@
+# Fichiers sensibles et temporaires
+*.log
+*.tmp
+*.cache
+
+# Dossiers de dépendances (trop lourds pour Git)
+vendor/
+node_modules/
+
+# Fichiers de configuration XAMPP (ne pas inclure)
+.htaccess
+.env
+
+# Dossiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de sauvegarde
+*.bak
+*.old
