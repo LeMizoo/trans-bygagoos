@@ -12,19 +12,29 @@ export class DepensesService {
     });
   }
 
-  async create(data: { description: string; montant: number; categorie: string; motoId?: string }) {
-    return this.prisma.depense.create({ data });
+  async create(data: { 
+    description: string; 
+    montant: number; 
+    categorie: string; 
+    motoId?: string;
+    litres?: number;
+    station?: string;
+  }) {
+    return this.prisma.depense.create({
+      data: {
+        description: data.description,
+        montant: data.montant,
+        categorie: data.categorie,
+        motoId: data.motoId,
+      },
+    });
   }
 
   async stats() {
-    const total = await this.prisma.depense.aggregate({
-      _sum: { montant: true },
-    });
-
-    const parCategorie = await this.prisma.depense.groupBy({
-      by: ['categorie'],
-      _sum: { montant: true },
-    });
+    const [total, parCategorie] = await Promise.all([
+      this.prisma.depense.aggregate({ _sum: { montant: true } }),
+      this.prisma.depense.groupBy({ by: ['categorie'], _sum: { montant: true } }),
+    ]);
 
     return {
       totalDepenses: total._sum.montant || 0,

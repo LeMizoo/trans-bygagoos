@@ -13,13 +13,14 @@ import { MotosModule } from './motos/motos.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
 import { ParametresModule } from './parametres/parametres.module';
+import { AlertesModule } from './alertes/alertes.module';
 
 @Module({
   imports: [
     PrismaModule, AuthModule, ChauffeursModule, CoursesModule,
     VersementsModule, PointagesModule, AssistanceModule,
     DepensesModule, ContratsModule, DashboardModule, MotosModule,
-    NotificationsModule, MessagesModule, ParametresModule,
+    NotificationsModule, MessagesModule, ParametresModule, AlertesModule,
   ],
 })
 export class AppModule {}
