@@ -4,7 +4,8 @@ import axios from 'axios';
 import { MapPin, DollarSign, Bike, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 function getChauffeur() {
   const data = localStorage.getItem('chauffeur');

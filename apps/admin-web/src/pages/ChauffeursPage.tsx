@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Search, Phone, Bike, Circle, Pause, StopCircle } from 'lucide-react';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 const statutIcon: Record<string, any> = {
   EN_SERVICE: { icon: Circle, color: 'text-green-500', label: 'En service' },

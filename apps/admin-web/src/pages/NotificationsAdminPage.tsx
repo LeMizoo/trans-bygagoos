@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Bell, BellRing, Check } from 'lucide-react';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 export function NotificationsAdminPage() {
   const queryClient = useQueryClient();

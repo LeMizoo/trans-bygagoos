@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Bike, MapPin, TrendingUp, DollarSign, Power, Clock, Plus, Bell } from 'lucide-react';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 function getToken() { return localStorage.getItem('chauffeur-token'); }
 function getChauffeur() { return JSON.parse(localStorage.getItem('chauffeur') || '{}'); }
 

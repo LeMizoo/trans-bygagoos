@@ -3,7 +3,8 @@ import axios from 'axios';
 import { Bike, Search } from 'lucide-react';
 import { useState } from 'react';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 export function MotosPage() {
   const [search, setSearch] = useState('');

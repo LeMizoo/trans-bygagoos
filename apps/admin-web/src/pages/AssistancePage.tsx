@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertTriangle, AlertCircle, Wrench, Check } from 'lucide-react';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 const urgenceColor: Record<string, string> = {
   FAIBLE: 'bg-blue-100 text-blue-700',

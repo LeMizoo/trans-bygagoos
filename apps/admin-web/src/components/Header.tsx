@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 
-const API = 'http://localhost:3000/api/v1';
+import { API_URL } from '../lib/api';
+const API = API_URL;
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [showNotifs, setShowNotifs] = useState(false);
