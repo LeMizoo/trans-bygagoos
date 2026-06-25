@@ -79,11 +79,11 @@ export class CoursesService {
           prix: c.prix,
         });
         results.push({ success: true, id: course.id });
-      } catch (e) {
-        results.push({ success: false, error: e.message });
+      } catch (e: any) {
+        results.push({ success: false, error: e?.message || 'Erreur' });
       }
     }
-    return { synced: results.filter(r => r.success).length, results };
+    return { synced: results.filter((r: any) => r.success).length, results };
   }
 
   async getStats() {
