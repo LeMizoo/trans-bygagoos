@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Démarrer tous les services",
+      "type": "shell",
+      "command": "npm run dev",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "🔧 Démarrer API uniquement",
+      "type": "shell",
+      "command": "npm run dev:api",
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Démarrer Admin Web",
+      "type": "shell",
+      "command": "npm run dev:admin",
+      "problemMatcher": []
+    },
+    {
+      "label": "📱 Démarrer Mobile PWA",
+      "type": "shell",
+      "command": "npm run dev:mobile",
+      "problemMatcher": []
+    },
+    {
+      "label": "🗄️ Migration Prisma",
+      "type": "shell",
+      "command": "cd apps/api && npx prisma migrate dev",
+      "problemMatcher": []
+    },
+    {
+      "label": "🌱 Seed Database",
+      "type": "shell",
+      "command": "cd apps/api && npx prisma db seed",
+      "problemMatcher": []
+    }
+  ]
+}

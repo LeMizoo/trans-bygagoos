@@ -1,0 +1,24 @@
+import { Module } from '@nestjs/common';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { ChauffeursModule } from './chauffeurs/chauffeurs.module';
+import { CoursesModule } from './courses/courses.module';
+import { VersementsModule } from './versements/versements.module';
+import { PointagesModule } from './pointages/pointages.module';
+import { AssistanceModule } from './assistance/assistance.module';
+import { DepensesModule } from './depenses/depenses.module';
+import { ContratsModule } from './contrats/contrats.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { MotosModule } from './motos/motos.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { MessagesModule } from './messages/messages.module';
+
+@Module({
+  imports: [
+    PrismaModule, AuthModule, ChauffeursModule, CoursesModule,
+    VersementsModule, PointagesModule, AssistanceModule,
+    DepensesModule, ContratsModule, DashboardModule, MotosModule,
+    NotificationsModule, MessagesModule,
+  ],
+})
+export class AppModule {}

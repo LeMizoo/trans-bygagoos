@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "prisma.prisma",
+    "ms-vscode.vscode-typescript-next",
+    "pkief.material-icon-theme",
+    "eamodio.gitlens",
+    "github.copilot",
+    "github.copilot-chat",
+    "bierner.markdown-mermaid",
+    "yoavbls.pretty-ts-errors",
+    "orta.vscode-jest",
+    "ms-azuretools.vscode-docker",
+    "rangav.vscode-thunder-client"
+  ]
+}

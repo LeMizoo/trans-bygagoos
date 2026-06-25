@@ -1,0 +1,11 @@
+{
+  "name": "@trans-bygagoos/ui",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.3.0",
+    "lucide-react": "^0.400.0"
+  }
+}

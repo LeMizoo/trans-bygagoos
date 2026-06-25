@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  nom       String
+  email     String   @unique
+  password  String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chauffeur {
+  id         String       @id @default(cuid())
+  nom        String
+  telephone  String       @unique
+  codeAcces  String       @unique
+  pin        String
+  statut     String       @default("HORS_SERVICE")
+  solde      Float        @default(0)
+  motoId     String?      @unique
+  moto       Moto?        @relation(fields: [motoId], references: [id])
+  courses    Course[]
+  pointages  Pointage[]
+  versements Versement[]
+  assistance Assistance[]
+  contrats   Contrat[]
+  messages   Message[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Proprietaire {
+  id        String   @id @default(cuid())
+  nom       String
+  telephone String   @unique
+  email     String?
+  motos     Moto[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Moto {
+  id              String       @id @default(cuid())
+  immatriculation String       @unique
+  marque          String
+  modele          String
+  kmActuel        Float        @default(0)
+  proprietaireId  String
+  proprietaire    Proprietaire @relation(fields: [proprietaireId], references: [id])
+  chauffeur       Chauffeur?
+  courses         Course[]
+  depenses        Depense[]
+  contrats        Contrat[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model Course {
+  id          String    @id @default(cuid())
+  chauffeurId String
+  chauffeur   Chauffeur @relation(fields: [chauffeurId], references: [id])
+  motoId      String
+  moto        Moto      @relation(fields: [motoId], references: [id])
+  type        String
+  distance    Float?
+  prix        Float
+  commission  Float
+  gainNet     Float
+  createdAt   DateTime  @default(now())
+}
+
+model Pointage {
+  id           String    @id @default(cuid())
+  chauffeurId  String
+  chauffeur    Chauffeur @relation(fields: [chauffeurId], references: [id])
+  type         String
+  datePointage DateTime  @default(now())
+}
+
+model Versement {
+  id           String    @id @default(cuid())
+  chauffeurId  String
+  chauffeur    Chauffeur @relation(fields: [chauffeurId], references: [id])
+  montantDu    Float
+  montantVerse Float
+  statut       String    @default("EN_ATTENTE")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Assistance {
+  id          String    @id @default(cuid())
+  chauffeurId String
+  chauffeur   Chauffeur @relation(fields: [chauffeurId], references: [id])
+  type        String
+  urgence     String    @default("NORMALE")
+  description String
+  statut      String    @default("OUVERT")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  titre     String
+  message   String
+  type      String
+  lu        Boolean  @default(false)
+  userId    String?
+  createdAt DateTime @default(now())
+}
+
+model Depense {
+  id          String   @id @default(cuid())
+  description String
+  montant     Float
+  categorie   String
+  motoId      String?
+  moto        Moto?    @relation(fields: [motoId], references: [id])
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Contrat {
+  id             String    @id @default(cuid())
+  chauffeurId    String
+  chauffeur      Chauffeur @relation(fields: [chauffeurId], references: [id])
+  motoId         String
+  moto           Moto      @relation(fields: [motoId], references: [id])
+  type           String
+  montantLocation Float
+  dateDebut      DateTime
+  dateFin        DateTime?
+  statut         String    @default("ACTIF")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  contenu     String
+  expediteur  String
+  chauffeurId String
+  chauffeur   Chauffeur @relation(fields: [chauffeurId], references: [id])
+  lu          Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
