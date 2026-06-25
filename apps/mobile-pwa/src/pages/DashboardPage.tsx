@@ -1,14 +1,19 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Bike, MapPin, TrendingUp, DollarSign, Power, Clock, Plus, Bell } from 'lucide-react';
-const API = "https://trans-bygagoos.onrender.com/api/v1";
+import { Bike, MapPin, TrendingUp, DollarSign, Power, Clock, Plus, Bell, Play, Pause, StopCircle } from 'lucide-react';
+
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 function getToken() { return localStorage.getItem('chauffeur-token'); }
 function getChauffeur() { return JSON.parse(localStorage.getItem('chauffeur') || '{}'); }
 
 export function DashboardPage() {
   const chauffeur = getChauffeur();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [msg, setMsg] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data: dashboard } = useQuery({
     queryKey: ['dashboard', chauffeur?.id],
@@ -17,6 +22,26 @@ export function DashboardPage() {
     }).then(r => r.data),
     enabled: !!chauffeur?.id,
     refetchInterval: 10000,
+  });
+
+  const pointer = useMutation({
+    mutationFn: (type: string) => axios.post(`${API}/pointages`, {
+      chauffeurId: chauffeur?.id, type
+    }, { headers: { Authorization: `Bearer ${getToken()}` } }),
+    onSuccess: (_, type) => {
+      const labels: Record<string, string> = {
+        ARRIVEE: 'Départ enregistré ! Bonne journée 🏍️',
+        PAUSE: 'Pause enregistrée',
+        REPRISE: 'Reprise enregistrée',
+        FIN_SERVICE: 'Arrêt enregistré. Bonne fin de journée !',
+      };
+      setMsg(labels[type] || '');
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      setTimeout(() => setMsg(''), 3000);
+    },
+    onError: (err: any) => {
+      setMsg('Erreur: ' + (err.response?.data?.message || 'Connexion perdue'));
+    },
   });
 
   const handleLogout = () => { localStorage.clear(); navigate('/login'); };
@@ -36,7 +61,7 @@ export function DashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#fff', paddingBottom: 80, fontFamily: 'system-ui, sans-serif' }}>
-      {/* Header avec logo + déconnexion */}
+      {/* Header */}
       <div style={{ background: '#1e293b', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/assets/logo/b-trans.png" alt="Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
@@ -45,21 +70,41 @@ export function DashboardPage() {
             <div style={{ fontSize: 12, color: '#94a3b8' }}>{chauffeur?.codeAcces} · {dashboard?.moto?.immatriculation || '-'}</div>
           </div>
         </div>
-        {/* Icône déconnexion en haut à droite */}
         <button onClick={handleLogout} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <Power size={18} color="#f87171" />
         </button>
       </div>
 
-      {/* Statut */}
-      <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Statut + Boutons Départ/Pause/Arrêt */}
+      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: statut.bg, color: statut.color }}>
           {statut.label}
         </span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => pointer.mutate('ARRIVEE')} 
+            style={{ padding: '8px 14px', background: '#22c55e', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Play size={14} /> Départ
+          </button>
+          <button onClick={() => pointer.mutate('PAUSE')}
+            style={{ padding: '8px 14px', background: '#eab308', border: 'none', borderRadius: 20, color: '#000', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Pause size={14} /> Pause
+          </button>
+          <button onClick={() => setShowConfirm(true)}
+            style={{ padding: '8px 14px', background: '#ef4444', border: 'none', borderRadius: 20, color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <StopCircle size={14} /> Arrêt
+          </button>
+        </div>
       </div>
 
+      {/* Message */}
+      {msg && (
+        <div style={{ margin: '0 16px 8px', padding: 10, borderRadius: 10, textAlign: 'center', background: 'rgba(34,197,94,0.2)', color: '#86efac', fontSize: 13 }}>
+          {msg}
+        </div>
+      )}
+
       {/* Solde */}
-      <div style={{ margin: '0 16px 16px', padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #e94560, #c23152)', textAlign: 'center' }}>
+      <div style={{ margin: '0 16px 12px', padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #e94560, #c23152)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>SOLDE ACTUEL</div>
         <div style={{ fontSize: 38, fontWeight: 800, marginTop: 4 }}>{dashboard?.solde?.toLocaleString() || 0} Ar</div>
       </div>
@@ -109,6 +154,29 @@ export function DashboardPage() {
         <button onClick={() => navigate('/versements')} style={navBtn(false)}><DollarSign size={20} /> Versements</button>
         <button onClick={() => navigate('/notifications')} style={navBtn(false)}><Bell size={20} /> Notifs</button>
       </div>
+
+      {/* Modal confirmation Arrêt */}
+      {showConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
+          <div style={{ background: '#1e293b', borderRadius: 20, padding: 24, maxWidth: 320, width: '100%', textAlign: 'center' }}>
+            <StopCircle size={48} color="#ef4444" style={{ marginBottom: 12 }} />
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Terminer la journée ?</h3>
+            <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
+              Vous êtes sur le point de terminer votre service. Vous ne pourrez plus enregistrer de courses aujourd'hui sans l'autorisation de l'administrateur.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowConfirm(false)}
+                style={{ flex: 1, padding: 12, background: '#334155', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+                Annuler
+              </button>
+              <button onClick={() => { pointer.mutate('FIN_SERVICE'); setShowConfirm(false); }}
+                style={{ flex: 1, padding: 12, background: '#ef4444', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
