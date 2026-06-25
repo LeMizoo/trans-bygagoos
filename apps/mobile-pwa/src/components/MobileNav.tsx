@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Clock, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Clock, PlusCircle, DollarSign, Bell } from 'lucide-react';
 
 export function MobileNav() {
   const navigate = useNavigate();
@@ -9,24 +9,26 @@ export function MobileNav() {
     { path: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
     { path: '/pointage', icon: Clock, label: 'Pointage' },
     { path: '/course', icon: PlusCircle, label: 'Course' },
+    { path: '/versements', icon: DollarSign, label: 'Versements' },
+    { path: '/notifications', icon: Bell, label: 'Notifs' },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 z-50">
-      <div className="flex">
-        {tabs.map((tab) => (
-          <button
-            key={tab.path}
-            onClick={() => navigate(tab.path)}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 text-xs transition-colors ${
-              location.pathname === tab.path ? 'text-primary' : 'text-gray-500'
-            }`}
-          >
-            <tab.icon size={20} />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+    <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#1e293b', borderTop: '1px solid #334155', display: 'flex', zIndex: 100 }}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.path}
+          onClick={() => navigate(tab.path)}
+          style={{
+            flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 2, background: 'none', border: 'none',
+            color: location.pathname === tab.path ? '#e94560' : '#64748b',
+            cursor: 'pointer', fontSize: 10, fontWeight: location.pathname === tab.path ? 600 : 400,
+          }}
+        >
+          <tab.icon size={20} /> {tab.label}
+        </button>
+      ))}
     </nav>
   );
 }

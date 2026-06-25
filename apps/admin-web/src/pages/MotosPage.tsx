@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Bike, Search, User } from 'lucide-react';
+import { Bike, Search } from 'lucide-react';
 import { useState } from 'react';
 
 const API = 'http://localhost:3000/api/v1';

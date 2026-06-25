@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { MapPin } from 'lucide-react';
+import { } from 'lucide-react';
 
 const API = 'http://localhost:3000/api/v1';
 
