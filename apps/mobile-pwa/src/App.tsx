@@ -1,67 +1,47 @@
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useAuthStore } from './stores/authStore';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { PointagePage } from './pages/PointagePage';
-import { CoursePage } from './pages/CoursePage';
+import { CoursesPage } from './pages/CoursesPage';
 import { VersementsPage } from './pages/VersementsPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { MobileHeader } from './components/MobileHeader';
-import { MobileNav } from './components/MobileNav';
+import { StatsPage } from './pages/StatsPage';
+import { ProfilPage } from './pages/ProfilPage';
+import { Header } from './components/Header';
+import { Nav } from './components/Nav';
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = useAuthStore((s) => s.token);
+function Layout({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('chauffeur-token');
   if (!token) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
-function AppLayout() {
-  const location = useLocation();
-  const isLogin = location.pathname === '/login';
-  const token = useAuthStore((s) => s.token);
-
-  if (isLogin || !token) {
-    return (
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    );
-  }
-
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#fff', paddingBottom: 80, fontFamily: 'system-ui, sans-serif' }}>
-      <MobileHeader />
-      <div style={{ paddingBottom: 80 }}>
-        <Routes>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/pointage" element={<PointagePage />} />
-          <Route path="/course" element={<CoursePage />} />
-          <Route path="/versements" element={<VersementsPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </div>
-      <MobileNav />
-    </div>
+    <>
+      <Header />
+      {children}
+      <Nav />
+    </>
   );
 }
 
-function AppInit() {
-  const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
-  useEffect(() => { loadFromStorage(); }, []);
-  return <AppLayout />;
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
+      <Route path="/courses" element={<Layout><CoursesPage /></Layout>} />
+      <Route path="/versements" element={<Layout><VersementsPage /></Layout>} />
+      <Route path="/stats" element={<Layout><StatsPage /></Layout>} />
+      <Route path="/profil" element={<Layout><ProfilPage /></Layout>} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
 }
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppInit />
+        <AppRoutes />
       </BrowserRouter>
     </QueryClientProvider>
   );
