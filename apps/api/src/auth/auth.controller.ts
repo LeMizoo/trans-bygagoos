@@ -17,3 +17,8 @@ export class AuthController {
     return this.authService.loginChauffeur(dto);
   }
 }
+
+  @Post('chauffeur/code')
+  async loginByCode(@Body() body: { code: string }) {
+    return this.authService.loginByCode(body.code);
+  }

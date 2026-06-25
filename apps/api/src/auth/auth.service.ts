@@ -56,3 +56,23 @@ export class AuthService {
     };
   }
 }
+
+  async loginByCode(code: string) {
+    const chauffeur = await this.prisma.chauffeur.findFirst({
+      where: { codeAcces: code },
+      include: { moto: true },
+    });
+    if (!chauffeur) throw new UnauthorizedException('Code invalide');
+    const payload = { sub: chauffeur.id, role: 'CHAUFFEUR' };
+    return {
+      accessToken: this.jwtService.sign(payload),
+      chauffeur: {
+        id: chauffeur.id,
+        nom: chauffeur.nom,
+        codeAcces: chauffeur.codeAcces,
+        statut: chauffeur.statut,
+        solde: chauffeur.solde,
+        moto: chauffeur.moto,
+      },
+    };
+  }
