@@ -17,9 +17,9 @@ export class ChauffeursService {
       where: { id },
       include: {
         moto: true,
-        courses: { orderBy: { createdAt: 'desc' }, take: 10 },
+        courses: { orderBy: { createdAt: 'desc' }, take: 20 },
         pointages: { orderBy: { datePointage: 'desc' }, take: 10 },
-        versements: { orderBy: { createdAt: 'desc' }, take: 5 },
+        versements: { orderBy: { createdAt: 'desc' }, take: 10 },
       },
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
@@ -29,16 +29,16 @@ export class ChauffeursService {
   async getDashboard(chauffeurId: string) {
     const now = new Date();
     
-    // Aujourd'hui
+    // Aujourd'hui (de minuit à maintenant)
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    // Cette semaine (lundi)
+    // Cette semaine (lundi 00:00)
     const dayOfWeek = now.getDay();
     const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - diff);
     
-    // Ce mois
+    // Ce mois (1er du mois)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const chauffeur = await this.prisma.chauffeur.findUnique({
@@ -47,31 +47,32 @@ export class ChauffeursService {
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
 
-    // Courses du jour
-    const coursesJour = await this.prisma.course.findMany({
-      where: { chauffeurId, createdAt: { gte: todayStart } },
-    });
+    // Récupérer toutes les courses pour les 3 périodes
+    const [coursesJour, coursesSemaine, coursesMois] = await Promise.all([
+      this.prisma.course.findMany({
+        where: { chauffeurId, createdAt: { gte: todayStart } },
+      }),
+      this.prisma.course.findMany({
+        where: { chauffeurId, createdAt: { gte: weekStart } },
+      }),
+      this.prisma.course.findMany({
+        where: { chauffeurId, createdAt: { gte: monthStart } },
+      }),
+    ]);
 
-    // Courses de la semaine
-    const coursesSemaine = await this.prisma.course.findMany({
-      where: { chauffeurId, createdAt: { gte: weekStart } },
-    });
-
-    // Courses du mois
-    const coursesMois = await this.prisma.course.findMany({
-      where: { chauffeurId, createdAt: { gte: monthStart } },
-    });
-
-    // Total all time
-    const totalCourses = await this.prisma.course.aggregate({
-      where: { chauffeurId },
-      _sum: { prix: true, commission: true, gainNet: true },
-      _count: true,
-    });
-
+    // Dernier pointage du jour pour savoir si le chauffeur a démarré
     const dernierPointage = await this.prisma.pointage.findFirst({
       where: { chauffeurId },
       orderBy: { datePointage: 'desc' },
+    });
+
+    // Vérifier si le chauffeur a pointé aujourd'hui
+    const pointageAujourdhui = await this.prisma.pointage.findFirst({
+      where: { 
+        chauffeurId, 
+        datePointage: { gte: todayStart },
+        type: 'ARRIVEE',
+      },
     });
 
     const sum = (courses: any[]) => ({
@@ -86,15 +87,11 @@ export class ChauffeursService {
       statut: chauffeur.statut,
       moto: chauffeur.moto,
       dernierPointage: dernierPointage?.datePointage || null,
+      dernierPointageType: dernierPointage?.type || null,
+      aDemarreAujourdhui: !!pointageAujourdhui,
       aujourdhui: sum(coursesJour),
       semaine: sum(coursesSemaine),
       mois: sum(coursesMois),
-      total: {
-        count: totalCourses._count,
-        prix: totalCourses._sum.prix || 0,
-        commission: totalCourses._sum.commission || 0,
-        gainNet: totalCourses._sum.gainNet || 0,
-      },
     };
   }
 }

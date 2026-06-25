@@ -6,17 +6,18 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Get()
-  findAll() {
-    return this.coursesService.findAll();
-  }
+  findAll() { return this.coursesService.findAll(); }
 
   @Post()
   create(@Body() data: { chauffeurId: string; motoId: string; type: string; distance?: number; prix?: number }) {
     return this.coursesService.create(data);
   }
 
-  @Get('stats')
-  getStats() {
-    return this.coursesService.getStats();
+  @Post('sync')
+  syncOffline(@Body() data: { chauffeurId: string; courses: any[] }) {
+    return this.coursesService.syncOffline(data);
   }
+
+  @Get('stats')
+  getStats() { return this.coursesService.getStats(); }
 }

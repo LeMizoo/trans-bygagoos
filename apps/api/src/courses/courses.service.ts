@@ -67,6 +67,25 @@ export class CoursesService {
     return course;
   }
 
+  async syncOffline(data: { chauffeurId: string; courses: any[] }) {
+    const results = [];
+    for (const c of data.courses) {
+      try {
+        const course = await this.create({
+          chauffeurId: data.chauffeurId,
+          motoId: c.motoId,
+          type: c.type,
+          distance: c.distance,
+          prix: c.prix,
+        });
+        results.push({ success: true, id: course.id });
+      } catch (e) {
+        results.push({ success: false, error: e.message });
+      }
+    }
+    return { synced: results.filter(r => r.success).length, results };
+  }
+
   async getStats() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
