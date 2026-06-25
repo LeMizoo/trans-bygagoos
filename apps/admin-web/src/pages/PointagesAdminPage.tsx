@@ -1,9 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Clock } from 'lucide-react';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 export function PointagesAdminPage() {
   const { data } = useQuery({

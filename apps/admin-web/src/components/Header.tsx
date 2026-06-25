@@ -5,9 +5,7 @@ import { Bell, User, BellRing, Check, LogOut, Menu, Moon, Sun, Settings, Chevron
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [showNotifs, setShowNotifs] = useState(false);

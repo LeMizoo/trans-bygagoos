@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API = '${import.meta.env.VITE_API_URL || 'https://trans-bygagoos.onrender.com/api/v1'}';
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 interface Chauffeur {
   id: string;
@@ -20,28 +20,23 @@ interface AuthStore {
   loadFromStorage: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   chauffeur: JSON.parse(localStorage.getItem('chauffeur') || 'null'),
   token: localStorage.getItem('chauffeur-token'),
-
-  login: async (codeAcces: string, pin: string) => {
+  login: async (codeAcces, pin) => {
     const { data } = await axios.post(`${API}/auth/chauffeur/login`, { codeAcces, pin });
     localStorage.setItem('chauffeur-token', data.accessToken);
     localStorage.setItem('chauffeur', JSON.stringify(data.chauffeur));
     set({ chauffeur: data.chauffeur, token: data.accessToken });
   },
-
   logout: () => {
     localStorage.removeItem('chauffeur-token');
     localStorage.removeItem('chauffeur');
     set({ chauffeur: null, token: null });
   },
-
   loadFromStorage: () => {
     const chauffeur = JSON.parse(localStorage.getItem('chauffeur') || 'null');
     const token = localStorage.getItem('chauffeur-token');
-    if (chauffeur && token) {
-      set({ chauffeur, token });
-    }
+    if (chauffeur && token) set({ chauffeur, token });
   },
 }));

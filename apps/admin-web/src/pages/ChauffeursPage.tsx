@@ -2,9 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useState } from 'react';
 import { Search, Phone, Bike, Circle, Pause, StopCircle } from 'lucide-react';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 const statutIcon: Record<string, any> = {
   EN_SERVICE: { icon: Circle, color: 'text-green-500', label: 'En service' },

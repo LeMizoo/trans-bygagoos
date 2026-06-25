@@ -3,9 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { MapPin, DollarSign, Bike, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 function getChauffeur() {
   const data = localStorage.getItem('chauffeur');

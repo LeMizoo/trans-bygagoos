@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 export function PointagePage() {
   const [msg, setMsg] = useState('');

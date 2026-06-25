@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Clock, Check, X, ArrowLeft, Send } from 'lucide-react';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 function getToken() { return localStorage.getItem('chauffeur-token'); }
 function getChauffeur() { return JSON.parse(localStorage.getItem('chauffeur') || '{}'); }
 

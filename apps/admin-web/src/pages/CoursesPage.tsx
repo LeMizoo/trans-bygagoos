@@ -1,9 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { } from 'lucide-react';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 const typeLabels: Record<string, string> = {
   NORMALE: 'Course normale',

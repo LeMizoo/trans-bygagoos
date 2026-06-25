@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Bell, BellRing, Check, ArrowLeft } from 'lucide-react';
-
-import { API_URL } from '../lib/api';
-const API = API_URL;
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 function getToken() { return localStorage.getItem('chauffeur-token'); }
 
 export function NotificationsPage() {
