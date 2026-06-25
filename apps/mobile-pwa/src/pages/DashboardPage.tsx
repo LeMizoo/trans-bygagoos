@@ -14,6 +14,7 @@ export function DashboardPage() {
   const queryClient = useQueryClient();
   const [msg, setMsg] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [periode, setPeriode] = useState<'aujourdhui' | 'semaine' | 'mois'>('aujourdhui');
 
   const { data: dashboard } = useQuery({
     queryKey: ['dashboard', chauffeur?.id],
@@ -32,15 +33,11 @@ export function DashboardPage() {
       const labels: Record<string, string> = {
         ARRIVEE: 'Départ enregistré ! Bonne journée 🏍️',
         PAUSE: 'Pause enregistrée',
-        REPRISE: 'Reprise enregistrée',
         FIN_SERVICE: 'Arrêt enregistré. Bonne fin de journée !',
       };
       setMsg(labels[type] || '');
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setTimeout(() => setMsg(''), 3000);
-    },
-    onError: (err: any) => {
-      setMsg('Erreur: ' + (err.response?.data?.message || 'Connexion perdue'));
     },
   });
 
@@ -52,6 +49,8 @@ export function DashboardPage() {
     HORS_SERVICE: { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', label: 'Hors service' },
   };
   const statut = statutInfo[chauffeur?.statut] || statutInfo.HORS_SERVICE;
+
+  const stats = dashboard?.[periode] || { count: 0, prix: 0, commission: 0, gainNet: 0 };
 
   const navBtn = (active: boolean) => ({
     flex: 1, padding: '10px 4px', display: 'flex', flexDirection: 'column' as const,
@@ -75,7 +74,7 @@ export function DashboardPage() {
         </button>
       </div>
 
-      {/* Statut + Boutons Départ/Pause/Arrêt */}
+      {/* Boutons Départ/Pause/Arrêt */}
       <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: statut.bg, color: statut.color }}>
           {statut.label}
@@ -96,7 +95,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Message */}
       {msg && (
         <div style={{ margin: '0 16px 8px', padding: 10, borderRadius: 10, textAlign: 'center', background: 'rgba(34,197,94,0.2)', color: '#86efac', fontSize: 13 }}>
           {msg}
@@ -104,9 +102,24 @@ export function DashboardPage() {
       )}
 
       {/* Solde */}
-      <div style={{ margin: '0 16px 12px', padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #e94560, #c23152)', textAlign: 'center' }}>
+      <div style={{ margin: '0 16px 12px', padding: 20, borderRadius: 20, background: 'linear-gradient(135deg, #e94560, #c23152)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: 2 }}>SOLDE ACTUEL</div>
-        <div style={{ fontSize: 38, fontWeight: 800, marginTop: 4 }}>{dashboard?.solde?.toLocaleString() || 0} Ar</div>
+        <div style={{ fontSize: 36, fontWeight: 800, marginTop: 4 }}>{dashboard?.solde?.toLocaleString() || 0} Ar</div>
+      </div>
+
+      {/* Période : Aujourd'hui / Semaine / Mois */}
+      <div style={{ display: 'flex', gap: 4, padding: '0 16px', marginBottom: 12 }}>
+        {(['aujourdhui', 'semaine', 'mois'] as const).map((p) => (
+          <button key={p} onClick={() => setPeriode(p)}
+            style={{
+              flex: 1, padding: '8px', borderRadius: 10, border: 'none',
+              background: periode === p ? '#e94560' : '#1e293b',
+              color: periode === p ? '#fff' : '#94a3b8',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize',
+            }}>
+            {p === 'aujourdhui' ? "Aujourd'hui" : p}
+          </button>
+        ))}
       </div>
 
       {/* Stats */}
@@ -114,26 +127,26 @@ export function DashboardPage() {
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 16 }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}><MapPin size={18} color="#3b82f6" /></div>
           <div style={{ fontSize: 11, color: '#94a3b8' }}>Courses</div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{dashboard?.coursesJour || 0}</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>aujourd'hui</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{stats.count}</div>
+          <div style={{ fontSize: 12, color: '#64748b', textTransform: 'capitalize' }}>{periode}</div>
         </div>
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 16 }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(234,179,8,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}><TrendingUp size={18} color="#eab308" /></div>
           <div style={{ fontSize: 11, color: '#94a3b8' }}>Commission</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#eab308' }}>{dashboard?.commissionJour?.toLocaleString() || 0} Ar</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#eab308' }}>{stats.commission.toLocaleString()} Ar</div>
           <div style={{ fontSize: 12, color: '#64748b' }}>20%</div>
         </div>
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 16 }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}><DollarSign size={18} color="#22c55e" /></div>
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>Gain net</div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#22c55e' }}>{dashboard?.gainNetJour?.toLocaleString() || 0} Ar</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>après commission</div>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>CA</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#22c55e' }}>{stats.prix.toLocaleString()} Ar</div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>total courses</div>
         </div>
         <div style={{ background: '#1e293b', borderRadius: 16, padding: 16 }}>
           <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}><Clock size={18} color="#8b5cf6" /></div>
-          <div style={{ fontSize: 11, color: '#94a3b8' }}>Dernier pointage</div>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>{dashboard?.dernierPointage ? new Date(dashboard.dernierPointage).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>heure</div>
+          <div style={{ fontSize: 11, color: '#94a3b8' }}>Gain net</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#8b5cf6' }}>{stats.gainNet.toLocaleString()} Ar</div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>après commission</div>
         </div>
       </div>
 
@@ -155,24 +168,20 @@ export function DashboardPage() {
         <button onClick={() => navigate('/notifications')} style={navBtn(false)}><Bell size={20} /> Notifs</button>
       </div>
 
-      {/* Modal confirmation Arrêt */}
+      {/* Modal Arrêt */}
       {showConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20 }}>
           <div style={{ background: '#1e293b', borderRadius: 20, padding: 24, maxWidth: 320, width: '100%', textAlign: 'center' }}>
             <StopCircle size={48} color="#ef4444" style={{ marginBottom: 12 }} />
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Terminer la journée ?</h3>
             <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 20 }}>
-              Vous êtes sur le point de terminer votre service. Vous ne pourrez plus enregistrer de courses aujourd'hui sans l'autorisation de l'administrateur.
+              Vous ne pourrez plus enregistrer de courses aujourd'hui sans l'autorisation de l'administrateur.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setShowConfirm(false)}
-                style={{ flex: 1, padding: 12, background: '#334155', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-                Annuler
-              </button>
+                style={{ flex: 1, padding: 12, background: '#334155', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
               <button onClick={() => { pointer.mutate('FIN_SERVICE'); setShowConfirm(false); }}
-                style={{ flex: 1, padding: 12, background: '#ef4444', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-                Confirmer
-              </button>
+                style={{ flex: 1, padding: 12, background: '#ef4444', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Confirmer</button>
             </div>
           </div>
         </div>
