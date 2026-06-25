@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 const TARIF_BASE = 2000;
@@ -17,6 +17,66 @@ export class CoursesService {
   }
 
   async create(data: { chauffeurId: string; motoId: string; type: string; distance?: number; prix?: number }) {
+    // 1. Vérifier le chauffeur
+    const chauffeur = await this.prisma.chauffeur.findUnique({
+      where: { id: data.chauffeurId },
+    });
+    if (!chauffeur) throw new BadRequestException('Chauffeur non trouvé');
+    if (!chauffeur.actif) throw new ForbiddenException('Compte désactivé');
+
+    // 2. Vérifier blocage (≥ 3 versements impayés)
+    const versementsImpayes = await this.prisma.versement.count({
+      where: {
+        chauffeurId: data.chauffeurId,
+        statut: { not: 'VALIDE' },
+        montantDu: { gt: 0 },
+      },
+    });
+    if (versementsImpayes >= 3) {
+      // Bloquer le chauffeur
+      await this.prisma.chauffeur.update({
+        where: { id: data.chauffeurId },
+        data: { actif: false },
+      });
+      throw new ForbiddenException('Compte bloqué - ≥ 3 versements impayés. Contactez l\'administration.');
+    }
+
+    // 3. Vérifier le mode type (libre/imposé)
+    const modeTypeNotif = await this.prisma.notification.findFirst({
+      where: { type: 'MODE_TYPE' },
+      orderBy: { createdAt: 'desc' },
+    });
+    const typeImposeNotif = await this.prisma.notification.findFirst({
+      where: { type: 'TYPE_IMPOSE' },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    const modeType = modeTypeNotif?.message || 'libre';
+    const typeImpose = typeImposeNotif?.message || 'NORMALE';
+
+    if (modeType === 'impose' && data.type !== typeImpose) {
+      throw new ForbiddenException(`Mode imposé : seul le type "${typeImpose}" est autorisé.`);
+    }
+
+    const typesAutorises = ['NORMALE', 'ADY_VAROTRA', 'LOCATION_JOURNALIERE'];
+    if (!typesAutorises.includes(data.type)) {
+      throw new BadRequestException(`Type invalide. Types autorisés : ${typesAutorises.join(', ')}`);
+    }
+
+    // 4. Vérifier la moto
+    if (!data.motoId) {
+      throw new BadRequestException('Aucune moto assignée');
+    }
+
+    const moto = await this.prisma.moto.findUnique({ where: { id: data.motoId } });
+    if (!moto) throw new BadRequestException('Moto non trouvée');
+
+    // 5. Vérifier le statut du chauffeur (doit être EN_SERVICE)
+    if (chauffeur.statut !== 'EN_SERVICE') {
+      throw new ForbiddenException('Vous devez être en service pour enregistrer une course. Cliquez sur Départ.');
+    }
+
+    // 6. Calculer prix, commission, gain net
     let prix: number;
     let commission: number;
 
@@ -31,15 +91,18 @@ export class CoursesService {
         break;
       case 'LOCATION_JOURNALIERE':
         prix = data.prix || 0;
-        commission = 0;
+        commission = 0; // 0% pour location
         break;
       default:
         prix = 0;
         commission = 0;
     }
 
+    if (prix <= 0) throw new BadRequestException('Montant invalide');
+
     const gainNet = prix - commission;
 
+    // 7. Créer la course
     const course = await this.prisma.course.create({
       data: {
         type: data.type,
@@ -52,19 +115,39 @@ export class CoursesService {
       },
     });
 
+    // 8. Mettre à jour le solde chauffeur
     await this.prisma.chauffeur.update({
       where: { id: data.chauffeurId },
       data: { solde: { decrement: gainNet } },
     });
 
-    if (data.distance) {
+    // 9. Mettre à jour le kilométrage moto
+    if (data.distance && data.distance > 0) {
       await this.prisma.moto.update({
         where: { id: data.motoId },
         data: { kmActuel: { increment: data.distance } },
       });
     }
 
-    return course;
+    // 10. Créer notification pour l'admin
+    await this.prisma.notification.create({
+      data: {
+        titre: 'Nouvelle course',
+        message: `${chauffeur.nom} a enregistré une course de ${prix.toLocaleString()} Ar`,
+        type: 'COURSE',
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Course enregistrée avec succès',
+      course_id: course.id,
+      prix,
+      commission,
+      gain_net: gainNet,
+      distance_km: data.distance || 0,
+      est_bloque: false,
+    };
   }
 
   async syncOffline(data: { chauffeurId: string; courses: any[] }) {
@@ -78,7 +161,7 @@ export class CoursesService {
           distance: c.distance,
           prix: c.prix,
         });
-        results.push({ success: true, id: course.id });
+        results.push({ success: true, id: course.course_id });
       } catch (e: any) {
         results.push({ success: false, error: e?.message || 'Erreur' });
       }
