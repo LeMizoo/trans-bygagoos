@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API = 'http://localhost:3000/api/v1';
+const API = '${import.meta.env.VITE_API_URL || 'https://trans-bygagoos.onrender.com/api/v1'}';
 
 interface Chauffeur {
   id: string;
