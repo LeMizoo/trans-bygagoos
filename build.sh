@@ -2,4 +2,5 @@
 npm install
 cd apps/api
 npx prisma generate
-npx nest build
+# Utiliser le chemin absolu vers nest
+/opt/render/project/src/node_modules/.bin/nest build
