@@ -1,1 +1,26 @@
-@import "tailwindcss";
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+  background: #0a0a0a; 
+  color: #fff; 
+  min-height: 100vh; 
+}
+.card { background: #1a1a1a; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid #2a2a2a; }
+.card-title { color: #DAA520; font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.stat-item { background: #252525; border-radius: 10px; padding: 10px; text-align: center; }
+.stat-value { font-size: 18px; font-weight: bold; color: #DAA520; }
+.stat-label { font-size: 9px; color: #888; margin-top: 2px; }
+.status-btn { flex: 1; border: none; border-radius: 12px; padding: 12px 6px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 60px; color: #fff; }
+.status-btn:active { transform: scale(0.97); }
+.btn-debut { background: #2ecc71; }
+.btn-standby { background: #f39c12; color: #000; }
+.btn-fin { background: #e74c3c; }
+.btn-primary { background: #DAA520; color: #000; border: none; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: bold; width: 100%; cursor: pointer; }
+.btn-primary:disabled { opacity: 0.5; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 1px solid #2a2a2a; padding: 4px 8px 8px; z-index: 100; }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #666; font-size: 10px; cursor: pointer; padding: 6px; }
+.nav-item.active { color: #DAA520; }
+input, select, textarea { width: 100%; padding: 10px; background: #252525; border: 1px solid #333; border-radius: 10px; color: #fff; font-size: 13px; }
+label { color: #DAA520; font-size: 11px; display: block; margin-bottom: 4px; }
+.form-group { margin-bottom: 12px; }
