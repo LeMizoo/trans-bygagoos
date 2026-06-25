@@ -6,6 +6,9 @@ export class ChauffeursService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
+    // Réinitialisation automatique : si pas de pointage aujourd'hui, mettre HORS_SERVICE
+    await this.resetChauffeursSansPointage();
+    
     return this.prisma.chauffeur.findMany({
       include: { moto: true },
       orderBy: { nom: 'asc' },
@@ -24,6 +27,35 @@ export class ChauffeursService {
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
     return chauffeur;
+  }
+
+  private async resetChauffeursSansPointage() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Trouver tous les chauffeurs qui sont EN_SERVICE ou EN_PAUSE
+    // mais qui n'ont pas pointé aujourd'hui
+    const chauffeursActifs = await this.prisma.chauffeur.findMany({
+      where: {
+        statut: { in: ['EN_SERVICE', 'EN_PAUSE'] },
+      },
+      include: {
+        pointages: {
+          where: { datePointage: { gte: today } },
+          take: 1,
+        },
+      },
+    });
+
+    // Réinitialiser ceux qui n'ont pas pointé aujourd'hui
+    for (const c of chauffeursActifs) {
+      if (c.pointages.length === 0) {
+        await this.prisma.chauffeur.update({
+          where: { id: c.id },
+          data: { statut: 'HORS_SERVICE' },
+        });
+      }
+    }
   }
 
   async getDashboard(chauffeurId: string) {
@@ -47,6 +79,24 @@ export class ChauffeursService {
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
 
+    // Vérifier si le chauffeur a pointé aujourd'hui
+    const pointageAujourdhui = await this.prisma.pointage.findFirst({
+      where: { 
+        chauffeurId, 
+        datePointage: { gte: todayStart },
+        type: 'ARRIVEE',
+      },
+    });
+
+    // Si pas de pointage aujourd'hui et statut != HORS_SERVICE, réinitialiser
+    if (!pointageAujourdhui && chauffeur.statut !== 'HORS_SERVICE') {
+      await this.prisma.chauffeur.update({
+        where: { id: chauffeurId },
+        data: { statut: 'HORS_SERVICE' },
+      });
+      chauffeur.statut = 'HORS_SERVICE';
+    }
+
     // Récupérer toutes les courses pour les 3 périodes
     const [coursesJour, coursesSemaine, coursesMois] = await Promise.all([
       this.prisma.course.findMany({
@@ -60,19 +110,10 @@ export class ChauffeursService {
       }),
     ]);
 
-    // Dernier pointage du jour pour savoir si le chauffeur a démarré
+    // Dernier pointage
     const dernierPointage = await this.prisma.pointage.findFirst({
       where: { chauffeurId },
       orderBy: { datePointage: 'desc' },
-    });
-
-    // Vérifier si le chauffeur a pointé aujourd'hui
-    const pointageAujourdhui = await this.prisma.pointage.findFirst({
-      where: { 
-        chauffeurId, 
-        datePointage: { gte: todayStart },
-        type: 'ARRIVEE',
-      },
     });
 
     const sum = (courses: any[]) => ({
@@ -89,6 +130,9 @@ export class ChauffeursService {
       dernierPointage: dernierPointage?.datePointage || null,
       dernierPointageType: dernierPointage?.type || null,
       aDemarreAujourdhui: !!pointageAujourdhui,
+      messageStatus: !pointageAujourdhui 
+        ? 'Nouvelle journée ! Cliquez sur Départ pour commencer.' 
+        : null,
       aujourdhui: sum(coursesJour),
       semaine: sum(coursesSemaine),
       mois: sum(coursesMois),
