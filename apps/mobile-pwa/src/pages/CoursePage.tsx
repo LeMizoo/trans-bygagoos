@@ -92,8 +92,8 @@ export function CoursePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#fff', padding: '16px', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 14 }}>
-          <ArrowLeft size={18} /> Retour
+
+
         </button>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: online ? '#22c55e' : '#ef4444' }}>
           {online ? <Wifi size={14} /> : <WifiOff size={14} />}

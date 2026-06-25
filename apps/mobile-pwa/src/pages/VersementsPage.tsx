@@ -58,7 +58,7 @@ export function VersementsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: '#fff', padding: 20, fontFamily: 'system-ui, sans-serif' }}>
       <a href="/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20 }}>
-        <ArrowLeft size={18} /> Retour
+
       </a>
 
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Versements</h1>

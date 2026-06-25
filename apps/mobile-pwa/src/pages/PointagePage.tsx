@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-const API = "https://trans-bygagoos.onrender.com/api/v1";
+import { Play, Pause, RotateCcw, StopCircle } from 'lucide-react';
+
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function PointagePage() {
+  const queryClient = useQueryClient();
   const [msg, setMsg] = useState('');
 
   const pointer = useMutation({
@@ -17,44 +20,40 @@ export function PointagePage() {
       return res.data;
     },
     onSuccess: (_, type) => {
-      setMsg(`${type.replace('_', ' ')} enregistré !`);
+      const labels: Record<string, string> = {
+        ARRIVEE: 'Départ enregistré !',
+        PAUSE: 'Pause enregistrée',
+        REPRISE: 'Reprise enregistrée',
+        FIN_SERVICE: 'Fin de service enregistrée',
+      };
+      setMsg(labels[type] || '');
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setTimeout(() => setMsg(''), 2000);
-    },
-    onError: (err: any) => {
-      setMsg('Erreur: ' + (err.response?.data?.message || err.message));
     },
   });
 
+  const actions = [
+    { type: 'ARRIVEE', label: 'Départ', icon: Play, color: '#22c55e' },
+    { type: 'PAUSE', label: 'Pause', icon: Pause, color: '#eab308' },
+    { type: 'REPRISE', label: 'Reprise', icon: RotateCcw, color: '#3b82f6' },
+    { type: 'FIN_SERVICE', label: 'Fin service', icon: StopCircle, color: '#ef4444' },
+  ];
+
   return (
-    <div style={{ minHeight: '100vh', background: '#111', color: '#fff', padding: 20 }}>
-      <a href="/dashboard" style={{ color: '#999', textDecoration: 'none', display: 'block', marginBottom: 20 }}>← Retour</a>
-      <h1 style={{ fontSize: 24, marginBottom: 20 }}>Pointage</h1>
-      
-      {msg ? (
-        <div style={{ 
-          padding: 12, 
-          borderRadius: 8, 
-          marginBottom: 16, 
-          background: msg.includes('Erreur') ? 'rgba(255,0,0,0.2)' : 'rgba(0,255,0,0.2)',
-          color: msg.includes('Erreur') ? '#f99' : '#9f9'
-        }}>
+    <div style={{ padding: 16 }}>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Pointage</h1>
+      {msg && (
+        <div style={{ padding: 12, borderRadius: 10, marginBottom: 16, textAlign: 'center', background: 'rgba(34,197,94,0.2)', color: '#86efac', fontSize: 13 }}>
           {msg}
         </div>
-      ) : null}
-
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <button onClick={() => pointer.mutate('ARRIVEE')} style={{ padding: 24, background: '#22c55e', color: '#fff', border: 'none', borderRadius: 16, fontSize: 16, fontWeight: 'bold', cursor: 'pointer' }}>
-          ▶ Arrivée
-        </button>
-        <button onClick={() => pointer.mutate('PAUSE')} style={{ padding: 24, background: '#eab308', color: '#000', border: 'none', borderRadius: 16, fontSize: 16, fontWeight: 'bold', cursor: 'pointer' }}>
-          ⏸ Pause
-        </button>
-        <button onClick={() => pointer.mutate('REPRISE')} style={{ padding: 24, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 16, fontSize: 16, fontWeight: 'bold', cursor: 'pointer' }}>
-          🔄 Reprise
-        </button>
-        <button onClick={() => pointer.mutate('FIN_SERVICE')} style={{ padding: 24, background: '#ef4444', color: '#fff', border: 'none', borderRadius: 16, fontSize: 16, fontWeight: 'bold', cursor: 'pointer' }}>
-          ⏹ Fin service
-        </button>
+        {actions.map((a) => (
+          <button key={a.type} onClick={() => pointer.mutate(a.type)} disabled={pointer.isPending}
+            style={{ padding: 24, background: a.color, border: 'none', borderRadius: 16, color: a.type === 'PAUSE' ? '#000' : '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: pointer.isPending ? 0.7 : 1 }}>
+            <a.icon size={28} /> {a.label}
+          </button>
+        ))}
       </div>
     </div>
   );
