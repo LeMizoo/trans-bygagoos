@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -25,6 +25,7 @@ model Chauffeur {
   pin        String
   statut     String       @default("HORS_SERVICE")
   solde      Float        @default(0)
+  actif      Boolean      @default(true)
   motoId     String?      @unique
   moto       Moto?        @relation(fields: [motoId], references: [id])
   courses    Course[]

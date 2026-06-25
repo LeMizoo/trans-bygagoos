@@ -12,7 +12,7 @@ import { PointagesAdminPage } from './pages/PointagesAdminPage';
 import { ContratsPage } from './pages/ContratsPage';
 import { DepensesPage } from './pages/DepensesPage';
 import { NotificationsAdminPage } from './pages/NotificationsAdminPage';
-import { MessagesPage } from './pages/MessagesPage';
+import { CodesChauffeursPage } from './pages/CodesChauffeursPage';
 import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
 
@@ -40,7 +40,7 @@ export default function App() {
             <Route path="/assistance" element={<AssistancePage />} />
             <Route path="/contrats" element={<ContratsPage />} />
             <Route path="/depenses" element={<DepensesPage />} />
-            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/codes" element={<CodesChauffeursPage />} />
             <Route path="/notifications" element={<NotificationsAdminPage />} />
             <Route path="/parametres" element={<ParametresPage />} />
           </Route>

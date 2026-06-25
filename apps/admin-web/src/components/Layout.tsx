@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LayoutDashboard, Users, Bike, MapPin, DollarSign, Clock, AlertCircle, FileText, Settings, LogOut, X, Receipt, Bell, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Bike, MapPin, DollarSign, Clock, AlertCircle, FileText, Settings, LogOut, X, Receipt, Bell, MessageSquare, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from './Header';
 
@@ -14,6 +14,7 @@ const menu = [
   { label: 'Assistance', icon: AlertCircle, path: '/assistance' },
   { label: 'Contrats', icon: FileText, path: '/contrats' },
   { label: 'Dépenses', icon: Receipt, path: '/depenses' },
+  { label: 'Codes', icon: QrCode, path: '/codes' },
   { label: 'Messages', icon: MessageSquare, path: '/messages' },
   { label: 'Notifications', icon: Bell, path: '/notifications' },
   { label: 'Paramètres', icon: Settings, path: '/parametres' },
@@ -98,3 +99,4 @@ export function Layout() {
     </div>
   );
 }
+// Ajouter dans le menu : { label: 'Codes', icon: QrCode, path: '/codes' },

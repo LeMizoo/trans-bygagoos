@@ -5,11 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ChauffeursService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
-    // Réinitialisation automatique : si pas de pointage aujourd'hui, mettre HORS_SERVICE
-    await this.resetChauffeursSansPointage();
+  async findAll(actif?: boolean) {
+    const where: any = {};
+    if (actif !== undefined) where.actif = actif;
     
     return this.prisma.chauffeur.findMany({
+      where,
       include: { moto: true },
       orderBy: { nom: 'asc' },
     });
@@ -29,48 +30,60 @@ export class ChauffeursService {
     return chauffeur;
   }
 
-  private async resetChauffeursSansPointage() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Trouver tous les chauffeurs qui sont EN_SERVICE ou EN_PAUSE
-    // mais qui n'ont pas pointé aujourd'hui
-    const chauffeursActifs = await this.prisma.chauffeur.findMany({
-      where: {
-        statut: { in: ['EN_SERVICE', 'EN_PAUSE'] },
-      },
-      include: {
-        pointages: {
-          where: { datePointage: { gte: today } },
-          take: 1,
-        },
-      },
+  async updateCode(id: string, codeAcces: string) {
+    const existant = await this.prisma.chauffeur.findUnique({ where: { codeAcces } });
+    if (existant && existant.id !== id) throw new Error('Code déjà utilisé');
+    
+    return this.prisma.chauffeur.update({
+      where: { id },
+      data: { codeAcces },
     });
+  }
 
-    // Réinitialiser ceux qui n'ont pas pointé aujourd'hui
-    for (const c of chauffeursActifs) {
-      if (c.pointages.length === 0) {
-        await this.prisma.chauffeur.update({
-          where: { id: c.id },
-          data: { statut: 'HORS_SERVICE' },
-        });
-      }
+  async toggleActif(id: string) {
+    const chauffeur = await this.prisma.chauffeur.findUnique({ where: { id } });
+    if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
+    
+    return this.prisma.chauffeur.update({
+      where: { id },
+      data: { actif: !chauffeur.actif },
+    });
+  }
+
+  async renouvelerTousCodes() {
+    const chauffeurs = await this.prisma.chauffeur.findMany({ where: { actif: true } });
+    let count = 0;
+    
+    for (const c of chauffeurs) {
+      const nouveauCode = String(Math.floor(1000 + Math.random() * 9000));
+      await this.prisma.chauffeur.update({
+        where: { id: c.id },
+        data: { codeAcces: nouveauCode },
+      });
+      count++;
     }
+    
+    return { renouveles: count, total: chauffeurs.length };
+  }
+
+  async renouvelerCode(id: string) {
+    const chauffeur = await this.prisma.chauffeur.findUnique({ where: { id } });
+    if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
+    
+    const nouveauCode = String(Math.floor(1000 + Math.random() * 9000));
+    return this.prisma.chauffeur.update({
+      where: { id },
+      data: { codeAcces: nouveauCode },
+    });
   }
 
   async getDashboard(chauffeurId: string) {
     const now = new Date();
-    
-    // Aujourd'hui (de minuit à maintenant)
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    // Cette semaine (lundi 00:00)
     const dayOfWeek = now.getDay();
     const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - diff);
-    
-    // Ce mois (1er du mois)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const chauffeur = await this.prisma.chauffeur.findUnique({
@@ -79,16 +92,10 @@ export class ChauffeursService {
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
 
-    // Vérifier si le chauffeur a pointé aujourd'hui
     const pointageAujourdhui = await this.prisma.pointage.findFirst({
-      where: { 
-        chauffeurId, 
-        datePointage: { gte: todayStart },
-        type: 'ARRIVEE',
-      },
+      where: { chauffeurId, datePointage: { gte: todayStart }, type: 'ARRIVEE' },
     });
 
-    // Si pas de pointage aujourd'hui et statut != HORS_SERVICE, réinitialiser
     if (!pointageAujourdhui && chauffeur.statut !== 'HORS_SERVICE') {
       await this.prisma.chauffeur.update({
         where: { id: chauffeurId },
@@ -97,20 +104,12 @@ export class ChauffeursService {
       chauffeur.statut = 'HORS_SERVICE';
     }
 
-    // Récupérer toutes les courses pour les 3 périodes
     const [coursesJour, coursesSemaine, coursesMois] = await Promise.all([
-      this.prisma.course.findMany({
-        where: { chauffeurId, createdAt: { gte: todayStart } },
-      }),
-      this.prisma.course.findMany({
-        where: { chauffeurId, createdAt: { gte: weekStart } },
-      }),
-      this.prisma.course.findMany({
-        where: { chauffeurId, createdAt: { gte: monthStart } },
-      }),
+      this.prisma.course.findMany({ where: { chauffeurId, createdAt: { gte: todayStart } } }),
+      this.prisma.course.findMany({ where: { chauffeurId, createdAt: { gte: weekStart } } }),
+      this.prisma.course.findMany({ where: { chauffeurId, createdAt: { gte: monthStart } } }),
     ]);
 
-    // Dernier pointage
     const dernierPointage = await this.prisma.pointage.findFirst({
       where: { chauffeurId },
       orderBy: { datePointage: 'desc' },
@@ -128,11 +127,8 @@ export class ChauffeursService {
       statut: chauffeur.statut,
       moto: chauffeur.moto,
       dernierPointage: dernierPointage?.datePointage || null,
-      dernierPointageType: dernierPointage?.type || null,
       aDemarreAujourdhui: !!pointageAujourdhui,
-      messageStatus: !pointageAujourdhui 
-        ? 'Nouvelle journée ! Cliquez sur Départ pour commencer.' 
-        : null,
+      messageStatus: !pointageAujourdhui ? 'Nouvelle journée ! Cliquez sur Départ pour commencer.' : null,
       aujourdhui: sum(coursesJour),
       semaine: sum(coursesSemaine),
       mois: sum(coursesMois),
