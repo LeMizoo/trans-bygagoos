@@ -35,7 +35,6 @@ export class NotificationsService {
       }),
     ]);
 
-    // Stats
     const [totalAll, nonLues, lues] = await Promise.all([
       this.prisma.notification.count(),
       this.prisma.notification.count({ where: { lu: false } }),
@@ -44,18 +43,8 @@ export class NotificationsService {
 
     return {
       notifications,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      stats: {
-        total: totalAll,
-        non_lues: nonLues,
-        lues: lues,
-        archivees: 0,
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      stats: { total: totalAll, non_lues: nonLues, lues, archivees: 0 },
     };
   }
 
@@ -67,7 +56,7 @@ export class NotificationsService {
     return this.prisma.notification.update({ where: { id }, data: { lu: true } });
   }
 
-  async compterNonLu() {
+  async countNonLu() {
     return this.prisma.notification.count({ where: { lu: false } });
   }
 }
