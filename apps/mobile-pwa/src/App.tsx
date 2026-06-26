@@ -99,6 +99,7 @@ function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
 }
 
-export default App;
+
+
 
 export default App;
