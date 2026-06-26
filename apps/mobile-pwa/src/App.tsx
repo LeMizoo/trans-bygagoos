@@ -35,6 +35,14 @@ function AppContent() {
         {page === 'profil' && <ProfilPage onLogout={() => { localStorage.clear(); setPage('login'); }} />}
       </div>
       <BottomNav current={page} onChange={setPage} />
+      {/* FAB Refresh */}
+      <button className="fab-refresh" onClick={() => window.location.reload()} title="Actualiser">
+        <span style={{ fontSize: 22 }}>🔄</span>
+      </button>
+      {/* FAB Assistance */}
+      <button className="fab-assistance" onClick={() => alert('📞 Assistance : contactez l\'administration')} title="Aide">
+        <span style={{ fontSize: 22 }}>🆘</span>
+      </button>
     </>
   );
 }
@@ -73,14 +81,9 @@ function LoginPage({ onLogin }: { onLogin: () => void }) {
           <div className="card-title">🔑 Connexion</div>
           {error && <div style={{ color: '#e74c3c', marginBottom: 12, fontSize: 12, textAlign: 'center', background: 'rgba(231,76,60,0.1)', padding: 8, borderRadius: 8 }}>{error}</div>}
           <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>CODE</label>
-              <input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" maxLength={6} autoFocus
-                style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, color: '#DAA520', border: '2px solid #DAA520' }} />
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? 'Connexion...' : 'Se connecter'}
-            </button>
+            <div className="form-group"><input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="CODE" maxLength={6} autoFocus
+                style={{ textAlign: 'center', fontSize: 26, fontWeight: 'bold', letterSpacing: 6, color: '#DAA520', border: '2px solid #DAA520' }} /></div>
+            <button type="submit" disabled={loading} className="btn-primary">{loading ? 'Connexion...' : 'Se connecter'}</button>
           </form>
         </div>
       </div>
@@ -102,6 +105,9 @@ function Header({ onLogout }: { onLogout: () => void }) {
     HORS_SERVICE: { class: 'presence-absent', icon: '🔴', label: 'Hors service' },
   };
   const s = statutInfo[c?.statut] || statutInfo.HORS_SERVICE;
+  
+  const [online] = useState(navigator.onLine);
+  
   return (
     <div className="app-header">
       <div className="header-content">
@@ -117,7 +123,22 @@ function Header({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
         <div className="header-right">
-          <button className="icon-btn" onClick={onLogout} style={{ background: 'rgba(231,76,60,0.2)' }}>🚪</button>
+          {/* Sync */}
+          <button className="icon-btn sync" onClick={() => window.location.reload()} title="Synchroniser">
+            <span style={{ fontSize: 14 }}>🔄</span>
+          </button>
+          {/* Notifications */}
+          <button className="icon-btn" onClick={() => alert('📬 Notifications')} title="Notifications" style={{ position: 'relative' }}>
+            <span style={{ fontSize: 14 }}>🔔</span>
+          </button>
+          {/* Logout */}
+          <button className="icon-btn" onClick={onLogout} title="Déconnexion" style={{ background: 'rgba(231,76,60,0.2)' }}>
+            <span style={{ fontSize: 14 }}>🚪</span>
+          </button>
+          {/* Statut connexion */}
+          <button className="icon-btn" title={online ? 'En ligne' : 'Hors ligne'} style={{ background: online ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)' }}>
+            <span style={{ fontSize: 14 }}>{online ? '📶' : '📡'}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -154,6 +175,7 @@ function DashboardPage() {
   const createCourse = useMutation({
     mutationFn: (data: any) => axios.post(`${API}/courses`, data, { headers: { Authorization: `Bearer ${tk()}` } }),
     onSuccess: () => { setMsg('✅ Course enregistrée'); setKmDepart(''); setKmArrivee(''); setMontant(''); queryClient.invalidateQueries({ queryKey: ['dashboard'] }); },
+    onError: (err: any) => setMsg('❌ ' + (err?.response?.data?.message || 'Erreur')),
   });
 
   const handleCourse = () => {
@@ -180,9 +202,7 @@ function DashboardPage() {
       
       <div className="status-buttons">
         <button onClick={() => pointer.mutate('ARRIVEE')} className="status-btn debut">▶️ Début</button>
-        <button onClick={() => pointer.mutate(c?.statut === 'EN_PAUSE' ? 'REPRISE' : 'PAUSE')} className="status-btn standby">
-          {c?.statut === 'EN_PAUSE' ? '▶️ Reprendre' : '⏸️ Standby'}
-        </button>
+        <button onClick={() => pointer.mutate(c?.statut === 'EN_PAUSE' ? 'REPRISE' : 'PAUSE')} className="status-btn standby">{c?.statut === 'EN_PAUSE' ? '▶️ Reprendre' : '⏸️ Standby'}</button>
         <button onClick={() => setShowConfirm(true)} className="status-btn fin">⏹️ Fin</button>
       </div>
 
@@ -214,13 +234,9 @@ function DashboardPage() {
             {distance > 0 && <div style={{ background: '#252525', borderRadius: 8, padding: 8, textAlign: 'center', fontSize: 12, marginBottom: 8 }}>📏 {distance.toFixed(1)} km · 💰 {prixEstime.toLocaleString()} Ar</div>}
           </>
         ) : (
-          <div className="form-group">
-            <input type="number" value={montant} onChange={e => setMontant(e.target.value)} placeholder="Montant (Ar)" />
-          </div>
+          <div className="form-group"><input type="number" value={montant} onChange={e => setMontant(e.target.value)} placeholder="Montant (Ar)" /></div>
         )}
-        <button onClick={handleCourse} disabled={createCourse.isPending} className="btn-primary">
-          {createCourse.isPending ? '⏳...' : '✅ Enregistrer'}
-        </button>
+        <button onClick={handleCourse} disabled={createCourse.isPending} className="btn-primary">{createCourse.isPending ? '⏳...' : '✅ Enregistrer'}</button>
       </div>
 
       <div className="card">
