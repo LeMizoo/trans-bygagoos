@@ -100,3 +100,5 @@ function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
 }
 
 export default App;
+
+export default App;
