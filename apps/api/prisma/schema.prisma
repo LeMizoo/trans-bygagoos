@@ -18,50 +18,92 @@ model User {
 }
 
 model Chauffeur {
-  id         String       @id @default(cuid())
-  nom        String
-  telephone  String       @unique
-  codeAcces  String       @unique
-  pin        String
-  statut     String       @default("HORS_SERVICE")
-  solde      Float        @default(0)
-  actif      Boolean      @default(true)
-  motoId     String?      @unique
-  moto       Moto?        @relation(fields: [motoId], references: [id])
-  courses    Course[]
-  pointages  Pointage[]
-  versements Versement[]
-  assistance Assistance[]
-  contrats   Contrat[]
-  messages   Message[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id                        String       @id @default(cuid())
+  nom                       String
+  telephone                 String       @unique
+  email                     String?
+  codeAcces                 String       @unique
+  pin                       String
+  statut                    String       @default("HORS_SERVICE")
+  solde                     Float        @default(0)
+  actif                     Boolean      @default(true)
+  cin                       String?
+  cinDateDelivrance         DateTime?
+  cinLieuDelivrance         String?
+  permisNumero              String?
+  permisCategorie           String?
+  permisDateDelivrance      DateTime?
+  permisDateExpiration      DateTime?
+  permisLieuDelivrance      String?
+  permisStatut              String?
+  adresse                   String?
+  certificatResidenceNum    String?
+  certificatResidenceDate   DateTime?
+  dateEmbauche              DateTime?
+  photo                     String?
+  heurePrisePoste           String?
+  heureFinService           String?
+  motoId                    String?      @unique
+  moto                      Moto?        @relation(fields: [motoId], references: [id])
+  courses                   Course[]
+  pointages                 Pointage[]
+  versements                Versement[]
+  assistance                Assistance[]
+  contrats                  Contrat[]
+  messages                  Message[]
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
 }
 
 model Proprietaire {
-  id        String   @id @default(cuid())
-  nom       String
-  telephone String   @unique
-  email     String?
-  motos     Moto[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  nom         String
+  telephone   String   @unique
+  email       String?
+  cin         String?
+  adresse     String?
+  nif         String?
+  numStat     String?
+  actif       Boolean  @default(true)
+  motos       Moto[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Moto {
-  id              String       @id @default(cuid())
-  immatriculation String       @unique
-  marque          String
-  modele          String
-  kmActuel        Float        @default(0)
-  proprietaireId  String
-  proprietaire    Proprietaire @relation(fields: [proprietaireId], references: [id])
-  chauffeur       Chauffeur?
-  courses         Course[]
-  depenses        Depense[]
-  contrats        Contrat[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                  String       @id @default(cuid())
+  immatriculation     String       @unique
+  marque              String
+  modele              String
+  cylindree           String?
+  numMoteur           String?
+  numChassis          String?
+  couleur             String?
+  kmActuel            Float        @default(0)
+  prixAchat           Float?
+  dateAchat           DateTime?
+  statut              String       @default("disponible")
+  proprietaireId      String?
+  proprietaire        Proprietaire? @relation(fields: [proprietaireId], references: [id])
+  proprietaireNom     String?
+  proprietaireCin     String?
+  proprietaireTelephone String?
+  proprietaireAdresse String?
+  proprietaireNif     String?
+  proprietaireNumStat String?
+  kmProchaineVidange  Float?
+  dateDerniereVidange DateTime?
+  derniereVidangeKm   Float?
+  coutDerniereVidange Float?
+  fournisseurVidange  String?
+  finAssurance        DateTime?
+  finVignette         DateTime?
+  chauffeur           Chauffeur?
+  courses             Course[]
+  depenses            Depense[]
+  contrats            Contrat[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 }
 
 model Course {
@@ -154,4 +196,14 @@ model Message {
   chauffeur   Chauffeur @relation(fields: [chauffeurId], references: [id])
   lu          Boolean   @default(false)
   createdAt   DateTime  @default(now())
+}
+
+model Parametre {
+  id        String   @id @default(cuid())
+  nom       String   @unique
+  valeur    String
+  type      String   @default("text")
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

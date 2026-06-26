@@ -1,29 +1,16 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ParametresService } from './parametres.service';
 
 @Controller('parametres')
 export class ParametresController {
-  constructor(private readonly parametresService: ParametresService) {}
+  constructor(private readonly service: ParametresService) {}
 
-  @Get('coup-envoi')
-  getCoupEnvoi() { return this.parametresService.getCoupEnvoi(); }
+  @Get()
+  getAll() { return this.service.getAll(); }
 
-  @Post('coup-envoi')
-  setCoupEnvoi(@Body() data: { actif: boolean; heure: string }) {
-    return this.parametresService.setCoupEnvoi(data.actif, data.heure);
-  }
+  @Post('general')
+  saveGeneral(@Body() data: any) { return this.service.saveGeneral(data); }
 
-  @Post('coup-envoi/lancer')
-  lancerCoupEnvoi() { return this.parametresService.lancerCoupEnvoi(); }
-
-  @Get('mode-type')
-  getModeType() { return this.parametresService.getModeType(); }
-
-  @Post('mode-type')
-  setModeType(@Body() data: { mode: string; typeImpose: string }) {
-    return this.parametresService.setModeType(data.mode, data.typeImpose);
-  }
-
-  @Get('stats-pointages')
-  getStats(@Query('date') date?: string) { return this.parametresService.getStats(date); }
+  @Post('style')
+  saveStyle(@Body() data: any) { return this.service.saveStyle(data); }
 }
