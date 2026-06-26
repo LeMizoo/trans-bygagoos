@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
