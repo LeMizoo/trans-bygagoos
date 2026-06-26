@@ -9,8 +9,8 @@ import {
   DollarSign, AlertCircle, FileText, Settings, Bell,
   MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
   TrendingUp, Shield, Archive, QrCode, Wrench, HandCoins,
-  History, Calculator, Undo, Tag, BarChart3, UserPlus, ClipboardList,
-  ClipboardList, HardDrive, Calendar
+  History, Calculator, Undo, Tag, BarChart3, UserPlus,
+  HardDrive, Calendar
 } from 'lucide-react';
 import { Header } from './Header';
 
