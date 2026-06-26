@@ -161,6 +161,43 @@ function VersementsPage(){
   return (
     <div>
       {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
+      <div className="card"><div className="card-title">💰 Résumé</div>
+        <div className="stats-grid">
+          <div className="stat-item"><div className="stat-value" style={{color:'#DAA520'}}>{resume.gainNetJour.toLocaleString()} Ar</div><div className="stat-label">Gain net du jour</div></div>
+          <div className="stat-item"><div className="stat-value" style={{color:'#27ae60'}}>{resume.totalVerse.toLocaleString()} Ar</div><div className="stat-label">Total versé</div></div>
+          <div className="stat-item"><div className="stat-value" style={{color:'#e74c3c'}}>{resume.resteAPayer.toLocaleString()} Ar</div><div className="stat-label">Reste à payer</div></div>
+          <div className="stat-item"><div className="stat-value" style={{color:resume.disponible>=0?'#27ae60':'#e74c3c'}}>{resume.disponible.toLocaleString()} Ar</div><div className="stat-label">Disponible</div></div>
+        </div>
+      </div>
+      {impayes.length>0&&(<div className="card" style={{borderLeft:'3px solid #e74c3c'}}><div className="card-title">⚠️ Versements impayés ({impayes.length})</div>
+        {impayes.map((v:any)=>(<div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold',color:'#e74c3c'}}>{v.reste?.toLocaleString()} Ar</div><div style={{fontSize:10,color:'#888'}}>{new Date(v.date).toLocaleDateString('fr')} - Dû: {v.montantDu?.toLocaleString()} Ar</div></div><span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(239,68,68,0.2)',color:'#ef4444'}}>⚠️ Impayé</span></div>))}
+      </div>)}
+      <div className="card"><div style={{display:'flex',gap:8}}><input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant à verser" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff'}}/><button onClick={envoyer} className="btn-primary" style={{width:'auto'}}>Envoyer</button></div></div>
+      <div className="card"><div className="card-title">📋 Historique</div>
+        {versements.map((v:any)=>(<div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold'}}>{v.montantVerse?.toLocaleString()} Ar</div><div style={{fontSize:10,color:'#888'}}>{new Date(v.createdAt).toLocaleDateString('fr')}</div></div><span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:v.statut==='VALIDE'?'rgba(39,174,96,0.2)':'rgba(243,156,18,0.2)',color:v.statut==='VALIDE'?'#27ae60':'#f39c12'}}>{v.statut==='VALIDE'?'✅ Validé':'⏳ En attente'}</span></div>))}
+      </div>
+    </div>
+  );
+}
+function CoursesPage(){
+  const c=chauffeur();
+  const {data}=useQuery({queryKey:['courses',c?.id],queryFn:()=>axios.get(`${API}/courses`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data).catch(()=>[]),enabled:!!c?.id});
+  const courses=Array.isArray(data)?data:[];
+  return <div><div className="card"><div className="card-title">📋 Mes courses</div></div>{courses.length===0?<p style={{color:'#888',textAlign:'center',padding:20}}>Aucune course</p>:courses.slice(0,100).map((course:any)=><div key={course.id} className="course-item"><div><div style={{fontWeight:'bold',color:'#DAA520',fontSize:12}}>{course.type}</div><div className="course-date">{new Date(course.createdAt).toLocaleString('fr')}</div></div><div className="course-price">{course.prix?.toLocaleString()} Ar</div></div>)}</div>;
+}
+
+// ========== VERSEMENTS ==========
+function VersementsPage(){
+  const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
+  const qc=useQueryClient();
+  const {data}=useQuery({queryKey:['versements',c?.id],queryFn:()=>axios.get(`${API}/versements/chauffeur/${c?.id}`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
+  const resume=data?.resume||{totalDu:0,totalVerse:0,resteAPayer:0,gainNetJour:0,disponible:0};
+  const impayes=data?.impayes||[];
+  const versements=data?.versements||[];
+  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant('');qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
+  return (
+    <div>
+      {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
       <div className="card">
         <div className="card-title">💰 Résumé</div>
         <div className="stats-grid">
