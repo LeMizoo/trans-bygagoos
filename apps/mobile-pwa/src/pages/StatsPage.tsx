@@ -7,15 +7,11 @@ const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 
 export function StatsPage() {
   const c = chauffeur();
-
   const { data: dash } = useQuery({
     queryKey: ['dashboard', c?.id],
     queryFn: () => axios.get(`${API}/chauffeurs/${c?.id}/dashboard`, { headers: { Authorization: `Bearer ${token()}` } }).then(r => r.data),
     enabled: !!c?.id,
   });
-
-  const stats = (periode: string) => dash?.[periode] || { count: 0, prix: 0, commission: 0, gainNet: 0 };
-
   const Card = ({ titre, data }: any) => (
     <div style={{ background: '#1a1a1a', borderRadius: 12, padding: 14, marginBottom: 10, border: '1px solid #2a2a2a' }}>
       <div style={{ color: '#DAA520', fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{titre}</div>
@@ -27,13 +23,13 @@ export function StatsPage() {
       </div>
     </div>
   );
-
+  const s = (p: string) => dash?.[p] || { count: 0, prix: 0, commission: 0, gainNet: 0 };
   return (
     <div style={{ padding: 12 }}>
       <h1 style={{ color: '#DAA520', fontSize: 18, fontWeight: 700, marginBottom: 16 }}>📊 Statistiques</h1>
-      <Card titre="📅 Aujourd'hui" data={stats('aujourdhui')} />
-      <Card titre="📆 Cette semaine" data={stats('semaine')} />
-      <Card titre="🗓️ Ce mois" data={stats('mois')} />
+      <Card titre="📅 Aujourd'hui" data={s('aujourdhui')} />
+      <Card titre="📆 Cette semaine" data={s('semaine')} />
+      <Card titre="🗓️ Ce mois" data={s('mois')} />
       <div style={{ background: 'linear-gradient(135deg, #1a1a1a, #DAA52022)', borderRadius: 12, padding: 16, textAlign: 'center', border: '1px solid #DAA520' }}>
         <div style={{ fontSize: 10, color: '#DAA520', letterSpacing: 2 }}>SOLDE ACTUEL</div>
         <div style={{ fontSize: 28, fontWeight: 800, color: '#DAA520' }}>{dash?.solde?.toLocaleString() || 0} Ar</div>
