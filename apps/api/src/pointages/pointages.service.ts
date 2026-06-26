@@ -142,15 +142,3 @@ export class PointagesService {
     };
 
     return {
-      ...pointage,
-      message: messages[type] || 'Pointage enregistré',
-      nouveauStatut,
-      versement: type === 'FIN_SERVICE' ? {
-        gainNetJour,
-        nbImpayes: nbImpayesFinal,
-        messageVersement,
-        doitVerser: gainNetJour > 0,
-      } : null,
-    };
-  }
-}
