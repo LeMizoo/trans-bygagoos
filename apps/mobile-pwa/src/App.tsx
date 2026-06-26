@@ -117,7 +117,7 @@ function DashboardPage({online}:{online:boolean}){
 
   const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:["dashboard"]});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
-  const handleCourse=()=>{if(typeCourse==='NORMALE'){const d=parseFloat(kmArrivee)-parseFloat(kmDepart);if(d<=0){setMsg('⚠️ Km arrivée > Km départ');return;}createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'NORMALE',distance:d});}else{if(!montant){setMsg('⚠️ Entrez un montant');return;}createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:typeCourse,prix:parseFloat(montant)});}};
+  const handleCourse=()=>{if(typeCourse==='NORMALE'){const d=parseFloat(kmArrivee)-parseFloat(kmDepart);if(d<=0){setMsg('⚠️ Km arrivée > Km départ');return;}createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'NORMALE',distance:d});}else{if(!montant){setMsg('⚠️ Entrez un montant');return;}if(typeCourse==="LOCATION_JOURNALIERE"){createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:"LOCATION_JOURNALIERE",prix:params?.tarif_location_journalier||15000});}else{createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:typeCourse,prix:parseFloat(montant)});}}};
 
   const distance=kmDepart&&kmArrivee?Math.max(0,parseFloat(kmArrivee)-parseFloat(kmDepart)):0;
   const stats=dash?.aujourdhui||{count:0,prix:0,commission:0,gainNet:0};
