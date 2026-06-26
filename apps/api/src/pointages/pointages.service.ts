@@ -21,36 +21,35 @@ export class PointagesService {
   }
 
   async pointer(chauffeurId: string, type: string) {
+    console.log(`📍 Pointage: chauffeurId=${chauffeurId}, type=${type}`);
+    
     const chauffeur = await this.prisma.chauffeur.findUnique({
       where: { id: chauffeurId },
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
     if (!chauffeur.actif) throw new ForbiddenException('Compte désactivé');
 
-    // Vérifier si une arrivée existe déjà aujourd'hui pour ce chauffeur
+    // Vérifier si une arrivée existe déjà aujourd'hui
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     if (type === 'ARRIVEE') {
       const dejaArrive = await this.prisma.pointage.findFirst({
-        where: {
-          chauffeurId,
-          type: 'ARRIVEE',
-          datePointage: { gte: today },
-        },
+        where: { chauffeurId, type: 'ARRIVEE', datePointage: { gte: today } },
       });
 
       if (dejaArrive) {
-        // Déjà pointé aujourd'hui, mais on laisse repasser pour réactiver
+        // Déjà pointé aujourd'hui, on remet EN_SERVICE
         await this.prisma.chauffeur.update({
           where: { id: chauffeurId },
           data: { statut: 'EN_SERVICE' },
         });
+        console.log(`✅ ${chauffeur.nom} déjà arrivé aujourd'hui -> EN_SERVICE`);
         return { ...dejaArrive, message: '✅ Déjà en service aujourd\'hui. Bonne continuation !' };
       }
     }
 
-    // Mise à jour du statut selon le type
+    // Mise à jour du statut
     const statutMap: Record<string, string> = {
       ARRIVEE: 'EN_SERVICE',
       PAUSE: 'EN_PAUSE',
@@ -58,18 +57,19 @@ export class PointagesService {
       FIN_SERVICE: 'HORS_SERVICE',
     };
 
-    await this.prisma.chauffeur.update({
+    const nouveauStatut = statutMap[type] || chauffeur.statut;
+    
+    const updated = await this.prisma.chauffeur.update({
       where: { id: chauffeurId },
-      data: { statut: statutMap[type] || chauffeur.statut },
+      data: { statut: nouveauStatut },
     });
+    console.log(`✅ ${chauffeur.nom} : ${chauffeur.statut} -> ${updated.statut}`);
 
-    // Créer le pointage
     const pointage = await this.prisma.pointage.create({
       data: { chauffeurId, type },
       include: { chauffeur: true },
     });
 
-    // Message personnalisé
     const messages: Record<string, string> = {
       ARRIVEE: '✅ Départ enregistré ! Bonne journée 🏍️',
       PAUSE: '⏸️ Pause enregistrée',
@@ -77,9 +77,6 @@ export class PointagesService {
       FIN_SERVICE: '🏁 Service terminé. À demain !',
     };
 
-    return {
-      ...pointage,
-      message: messages[type] || 'Pointage enregistré',
-    };
+    return { ...pointage, message: messages[type] || 'Pointage enregistré' };
   }
 }
