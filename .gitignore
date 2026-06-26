@@ -5,3 +5,6 @@ dist/
 *.db
 *.db-journal
 uploads/*
+
+# Local Netlify folder
+.netlify
