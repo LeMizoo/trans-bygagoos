@@ -41,7 +41,7 @@ async function syncOffline() {
 }
 
 // ========== APP PRINCIPALE ==========
-function App() {
+export default function App() {
   const queryClient = new QueryClient();
   useEffect(() => { openDB(); }, []);
   return (
@@ -112,7 +112,7 @@ function DashboardPage({online}:{online:boolean}){
 
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
 
-  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const labels:any={ARRIVEE:'✅ Service débuté !',PAUSE:'⏸️ Pause',REPRISE:'🔄 Reprise',FIN_SERVICE:'🏁 Service terminé'};setMsg(labels[type]||'✅ OK');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>setMsg(''),3000);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const chauffeurData=JSON.parse(localStorage.getItem("chauffeur")||"{}");chauffeurData.statut=type==="ARRIVEE"||type==="REPRISE"?"EN_SERVICE":type==="PAUSE"?"EN_PAUSE":"HORS_SERVICE";localStorage.setItem("chauffeur",JSON.stringify(chauffeurData));const labels:any={ARRIVEE:'✅ Service débuté !',PAUSE:'⏸️ Pause',REPRISE:'🔄 Reprise',FIN_SERVICE:'🏁 Service terminé'};setMsg(labels[type]||'✅ OK');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg("");window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
   const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:['dashboard']});},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
@@ -202,5 +202,3 @@ function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   const tabs=[{key:'accueil',label:'Accueil',icon:'🏠'},{key:'courses',label:'Courses',icon:'📋'},{key:'versements',label:'Versements',icon:'💰'},{key:'stats',label:'Stats',icon:'📊'},{key:'profil',label:'Profil',icon:'👤'}];
   return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
 }
-
-export default App;
