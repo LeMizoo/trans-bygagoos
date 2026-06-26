@@ -106,6 +106,7 @@ function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
 
 // ========== DASHBOARD ==========
 function DashboardPage({online}:{online:boolean}){
+  const {data:params}=useQuery({queryKey:["parametres"],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
   const qc=useQueryClient(); const c=chauffeur(); const m=moto();
   const [msg,setMsg]=useState(''); const [showConfirm,setShowConfirm]=useState(false);
   const [typeCourse,setTypeCourse]=useState('NORMALE'); const [kmDepart,setKmDepart]=useState(''); const [kmArrivee,setKmArrivee]=useState(''); const [montant,setMontant]=useState('');
