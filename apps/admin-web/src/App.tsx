@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/authStore';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ChauffeursPage } from './pages/ChauffeursPage';
+import { CodesChauffeursPage } from './pages/CodesChauffeursPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { VersementsPage } from './pages/VersementsPage';
 import { AssistancePage } from './pages/AssistancePage';
@@ -12,7 +13,6 @@ import { PointagesAdminPage } from './pages/PointagesAdminPage';
 import { ContratsPage } from './pages/ContratsPage';
 import { DepensesPage } from './pages/DepensesPage';
 import { NotificationsAdminPage } from './pages/NotificationsAdminPage';
-import { CodesChauffeursPage } from './pages/CodesChauffeursPage';
 import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
 
@@ -33,16 +33,20 @@ export default function App() {
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/chauffeurs" element={<ChauffeursPage />} />
+            <Route path="/codes" element={<CodesChauffeursPage />} />
             <Route path="/motos" element={<MotosPage />} />
+            <Route path="/proprietaires" element={<div className="p-6 text-gray-400">Propriétaires (à venir)</div>} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/versements" element={<VersementsPage />} />
             <Route path="/pointages" element={<PointagesAdminPage />} />
             <Route path="/assistance" element={<AssistancePage />} />
             <Route path="/contrats" element={<ContratsPage />} />
             <Route path="/depenses" element={<DepensesPage />} />
-            <Route path="/codes" element={<CodesChauffeursPage />} />
+            <Route path="/rapports" element={<div className="p-6 text-gray-400">Rapports (à venir)</div>} />
+            <Route path="/messages" element={<div className="p-6 text-gray-400">Messages</div>} />
             <Route path="/notifications" element={<NotificationsAdminPage />} />
             <Route path="/parametres" element={<ParametresPage />} />
+            <Route path="/utilisateurs" element={<div className="p-6 text-gray-400">Utilisateurs (à venir)</div>} />
           </Route>
         </Routes>
       </BrowserRouter>
