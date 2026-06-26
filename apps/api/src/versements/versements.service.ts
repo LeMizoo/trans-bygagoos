@@ -110,3 +110,32 @@ export class VersementsService {
     });
   }
 }
+
+  async findOne(id: string) {
+    const v = await this.prisma.versement.findUnique({ where: { id } });
+    if (!v) throw new NotFoundException('Versement non trouvé');
+    return v;
+  }
+
+  async validerPartiel(id: string, montant: number) {
+    const v = await this.prisma.versement.findUnique({ where: { id } });
+    const nouveauVerse = (v.montantVerse || 0) + montant;
+    const statut = nouveauVerse >= v.montantDu ? 'VALIDE' : 'EN_ATTENTE';
+    return this.prisma.versement.update({
+      where: { id },
+      data: { montantVerse: nouveauVerse, statut },
+    });
+  }
+
+  async countImpayes(chauffeurId: string) {
+    const impayes = await this.prisma.versement.findMany({
+      where: { chauffeurId, montantDu: { gt: 0 } },
+    });
+    const impayesParJour = new Map<string, number>();
+    for (const v of impayes) {
+      const dateKey = v.createdAt.toISOString().split('T')[0];
+      const reste = v.montantDu - v.montantVerse;
+      if (reste > 0) impayesParJour.set(dateKey, reste);
+    }
+    return impayesParJour.size;
+  }
