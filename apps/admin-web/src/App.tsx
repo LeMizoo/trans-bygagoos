@@ -9,6 +9,7 @@ import { CoursesPage } from './pages/CoursesPage';
 import { VersementsPage } from './pages/VersementsPage';
 import { AssistancePage } from './pages/AssistancePage';
 import { MotosPage } from './pages/MotosPage';
+import { ProprietairesPage } from './pages/ProprietairesPage';
 import { PointagesAdminPage } from './pages/PointagesAdminPage';
 import { ContratsPage } from './pages/ContratsPage';
 import { DepensesPage } from './pages/DepensesPage';
@@ -35,18 +36,18 @@ export default function App() {
             <Route path="/chauffeurs" element={<ChauffeursPage />} />
             <Route path="/codes" element={<CodesChauffeursPage />} />
             <Route path="/motos" element={<MotosPage />} />
-            <Route path="/proprietaires" element={<div className="p-6 text-gray-400">Propriétaires (à venir)</div>} />
+            <Route path="/proprietaires" element={<ProprietairesPage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/versements" element={<VersementsPage />} />
             <Route path="/pointages" element={<PointagesAdminPage />} />
             <Route path="/assistance" element={<AssistancePage />} />
             <Route path="/contrats" element={<ContratsPage />} />
             <Route path="/depenses" element={<DepensesPage />} />
-            <Route path="/rapports" element={<div className="p-6 text-gray-400">Rapports (à venir)</div>} />
-            <Route path="/messages" element={<div className="p-6 text-gray-400">Messages</div>} />
+            <Route path="/rapports" element={<div className="p-6 text-gray-400">📊 Rapports (à venir)</div>} />
+            <Route path="/messages" element={<div className="p-6 text-gray-400">💬 Messages (à venir)</div>} />
             <Route path="/notifications" element={<NotificationsAdminPage />} />
             <Route path="/parametres" element={<ParametresPage />} />
-            <Route path="/utilisateurs" element={<div className="p-6 text-gray-400">Utilisateurs (à venir)</div>} />
+            <Route path="/utilisateurs" element={<div className="p-6 text-gray-400">👥 Utilisateurs (à venir)</div>} />
           </Route>
         </Routes>
       </BrowserRouter>

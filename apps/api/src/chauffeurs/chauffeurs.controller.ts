@@ -3,41 +3,16 @@ import { ChauffeursService } from './chauffeurs.service';
 
 @Controller('chauffeurs')
 export class ChauffeursController {
-  constructor(private readonly chauffeursService: ChauffeursService) {}
+  constructor(private readonly service: ChauffeursService) {}
 
-  @Get()
-  findAll(@Query('actif') actif?: string) {
-    const filterActif = actif === 'true' ? true : actif === 'false' ? false : undefined;
-    return this.chauffeursService.findAll(filterActif);
+  @Get() findAll(@Query('actif') actif?: string) {
+    return this.service.findAll(actif === 'true' ? true : actif === 'false' ? false : undefined);
   }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.chauffeursService.findOne(id);
-  }
-
-  @Get(':id/dashboard')
-  getDashboard(@Param('id') id: string) {
-    return this.chauffeursService.getDashboard(id);
-  }
-
-  @Put(':id/code')
-  updateCode(@Param('id') id: string, @Body() data: { codeAcces: string }) {
-    return this.chauffeursService.updateCode(id, data.codeAcces);
-  }
-
-  @Put(':id/toggle-actif')
-  toggleActif(@Param('id') id: string) {
-    return this.chauffeursService.toggleActif(id);
-  }
-
-  @Post('renouveler-tous')
-  renouvelerTousCodes() {
-    return this.chauffeursService.renouvelerTousCodes();
-  }
-
-  @Post(':id/renouveler')
-  renouvelerCode(@Param('id') id: string) {
-    return this.chauffeursService.renouvelerCode(id);
-  }
+  @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(id); }
+  @Get(':id/dashboard') getDashboard(@Param('id') id: string) { return this.service.getDashboard(id); }
+  @Put(':id') update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
+  @Put(':id/code') updateCode(@Param('id') id: string, @Body() data: { codeAcces: string }) { return this.service.updateCode(id, data.codeAcces); }
+  @Put(':id/toggle-actif') toggleActif(@Param('id') id: string) { return this.service.toggleActif(id); }
+  @Post('renouveler-tous') renouvelerTousCodes() { return this.service.renouvelerTousCodes(); }
+  @Post(':id/renouveler') renouvelerCode(@Param('id') id: string) { return this.service.renouvelerCode(id); }
 }
