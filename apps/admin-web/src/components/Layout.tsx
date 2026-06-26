@@ -9,7 +9,7 @@ import {
   DollarSign, AlertCircle, FileText, Settings, Bell,
   MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
   TrendingUp, Shield, Archive, QrCode, Wrench, HandCoins,
-  History, Calculator, Undo, Tag, BarChart3, UserPlus,
+  History, Calculator, Undo, Tag, BarChart3, UserPlus, ClipboardList,
   ClipboardList, HardDrive, Calendar
 } from 'lucide-react';
 import { Header } from './Header';
@@ -45,7 +45,8 @@ const menuSections = [
     title: '💰 Finances',
     items: [
       { label: 'Dépenses', icon: Receipt, path: '/depenses' },
-      { label: 'Rapports', icon: BarChart3, path: '/rapports' },
+      { label: .Journaux., icon: ClipboardList, path: .journaux. },
+  { label: .Rapports., icon: BarChart3, path: '/rapports' },
     ]
   },
   {
@@ -197,6 +198,9 @@ export function Layout() {
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
+        <footer className="text-center py-4 text-xs text-gray-400 dark:text-gray-600 border-t border-gray-200 dark:border-gray-700 mt-auto">
+          © 2026 Trans ByGagoos - Ensemble pour la famille Gagoos ❤️
+        </footer>
       </div>
     </div>
   );

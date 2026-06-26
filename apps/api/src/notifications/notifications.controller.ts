@@ -1,25 +1,15 @@
-import { Controller, Get, Post, Put, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly service: NotificationsService) {}
 
-  @Get()
-  findAll() { return this.notificationsService.findAll(); }
-
-  @Post()
-  create(@Body() data: { titre: string; message: string; type: string }) {
-    return this.notificationsService.create(data);
+  @Get() findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.service.findAll(Number(page) || 1, Number(limit) || 20);
   }
-
-  @Put(':id/lu')
-  marquerLu(@Param('id') id: string) {
-    return this.notificationsService.marquerLu(id);
-  }
-
-  @Get('count')
-  countNonLu() {
-    return this.notificationsService.countNonLu();
-  }
+  @Post() create(@Body() data: { titre: string; message: string; type: string }) { return this.service.create(data); }
+  @Put(':id/lu') marquerLu(@Param('id') id: string) { return this.service.marquerLu(id); }
+  @Delete(':id') supprimer(@Param('id') id: string) { return this.service.supprimer(id); }
+  @Get('count') countNonLu() { return this.service.countNonLu(); }
 }

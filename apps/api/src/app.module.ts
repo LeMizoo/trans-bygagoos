@@ -15,6 +15,7 @@ import { MessagesModule } from './messages/messages.module';
 import { ParametresModule } from './parametres/parametres.module';
 import { AlertesModule } from './alertes/alertes.module';
 import { ProprietairesModule } from './proprietaires/proprietaires.module';
+import { JournauxModule } from './journaux/journaux.module';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { ProprietairesModule } from './proprietaires/proprietaires.module';
     VersementsModule, PointagesModule, AssistanceModule,
     DepensesModule, ContratsModule, DashboardModule, MotosModule,
     NotificationsModule, MessagesModule, ParametresModule, AlertesModule,
-    ProprietairesModule,
+    ProprietairesModule, JournauxModule,
   ],
 })
 export class AppModule {}

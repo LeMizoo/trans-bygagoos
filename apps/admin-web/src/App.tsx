@@ -17,6 +17,7 @@ import { NotificationsAdminPage } from './pages/NotificationsAdminPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { RapportsPage } from './pages/RapportsPage';
 import { UtilisateursPage } from './pages/UtilisateursPage';
+import { JournauxPage } from './pages/JournauxPage';
 import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
 
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/notifications" element={<NotificationsAdminPage />} />
             <Route path="/parametres" element={<ParametresPage />} />
             <Route path="/utilisateurs" element={<UtilisateursPage />} />
+            <Route path="/journaux" element={<JournauxPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
