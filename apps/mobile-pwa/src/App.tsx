@@ -78,7 +78,6 @@ function VersementsPage(){
     </div>
   );
 }
-
 function StatsPage(){
   const c=chauffeur();
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
