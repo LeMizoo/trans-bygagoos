@@ -45,8 +45,8 @@ const menuSections = [
     title: '💰 Finances',
     items: [
       { label: 'Dépenses', icon: Receipt, path: '/depenses' },
-      { label: .Journaux., icon: ClipboardList, path: .journaux. },
-  { label: .Rapports., icon: BarChart3, path: '/rapports' },
+      { label: "Journaux", icon: ClipboardList, path: "/journaux" },
+  { label: "Rapports", icon: BarChart3, path: '/rapports' },
     ]
   },
   {
