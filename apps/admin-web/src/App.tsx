@@ -14,6 +14,9 @@ import { PointagesAdminPage } from './pages/PointagesAdminPage';
 import { ContratsPage } from './pages/ContratsPage';
 import { DepensesPage } from './pages/DepensesPage';
 import { NotificationsAdminPage } from './pages/NotificationsAdminPage';
+import { MessagesPage } from './pages/MessagesPage';
+import { RapportsPage } from './pages/RapportsPage';
+import { UtilisateursPage } from './pages/UtilisateursPage';
 import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
 
@@ -43,11 +46,11 @@ export default function App() {
             <Route path="/assistance" element={<AssistancePage />} />
             <Route path="/contrats" element={<ContratsPage />} />
             <Route path="/depenses" element={<DepensesPage />} />
-            <Route path="/rapports" element={<div className="p-6 text-gray-400">📊 Rapports (à venir)</div>} />
-            <Route path="/messages" element={<div className="p-6 text-gray-400">💬 Messages (à venir)</div>} />
+            <Route path="/rapports" element={<RapportsPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
             <Route path="/notifications" element={<NotificationsAdminPage />} />
             <Route path="/parametres" element={<ParametresPage />} />
-            <Route path="/utilisateurs" element={<div className="p-6 text-gray-400">👥 Utilisateurs (à venir)</div>} />
+            <Route path="/utilisateurs" element={<UtilisateursPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
