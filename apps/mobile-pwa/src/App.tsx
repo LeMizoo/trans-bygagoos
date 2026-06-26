@@ -168,7 +168,7 @@ function VersementsPage(){
         <div className="stat-item"><div className="stat-value" style={{color:reste>0?'#e74c3c':'#27ae60'}}>{reste.toLocaleString()} Ar</div><div className="stat-label">Reste</div></div>
       </div>
     </div>
-    <div className="card"><div style={{display:'flex',gap:8}}><input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant à verser" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff'}}/><button onClick={envoyer} className="btn-primary" style={{width:'auto'}}>Envoyer</button></div></div>
+    <div className="card"><div style={{display:'flex',gap:8}}><input type="number" value={montant || resume?.montantSuggere || ""} onChange={e=>setMontant(e.target.value)} placeholder={"Suggéré: " + (resume?.montantSuggere||0).toLocaleString() + " Ar"} style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff'}}/><button onClick={envoyer} className="btn-primary" style={{width:'auto'}}>Envoyer</button></div></div>
     <div className="card"><div className="card-title">📋 Historique</div>{versements.map((v:any)=><div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold'}}>{v.montantVerse?.toLocaleString()} Ar</div><div style={{fontSize:10,color:'#888'}}>{new Date(v.createdAt).toLocaleDateString('fr')}</div></div><span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:v.statut==='VALIDE'?'rgba(39,174,96,0.2)':'rgba(243,156,18,0.2)',color:v.statut==='VALIDE'?'#27ae60':'#f39c12'}}>{v.statut==='VALIDE'?'✅ Validé':'⏳ En attente'}</span></div>)}</div>
   </div>;
 }

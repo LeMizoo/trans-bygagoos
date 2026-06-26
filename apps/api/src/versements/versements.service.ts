@@ -13,10 +13,57 @@ export class VersementsService {
   }
 
   async findByChauffeur(chauffeurId: string) {
-    return this.prisma.versement.findMany({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // CA net du jour (commission totale du jour)
+    const caNetJour = await this.prisma.course.aggregate({
+      _sum: { gainNet: true, commission: true, prix: true },
+      where: { chauffeurId, createdAt: { gte: today } },
+    });
+
+    // Tous les versements
+    const versements = await this.prisma.versement.findMany({
       where: { chauffeurId },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Total dû et versé
+    const totalDu = versements.reduce((s, v) => s + v.montantDu, 0);
+    const totalVerse = versements.reduce((s, v) => s + v.montantVerse, 0);
+    const resteAPayer = totalDu - totalVerse;
+
+    // Impayés détaillés avec date des courses
+    const impayes = versements
+      .filter(v => v.montantDu > v.montantVerse)
+      .map(v => ({
+        id: v.id,
+        date: v.createdAt,
+        montantDu: v.montantDu,
+        montantVerse: v.montantVerse,
+        reste: v.montantDu - v.montantVerse,
+        statut: v.statut,
+      }));
+
+    // Gain net disponible (CA net jour - reste à payer)
+    const gainNetJour = caNetJour._sum.gainNet || 0;
+    const disponible = gainNetJour - resteAPayer;
+
+    return {
+      versements,
+      resume: {
+        caNetJour: gainNetJour,
+        commissionJour: caNetJour._sum.commission || 0,
+        caBrutJour: caNetJour._sum.prix || 0,
+        totalDu,
+        totalVerse,
+        resteAPayer,
+        disponible,
+        montantSuggere: Math.max(0, disponible),
+      },
+      impayes,
+      nbImpayes: impayes.length,
+    };
   }
 
   async create(data: { chauffeurId: string; montantVerse: number }) {
@@ -25,31 +72,35 @@ export class VersementsService {
     });
     if (!chauffeur) throw new NotFoundException('Chauffeur non trouvé');
 
-    const versement = await this.prisma.versement.create({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculer le CA net du jour comme montant dû
+    const caNet = await this.prisma.course.aggregate({
+      _sum: { gainNet: true },
+      where: { chauffeurId: data.chauffeurId, createdAt: { gte: today } },
+    });
+
+    return this.prisma.versement.create({
       data: {
         chauffeurId: data.chauffeurId,
-        montantDu: chauffeur.solde,
+        montantDu: caNet._sum.gainNet || chauffeur.solde,
         montantVerse: data.montantVerse,
         statut: 'EN_ATTENTE',
       },
     });
-
-    return versement;
   }
 
   async valider(id: string) {
-    const versement = await this.prisma.versement.update({
+    const v = await this.prisma.versement.update({
       where: { id },
       data: { statut: 'VALIDE' },
     });
-
-    // Mise à jour du solde chauffeur
     await this.prisma.chauffeur.update({
-      where: { id: versement.chauffeurId },
-      data: { solde: { decrement: versement.montantVerse } },
+      where: { id: v.chauffeurId },
+      data: { solde: { decrement: v.montantVerse } },
     });
-
-    return versement;
+    return v;
   }
 
   async refuser(id: string) {
