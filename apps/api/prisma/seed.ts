@@ -92,9 +92,9 @@ async function main() {
   // Quelques courses
   await prisma.course.createMany({
     data: [
-      { chauffeurId: ch1.id, motoId: moto1.id, type: 'NORMALE', distance: 5, prix: 4500, commission: 900, gainNet: 3600, createdAt: new Date() },
-      { chauffeurId: ch1.id, motoId: moto1.id, type: 'ADY_VAROTRA', distance: 0, prix: 10000, commission: 2000, gainNet: 8000, createdAt: new Date() },
-      { chauffeurId: ch2.id, motoId: moto2.id, type: 'NORMALE', distance: 3, prix: 3500, commission: 700, gainNet: 2800, createdAt: new Date() },
+      { chauffeurId: ch1.id, motoId: moto1.id, type: 'NORMALE', distance: 5, prix: 4500, commission: 900, gainNet: 3600, createdAt: new Date(Date.now() - 86400000) },
+      { chauffeurId: ch1.id, motoId: moto1.id, type: 'ADY_VAROTRA', distance: 0, prix: 10000, commission: 2000, gainNet: 8000, createdAt: new Date(Date.now() - 86400000) },
+      { chauffeurId: ch2.id, motoId: moto2.id, type: 'NORMALE', distance: 3, prix: 3500, commission: 700, gainNet: 2800, createdAt: new Date(Date.now() - 86400000) },
     ],
   });
 
