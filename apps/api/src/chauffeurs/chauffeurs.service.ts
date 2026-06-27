@@ -59,8 +59,6 @@ export class ChauffeursService {
       this.prisma.course.findMany({ where: { chauffeurId, createdAt: { gte: monthStart } } }),
     ]);
 
-    const dernierPointage = await this.prisma.pointage.findFirst({ where: { chauffeurId }, orderBy: { datePointage: 'desc' } });
-
     const sum = (courses: any[]) => ({
       count: (courses || []).length,
       prix: (courses || []).reduce((s, c) => s + (c.prix || 0), 0),
@@ -70,24 +68,22 @@ export class ChauffeursService {
 
     return {
       solde: chauffeur.solde, statut: chauffeur.statut, moto: chauffeur.moto,
-      dernierPointage: dernierPointage?.datePointage || null,
       aDemarreAujourdhui: !!pointageAujourdhui,
-      messageStatus: !pointageAujourdhui ? '🆕 Nouvelle journée ! Cliquez sur DÉPART pour commencer.' : null,
+      messageStatus: !pointageAujourdhui ? '🆕 Nouvelle journée !' : null,
       aujourdhui: sum(coursesJour), semaine: sum(coursesSemaine), mois: sum(coursesMois),
     };
   }
 
   async create(data: any) {
     return this.prisma.chauffeur.create({
-      data: { ...data, pin: data.pin || '$2b$10$Tqqqk7RzDxPDObOWpo4hKeW4rR84AGcosxAtOro5/uemNug6C7Svm', statut: 'HORS_SERVICE', solde: 0, actif: true },
+      data: { ...data, statut: 'HORS_SERVICE', solde: 0, actif: true },
     });
   }
 
   async update(id: string, data: any) {
-    const { pin, motoId, codeAcces, ...safeData } = data;
-    const updateData: any = { ...safeData };
+    const { motoId, ...rest } = data;
+    const updateData: any = { ...rest };
     if (motoId !== undefined) updateData.motoId = motoId || null;
-    if (codeAcces) updateData.codeAcces = codeAcces;
     return this.prisma.chauffeur.update({ where: { id }, data: updateData });
   }
 
@@ -96,8 +92,6 @@ export class ChauffeursService {
   }
 
   async updateCode(id: string, codeAcces: string) {
-    const existant = await this.prisma.chauffeur.findUnique({ where: { codeAcces } });
-    if (existant && existant.id !== id) throw new Error('Code déjà utilisé');
     return this.prisma.chauffeur.update({ where: { id }, data: { codeAcces } });
   }
 
@@ -112,7 +106,7 @@ export class ChauffeursService {
     for (const c of chauffeurs) {
       await this.prisma.chauffeur.update({ where: { id: c.id }, data: { codeAcces: String(Math.floor(1000 + Math.random() * 9000)) } });
     }
-    return { renouveles: chauffeurs.length, total: chauffeurs.length };
+    return { renouveles: chauffeurs.length };
   }
 
   async renouvelerCode(id: string) {
