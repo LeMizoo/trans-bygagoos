@@ -1,4 +1,3 @@
-import { VersementsPage } from "./pages/VersementsPage";
 /* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -72,7 +71,7 @@ function AppContent() {
       <div className="main-content">
         {page==='accueil'&&<DashboardPage online={online}/>}
         {page==='courses'&&<CoursesPage/>}
-        {page==='versements'&&<VersementsPage/>}
+        {page==="versements"&&<VersementsSimplePage />}
         {page==='stats'&&<StatsPage/>}
         {page==='profil'&&<ProfilPage onLogout={()=>{localStorage.clear();setPage('login');}}/>}
         {page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}
@@ -177,6 +176,40 @@ function NotificationsPage({onBack}:{onBack:()=>void}){
 }
 
 // ========== BOTTOM NAV ==========
+
+function VersementsSimplePage(){
+  const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
+  const qc=useQueryClient();
+  const {data}=useQuery({queryKey:['versements',c?.id],queryFn:()=>axios.get(`${API}/versements/chauffeur/${c?.id}`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
+  const versements=data?.versements||[];
+  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant('');qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
+  return (
+    <div>
+      {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
+      <h1 style={{color:'#DAA520',fontSize:18,fontWeight:700,marginBottom:12}}>💰 Versements</h1>
+      <p style={{fontSize:12,color:'#94a3b8',marginBottom:12}}>Solde : <strong style={{color:'#fff'}}>{c?.solde?.toLocaleString()||0} Ar</strong></p>
+      <div className="card">
+        <div style={{display:'flex',gap:8}}>
+          <input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant à verser" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:14,outline:'none'}}/>
+          <button onClick={envoyer} disabled={!montant} style={{padding:'12px 20px',background:'#DAA520',color:'#000',border:'none',borderRadius:10,fontWeight:600,cursor:'pointer',opacity:!montant?0.5:1}}>Envoyer</button>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-title">📋 Historique</div>
+        {versements.map((v:any)=>(
+          <div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}>
+            <div>
+              <div style={{fontWeight:'bold'}}>{v.montantVerse?.toLocaleString()||0} Ar</div>
+              <div style={{fontSize:10,color:'#888'}}>{new Date(v.createdAt).toLocaleDateString('fr')}</div>
+            </div>
+            <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:v.statut==='VALIDE'?'rgba(39,174,96,0.2)':'rgba(243,156,18,0.2)',color:v.statut==='VALIDE'?'#27ae60':'#f39c12'}}>{v.statut==='VALIDE'?'✅ Validé':'⏳ En attente'}</span>
+          </div>
+        ))}
+        {versements.length===0&&<p style={{color:'#888',textAlign:'center',padding:20}}>Aucun versement</p>}
+      </div>
+    </div>
+  );
+}
 function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   const tabs=[{key:'accueil',label:'Accueil',icon:'🏠'},{key:'courses',label:'Courses',icon:'📋'},{key:'versements',label:'Versements',icon:'💰'},{key:'stats',label:'Stats',icon:'📊'},{key:'profil',label:'Profil',icon:'👤'}];
   return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
