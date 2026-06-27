@@ -8,9 +8,7 @@ export class ParametresService {
   async getAll() {
     const params = await this.prisma.parametre.findMany();
     const result: any = {};
-    for (const p of params) {
-      result[p.nom] = p.valeur;
-    }
+    for (const p of params) result[p.nom] = p.valeur;
     return {
       prix_base: parseInt(result.prix_base) || 2000,
       prix_km: parseFloat(result.prix_km) || 500,
@@ -33,6 +31,45 @@ export class ParametresService {
     return { success: true, message: 'Style mis à jour' };
   }
 
+  async getTypesAutorises() {
+    const types = await this.prisma.parametre.findFirst({ where: { nom: 'types_courses_autorises' } });
+    const defaut = ['NORMALE', 'ADY_VAROTRA', 'LOCATION_JOURNALIERE'];
+    return { types: types?.valeur ? JSON.parse(types.valeur) : defaut };
+  }
+
+  async setTypesAutorises(types: string[]) {
+    await this.upsert('types_courses_autorises', JSON.stringify(types));
+    return { success: true, types };
+  }
+
+  async coupEnvoi(types: string[], heure: string) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    await this.prisma.pointage.deleteMany({ where: { datePointage: { gte: today } } });
+    await this.prisma.chauffeur.updateMany({ data: { statut: 'HORS_SERVICE' } });
+    await this.upsert('types_courses_autorises', JSON.stringify(types));
+    await this.upsert('coup_envoi_heure', heure);
+    await this.upsert('coup_envoi_actif', '1');
+    return { success: true, message: `Coup d'envoi à ${heure} - ${types.length} type(s) autorisé(s)`, types };
+  }
+
+  async getCoupEnvoi() {
+    const actif = await this.prisma.parametre.findFirst({ where: { nom: 'coup_envoi_actif' } });
+    const heure = await this.prisma.parametre.findFirst({ where: { nom: 'coup_envoi_heure' } });
+    return { actif: actif?.valeur === '1', heure: heure?.valeur || '07:00' };
+  }
+
+  async getStatsPointages(date?: string) {
+    const d = date ? new Date(date) : new Date();
+    d.setHours(0, 0, 0, 0);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    const [arrivees, departs, total] = await Promise.all([
+      this.prisma.pointage.count({ where: { type: 'ARRIVEE', datePointage: { gte: d, lt: next } } }),
+      this.prisma.pointage.count({ where: { type: 'FIN_SERVICE', datePointage: { gte: d, lt: next } } }),
+      this.prisma.chauffeur.count(),
+    ]);
+    return { arrivees, departs, totalChauffeurs: total };
+  }
+
   private async upsert(nom: string, valeur: string) {
     const existant = await this.prisma.parametre.findUnique({ where: { nom } });
     if (existant) {
@@ -42,39 +79,3 @@ export class ParametresService {
     }
   }
 }
-
-  // Types de courses autorisés
-  async getTypesAutorises() {
-    const types = await this.prisma.parametre.findFirst({
-      where: { nom: 'types_courses_autorises' },
-    });
-    const defaut = ['NORMALE', 'ADY_VAROTRA', 'LOCATION_JOURNALIERE'];
-    return {
-      types: types?.valeur ? JSON.parse(types.valeur) : defaut,
-      actif: types?.valeur ? true : false,
-    };
-  }
-
-  async setTypesAutorises(types: string[]) {
-    await this.upsert('types_courses_autorises', JSON.stringify(types));
-    return { success: true, types };
-  }
-
-  // Coup d'envoi avec types
-  async coupEnvoi(types: string[], heure: string) {
-    // Réinitialiser les pointages du jour
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    await this.prisma.pointage.deleteMany({ where: { datePointage: { gte: today } } });
-    await this.prisma.chauffeur.updateMany({ data: { statut: 'HORS_SERVICE' } });
-    
-    // Sauvegarder les types autorisés
-    await this.upsert('types_courses_autorises', JSON.stringify(types));
-    await this.upsert('coup_envoi_heure', heure);
-    await this.upsert('coup_envoi_actif', '1');
-    
-    return {
-      success: true,
-      message: `Coup d'envoi lancé à ${heure} avec ${types.length} type(s) de course autorisé(s)`,
-      types,
-    };
-  }
