@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Bike, Search, User, AlertTriangle, Check, X, Filter } from 'lucide-react';
+import { Bike, Search, Plus, Edit, Trash2, X, Save, User, Wrench } from 'lucide-react';
 import { useState } from 'react';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
@@ -8,10 +8,14 @@ const API = 'https://trans-bygagoos.onrender.com/api/v1';
 export function MotosPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('tous');
-  const [showAssign, setShowAssign] = useState<string | null>(null);
-  const [selectedChauffeur, setSelectedChauffeur] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
+  const [form, setForm] = useState({
+    immatriculation: '', marque: '', modele: '', cylindree: '', couleur: '',
+    kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '',
+    proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '',
+  });
 
   const { data: motos } = useQuery({
     queryKey: ['motos'],
@@ -24,139 +28,106 @@ export function MotosPage() {
     queryFn: () => axios.get(`${API}/chauffeurs`).then(r => r.data?.filter((c: any) => !c.motoId)),
   });
 
+  const liste = Array.isArray(motos) ? motos : [];
+  const filtered = liste.filter((m: any) =>
+    !search || m.immatriculation?.toLowerCase().includes(search.toLowerCase()) || m.marque?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const saveMutation = useMutation({
+    mutationFn: () => editId
+      ? axios.put(`${API}/motos/${editId}`, form)
+      : axios.post(`${API}/motos`, form),
+    onSuccess: () => {
+      setMsg(editId ? '✅ Moto modifiée' : '✅ Moto ajoutée');
+      setShowForm(false); setEditId(null);
+      setForm({ immatriculation: '', marque: '', modele: '', cylindree: '', couleur: '', kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '', proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '' });
+      queryClient.invalidateQueries({ queryKey: ['motos'] });
+    },
+    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
+  });
+
   const assignMutation = useMutation({
     mutationFn: ({ motoId, chauffeurId }: { motoId: string; chauffeurId: string }) =>
       axios.post(`${API}/motos/${motoId}/assigner`, { chauffeurId }),
-    onSuccess: () => {
-      setMsg('✅ Moto assignée');
-      setShowAssign(null);
-      setSelectedChauffeur('');
-      queryClient.invalidateQueries({ queryKey: ['motos'] });
-      queryClient.invalidateQueries({ queryKey: ['chauffeurs-sans-moto'] });
-    },
-    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
+    onSuccess: () => { setMsg('✅ Moto assignée'); queryClient.invalidateQueries({ queryKey: ['motos'] }); },
   });
 
-  const desassignMutation = useMutation({
-    mutationFn: (motoId: string) => axios.post(`${API}/motos/${motoId}/desassigner`),
-    onSuccess: () => {
-      setMsg('✅ Moto désassignée');
-      queryClient.invalidateQueries({ queryKey: ['motos'] });
-    },
-    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => axios.delete(`${API}/motos/${id}`),
+    onSuccess: () => { setMsg('🗑️ Moto supprimée'); queryClient.invalidateQueries({ queryKey: ['motos'] }); },
   });
 
-  const motosList = Array.isArray(motos) ? motos : [];
-  
-  const filtered = motosList.filter((m: any) => {
-    const matchSearch = !search || 
-      m.immatriculation?.toLowerCase().includes(search.toLowerCase()) ||
-      m.marque?.toLowerCase().includes(search.toLowerCase()) ||
-      m.chauffeur?.nom?.toLowerCase().includes(search.toLowerCase());
-    
-    if (filter === 'disponible') return matchSearch && !m.chauffeur;
-    if (filter === 'utilisee') return matchSearch && m.chauffeur;
-    return matchSearch;
-  });
-
-  const stats = {
-    total: motosList.length,
-    disponibles: motosList.filter((m: any) => !m.chauffeur).length,
-    utilisees: motosList.filter((m: any) => m.chauffeur).length,
-    kmTotal: motosList.reduce((s: number, m: any) => s + (m.kmActuel || 0), 0),
+  const openEdit = (m: any) => {
+    setForm({
+      immatriculation: m.immatriculation || '', marque: m.marque || '', modele: m.modele || '',
+      cylindree: m.cylindree || '', couleur: m.couleur || '', kmActuel: m.kmActuel || 0,
+      prixAchat: m.prixAchat || 0, dateAchat: m.dateAchat?.split('T')[0] || '',
+      numMoteur: m.numMoteur || '', numChassis: m.numChassis || '',
+      proprietaireNom: m.proprietaireNom || '', proprietaireTelephone: m.proprietaireTelephone || '', proprietaireCin: m.proprietaireCin || '',
+    });
+    setEditId(m.id);
+    setShowForm(true);
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Bike size={28} className="text-primary" /> Parc Moto
-        </h1>
-        <span className="text-sm text-gray-500">{stats.total} motos</span>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><Bike size={24} className="text-primary" /> Motos</h1>
+        <button onClick={() => { setEditId(null); setForm({ immatriculation: '', marque: '', modele: '', cylindree: '', couleur: '', kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '', proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '' }); setShowForm(true); }}
+          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium"><Plus size={16} /> Nouvelle</button>
       </div>
 
       {msg && <div className={`p-3 rounded-lg text-sm ${msg.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{msg}</div>}
 
-      {/* Stats rapides */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats.total}</div>
-          <div className="text-xs text-gray-500">Total motos</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-green-200 p-4 text-center">
-          <div className="text-2xl font-bold text-green-500">{stats.disponibles}</div>
-          <div className="text-xs text-gray-500">Disponibles</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-orange-200 p-4 text-center">
-          <div className="text-2xl font-bold text-orange-500">{stats.kmTotal.toLocaleString()} km</div>
-          <div className="text-xs text-gray-500">Kilométrage total</div>
-        </div>
+      <div className="relative max-w-xs">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
       </div>
 
-      {/* Filtres + Recherche */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
+      {showForm && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 space-y-4">
+          <h3 className="font-semibold text-lg">{editId ? 'Modifier' : 'Ajouter'} une moto</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="text-xs text-gray-500">Immatriculation *</label><input value={form.immatriculation} onChange={e => setForm({ ...form, immatriculation: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Marque</label><input value={form.marque} onChange={e => setForm({ ...form, marque: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Modèle</label><input value={form.modele} onChange={e => setForm({ ...form, modele: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Cylindrée</label><input value={form.cylindree} onChange={e => setForm({ ...form, cylindree: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Couleur</label><input value={form.couleur} onChange={e => setForm({ ...form, couleur: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Km actuels</label><input type="number" value={form.kmActuel} onChange={e => setForm({ ...form, kmActuel: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Prix achat</label><input type="number" value={form.prixAchat} onChange={e => setForm({ ...form, prixAchat: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Date achat</label><input type="date" value={form.dateAchat} onChange={e => setForm({ ...form, dateAchat: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">N° Moteur</label><input value={form.numMoteur} onChange={e => setForm({ ...form, numMoteur: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">N° Châssis</label><input value={form.numChassis} onChange={e => setForm({ ...form, numChassis: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Propriétaire nom</label><input value={form.proprietaireNom} onChange={e => setForm({ ...form, proprietaireNom: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+            <div><label className="text-xs text-gray-500">Propriétaire tél</label><input value={form.proprietaireTelephone} onChange={e => setForm({ ...form, proprietaireTelephone: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => saveMutation.mutate()} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm"><Save size={14} /> Enregistrer</button>
+            <button onClick={() => setShowForm(false)} className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg text-sm"><X size={14} /> Annuler</button>
+          </div>
         </div>
-        <div className="flex gap-1">
-          {['tous', 'disponible', 'utilisee'].map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${filter === f ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Liste */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((m: any) => (
-          <div key={m.id} className={`bg-white dark:bg-gray-800 rounded-xl border p-4 hover:shadow-md transition-shadow ${!m.chauffeur ? 'border-green-200 dark:border-green-500/20' : 'border-gray-200 dark:border-gray-700'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{m.immatriculation}</h3>
-                <p className="text-xs text-gray-500">{m.marque} {m.modele} · {m.kmActuel?.toLocaleString()} km</p>
+          <div key={m.id} className="bg-white dark:bg-gray-800 rounded-xl border p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold">{m.immatriculation}</h3>
+              <div className="flex gap-1">
+                <button onClick={() => openEdit(m)} className="p-1.5 bg-orange-100 text-orange-600 rounded-lg"><Edit size={14} /></button>
+                <button onClick={() => { if (confirm('Supprimer ?')) deleteMutation.mutate(m.id); }} className="p-1.5 bg-red-100 text-red-600 rounded-lg"><Trash2 size={14} /></button>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${m.chauffeur ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
-                {m.chauffeur ? '🏍️ Assignée' : '✅ Disponible'}
-              </span>
             </div>
-
+            <p className="text-sm text-gray-500">{m.marque} {m.modele} · {m.kmActuel?.toLocaleString()} km</p>
             {m.chauffeur ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <User size={14} />
-                  <span>{m.chauffeur?.nom}</span>
-                </div>
-                <button onClick={() => desassignMutation.mutate(m.id)}
-                  className="px-2 py-1 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-lg text-xs hover:bg-red-100">
-                  Désassigner
-                </button>
-              </div>
+              <div className="flex items-center gap-2 mt-2 text-sm text-gray-600"><User size={14} /> {m.chauffeur?.nom}</div>
             ) : (
-              <div>
-                {showAssign === m.id ? (
-                  <div className="flex gap-2">
-                    <select value={selectedChauffeur} onChange={e => setSelectedChauffeur(e.target.value)}
-                      className="flex-1 px-2 py-1 border rounded text-xs dark:bg-gray-700">
-                      <option value="">Choisir...</option>
-                      {chauffeurs?.map((c: any) => (
-                        <option key={c.id} value={c.id}>{c.nom} ({c.codeAcces})</option>
-                      ))}
-                    </select>
-                    <button onClick={() => selectedChauffeur && assignMutation.mutate({ motoId: m.id, chauffeurId: selectedChauffeur })}
-                      className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs">✓</button>
-                    <button onClick={() => setShowAssign(null)} className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs">✕</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setShowAssign(m.id)}
-                    className="w-full px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-medium hover:bg-primary/20">
-                    + Assigner un chauffeur
-                  </button>
-                )}
-              </div>
+              <select onChange={e => e.target.value && assignMutation.mutate({ motoId: m.id, chauffeurId: e.target.value })}
+                className="mt-2 w-full px-2 py-1 border rounded text-xs dark:bg-gray-700">
+                <option value="">+ Assigner chauffeur</option>
+                {chauffeurs?.map((c: any) => <option key={c.id} value={c.id}>{c.nom} ({c.codeAcces})</option>)}
+              </select>
             )}
           </div>
         ))}
