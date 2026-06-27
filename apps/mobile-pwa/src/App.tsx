@@ -122,9 +122,9 @@ function DashboardPage({online}:{online:boolean}){
   const handleCourse=()=>{if(typeCourse==='NORMALE'){const d=parseFloat(kmArrivee)-parseFloat(kmDepart);if(d<=0){setMsg('⚠️ Km arrivée > Km départ');return;}createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'NORMALE',distance:d});}else{if(typeCourse==="LOCATION_JOURNALIERE"){createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:"LOCATION_JOURNALIERE",prix:params?.tarif_location_journalier||15000});}else{createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:typeCourse,prix:parseFloat(montant)});}}};
 
   const distance=kmDepart&&kmArrivee?Math.max(0,parseFloat(kmArrivee)-parseFloat(kmDepart)):0;
-  const stats=dash?.aujourdhui||{count:0,prix:0,commission:0,gainNet:0};
-  const semaine=dash?.semaine||{count:0,prix:0,commission:0,gainNet:0};
-  const mois=dash?.mois||{count:0,prix:0,commission:0,gainNet:0};
+const stats = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.aujourdhui ?? {}) };
+const semaine = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.semaine ?? {}) };
+const mois = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.mois ?? {}) };
 
   return <div>
     {msg&&<div className={`floating-alert ${msg.includes('✅')||msg.includes('📱')?'success':'warning'}`}>{msg}</div>}
