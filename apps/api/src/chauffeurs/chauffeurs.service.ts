@@ -132,14 +132,12 @@ export class ChauffeursService {
       commission: (courses || []).reduce((s, c) => s + (c.commission || 0), 0),
       gainNet: (courses || []).reduce((s, c) => s + (c.gainNet || 0), 0),
     });
-    const _oldSum = (courses: any[]) => ({
       count: (courses || []).length,
       prix: (courses || []).reduce((s, c) => s + (c.prix || 0), 0),
       commission: (courses || []).reduce((s, c) => s + (c.commission || 0), 0),
       gainNet: (courses || []).reduce((s, c) => s + (c.gainNet || 0), 0),
     });
     
-    const _oldSum = (courses: any[]) => ({
       count: courses.length,
       prix: courses.reduce((s, c) => s + c.prix, 0),
       commission: courses.reduce((s, c) => s + c.commission, 0),
