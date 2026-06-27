@@ -84,8 +84,11 @@ export class ChauffeursService {
   }
 
   async update(id: string, data: any) {
-    const { motoId, ...rest } = data;
-    return this.prisma.chauffeur.update({ where: { id }, data: { ...rest, ...(motoId !== undefined ? { motoId: motoId || null } : {}) } });
+    const { pin, motoId, codeAcces, ...safeData } = data;
+    const updateData: any = { ...safeData };
+    if (motoId !== undefined) updateData.motoId = motoId || null;
+    if (codeAcces) updateData.codeAcces = codeAcces;
+    return this.prisma.chauffeur.update({ where: { id }, data: updateData });
   }
 
   async delete(id: string) {
