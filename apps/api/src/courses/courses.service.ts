@@ -71,3 +71,14 @@ export class CoursesService {
     return { totalCourses: total, coursesAujourdhui: todayCourses, caAujourdhui: ca._sum.prix || 0, commissionAujourdhui: ca._sum.commission || 0, gainNetAujourdhui: ca._sum.gainNet || 0 };
   }
 }
+
+  async syncOffline(data: { chauffeurId: string; courses: any[] }) {
+    const results = [];
+    for (const c of data.courses) {
+      try {
+        const course = await this.create({ chauffeurId: data.chauffeurId, motoId: c.motoId, type: c.type, distance: c.distance, prix: c.prix });
+        results.push({ success: true, id: course.course_id });
+      } catch (e: any) { results.push({ success: false, error: e?.message || 'Erreur' }); }
+    }
+    return { synced: results.filter((r: any) => r.success).length, results };
+  }
