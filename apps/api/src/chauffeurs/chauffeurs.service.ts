@@ -124,3 +124,19 @@ export class ChauffeursService {
   async delete(id: string) {
     return this.prisma.chauffeur.update({ where: { id }, data: { actif: false } });
   }
+
+  async create(data: any) {
+    return this.prisma.chauffeur.create({
+      data: {
+        ...data,
+        pin: data.pin || '$2b$10$Tqqqk7RzDxPDObOWpo4hKeW4rR84AGcosxAtOro5/uemNug6C7Svm',
+        statut: 'HORS_SERVICE',
+        solde: 0,
+        actif: true,
+      },
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.chauffeur.update({ where: { id }, data: { actif: false } });
+  }
