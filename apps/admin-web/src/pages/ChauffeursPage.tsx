@@ -42,7 +42,7 @@ export function ChauffeursPage() {
       setForm({ nom: '', telephone: '', codeAcces: '', email: '', adresse: '', cin: '', permisNumero: '', dateEmbauche: '', heurePrisePoste: '07:00', heureFinService: '19:00' });
       queryClient.invalidateQueries({ queryKey: ['chauffeurs'] });
     },
-    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
+    onError: (err: any) => setMsg("❌ " + (err.response?.data?.message || err.response?.data?.error || err.message || "Erreur")),
   });
 
   const toggleActif = useMutation({

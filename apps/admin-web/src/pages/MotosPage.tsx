@@ -43,7 +43,7 @@ export function MotosPage() {
       setForm({ immatriculation: '', marque: '', modele: '', cylindree: '', couleur: '', kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '', proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '' });
       queryClient.invalidateQueries({ queryKey: ['motos'] });
     },
-    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
+    onError: (err: any) => setMsg("❌ " + (err.response?.data?.message || err.response?.data?.error || err.message || "Erreur")),
   });
 
   const assignMutation = useMutation({
