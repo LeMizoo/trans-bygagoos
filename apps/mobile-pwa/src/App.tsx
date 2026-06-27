@@ -215,3 +215,4 @@ function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   const tabs=[{key:'accueil',label:'Accueil',icon:'🏠'},{key:'courses',label:'Courses',icon:'📋'},{key:'versements',label:'Versements',icon:'💰'},{key:'stats',label:'Stats',icon:'📊'},{key:'profil',label:'Profil',icon:'👤'}];
   return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
 }
+// force rebuild 1782544940
