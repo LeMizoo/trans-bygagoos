@@ -9,7 +9,7 @@ const tk = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || chauffeur()?.moto;
 
-// ========== INDEXEDDB POUR MODE HORS LIGNE ==========
+// ========== INDEXEDDB ==========
 let db: any = null;
 function openDB(): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -41,15 +41,11 @@ async function syncOffline() {
   }
 }
 
-// ========== APP PRINCIPALE ==========
+// ========== APP ==========
 export default function App() {
   const queryClient = new QueryClient();
   useEffect(() => { openDB(); }, []);
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AppContent />
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}><AppContent /></QueryClientProvider>;
 }
 
 function AppContent() {
@@ -66,12 +62,12 @@ function AppContent() {
 
   return (
     <>
-      {!online && <div className="offline-indicator">📡 Mode hors ligne - Synchronisation automatique dès le retour de connexion</div>}
+      {!online && <div className="offline-indicator">📡 Mode hors ligne</div>}
       <Header onLogout={()=>{localStorage.clear();setPage('login');}} online={online}/>
       <div className="main-content">
         {page==='accueil'&&<DashboardPage online={online}/>}
         {page==='courses'&&<CoursesPage/>}
-        {page==="versements"&&<VersementsSimplePage />}
+        {page==='versements'&&<VersementsSimplePage/>}
         {page==='stats'&&<StatsPage/>}
         {page==='profil'&&<ProfilPage onLogout={()=>{localStorage.clear();setPage('login');}}/>}
         {page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}
@@ -102,29 +98,46 @@ function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
   const s:any={EN_SERVICE:{class:'presence-present',icon:'🟢',label:'En service'},EN_PAUSE:{class:'presence-pause',icon:'🟠',label:'En pause'},HORS_SERVICE:{class:'presence-absent',icon:'🔴',label:'Hors service'}};
   const st=s[c?.statut]||s.HORS_SERVICE;
-  return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()} title="Synchroniser">🔄</button><button className="icon-btn" onClick={()=>{}} title="Notifications" style={{position:'relative'}}>🔔</button><button className="icon-btn logout" onClick={onLogout} title="Déconnexion">🚪</button><button className={`icon-btn ${online?'online':'offline'}`} title={online?'En ligne':'Hors ligne'}>{online?'📶':'📡'}</button></div></div></div>;
+  return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()}>🔄</button><button className="icon-btn" onClick={()=>{}} style={{position:'relative'}}>🔔</button><button className="icon-btn logout" onClick={onLogout}>🚪</button><button className={`icon-btn ${online?'online':'offline'}`}>{online?'📶':'📡'}</button></div></div></div>;
 }
 
 // ========== DASHBOARD ==========
 function DashboardPage({online}:{online:boolean}){
-  const {data:typesAutorises}=useQuery({queryKey:["types-autorises"],queryFn:()=>axios.get(`${API}/parametres/types-autorises`).then(r=>r.data?.types||["NORMALE","ADY_VAROTRA","LOCATION_JOURNALIERE"]),staleTime:300000});
-  const {data:params}=useQuery({queryKey:["parametres"],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
   const qc=useQueryClient(); const c=chauffeur(); const m=moto();
   const [msg,setMsg]=useState(''); const [showConfirm,setShowConfirm]=useState(false);
-  const [typeCourse,setTypeCourse]=useState('NORMALE'); const [kmDepart,setKmDepart]=useState(''); const [kmArrivee,setKmArrivee]=useState(''); const [montant,setMontant]=useState('');
+  const [typeCourse,setTypeCourse]=useState('NORMALE');
+  const [kmDepart,setKmDepart]=useState(''); const [kmArrivee,setKmArrivee]=useState('');
+  const [montant,setMontant]=useState('');
 
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
+  const {data:params}=useQuery({queryKey:['parametres'],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
+  const {data:typesData}=useQuery({queryKey:['types-autorises'],queryFn:()=>axios.get(`${API}/parametres/types-autorises`).then(r=>r.data?.types||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']).catch(()=>['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']),staleTime:300000});
+  const typesAutorises=typesData||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE'];
+  const enService=c?.statut==='EN_SERVICE';
 
-  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const chauffeurData=JSON.parse(localStorage.getItem("chauffeur")||"{}");chauffeurData.statut=type==="ARRIVEE"||type==="REPRISE"?"EN_SERVICE":type==="PAUSE"?"EN_PAUSE":"HORS_SERVICE";localStorage.setItem("chauffeur",JSON.stringify(chauffeurData));const labels:any={ARRIVEE:'✅ Service débuté !',PAUSE:'⏸️ Pause',REPRISE:'🔄 Reprise',FIN_SERVICE:'🏁 Service terminé'};setMsg(labels[type]||'✅ OK');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg("");window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.statut=type==='ARRIVEE'||type==='REPRISE'?'EN_SERVICE':type==='PAUSE'?'EN_PAUSE':'HORS_SERVICE';localStorage.setItem('chauffeur',JSON.stringify(cd));setMsg(type==='ARRIVEE'?'✅ Service débuté !':type==='PAUSE'?'⏸️ Pause':type==='REPRISE'?'🔄 Reprise':'🏁 Service terminé');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg('');window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
-  const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:["dashboard"]});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
-  const handleCourse=()=>{if(typeCourse==='NORMALE'){const d=parseFloat(kmArrivee)-parseFloat(kmDepart);if(d<=0){setMsg('⚠️ Km arrivée > Km départ');return;}createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'NORMALE',distance:d});}else{if(typeCourse==="LOCATION_JOURNALIERE"){createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:"LOCATION_JOURNALIERE",prix:params?.tarif_location_journalier||15000});}else{createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:typeCourse,prix:parseFloat(montant)});}}};
+  const handleCourse=()=>{
+    if(!enService){setMsg('❌ Vous devez être EN SERVICE');return;}
+    if(typeCourse==='LOCATION_JOURNALIERE'){
+      createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'LOCATION_JOURNALIERE',prix:params?.tarif_location_journalier||15000});
+    }else if(typeCourse==='NORMALE'){
+      const d=parseFloat(kmArrivee)-parseFloat(kmDepart);
+      if(d<=0){setMsg('⚠️ Km arrivée > Km départ');return;}
+      createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:'NORMALE',distance:d});
+    }else{
+      if(!montant){setMsg('⚠️ Entrez un montant');return;}
+      createCourse.mutate({chauffeurId:c?.id,motoId:m?.id,type:typeCourse,prix:parseFloat(montant)});
+    }
+  };
 
+  const typeLabels:Record<string,string>={'NORMALE':'🚖 Course normale','ADY_VAROTRA':'🛺 Ady Varotra','LOCATION_JOURNALIERE':'📅 Location journalière'};
   const distance=kmDepart&&kmArrivee?Math.max(0,parseFloat(kmArrivee)-parseFloat(kmDepart)):0;
-const stats = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.aujourdhui ?? {}) };
-const semaine = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.semaine ?? {}) };
-const mois = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.mois ?? {}) };
+  const stats={count:0,prix:0,commission:0,gainNet:0,...(dash?.aujourdhui??{})};
+  const semaine={count:0,prix:0,commission:0,gainNet:0,...(dash?.semaine??{})};
+  const mois={count:0,prix:0,commission:0,gainNet:0,...(dash?.mois??{})};
 
   return <div>
     {msg&&<div className={`floating-alert ${msg.includes('✅')||msg.includes('📱')?'success':'warning'}`}>{msg}</div>}
@@ -134,13 +147,37 @@ const mois = { count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.mois ?? {
       <button onClick={()=>pointer.mutate(c?.statut==='EN_PAUSE'?'REPRISE':'PAUSE')} className="status-btn standby">{c?.statut==='EN_PAUSE'?'▶️ Reprendre':'⏸️ Standby'}</button>
       <button onClick={()=>setShowConfirm(true)} className="status-btn fin">⏹️ Fin</button>
     </div>
-    <div className="card"><div className="card-title">📅 Aujourd'hui</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{stats.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(stats?.prix || 0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(stats?.commission || 0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:stats.gainNet>=0?'#27ae60':'#e74c3c'}}>{(stats?.gainNet || 0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
-    <div className="card"><div className="card-title">➕ Nouvelle course</div><div className="form-group"><select value={typeCourse} onChange={e=>setTypeCourse(e.target.value)} disabled={c?.statut!=="EN_SERVICE"}>{(typesAutorises||["NORMALE","ADY_VAROTRA","LOCATION_JOURNALIERE"]).map((t:string)=>(<option key={t} value={t}>{t==="NORMALE"?"🚖 Course normale":t==="ADY_VAROTRA"?"🛺 Ady Varotra":"📅 Location journalière"}</option>))}</select></div>
-      {c?.statut!=="EN_SERVICE"&&<div style={{background:"rgba(239,68,68,0.1)",borderLeft:"3px solid #ef4444",padding:10,borderRadius:8,marginBottom:12,fontSize:12,color:"#ef4444"}}>🔒 Vous devez être EN SERVICE pour enregistrer une course. Cliquez sur DÉPART.</div>}
-      {typeCourse==='NORMALE'?<><div style={{display:'flex',gap:6,marginBottom:6}}><input type="number" step="0.1" value={kmDepart} onChange={e=>setKmDepart(e.target.value)} placeholder="Km départ" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13}}/><input type="number" step="0.1" value={kmArrivee} onChange={e=>setKmArrivee(e.target.value)} placeholder="Km arrivée" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13}}/></div>{distance>0&&<div style={{background:'#252525',borderRadius:8,padding:8,textAlign:'center',fontSize:12,marginBottom:8}}>📏 {distance.toFixed(1)} km · 💰 {((params?.prix_base||2000)+distance*(params?.prix_km||500)).toLocaleString()} Ar</div>}</>:typeCourse==='LOCATION_JOURNALIERE'?<div style={{background:'#1a2a1a',borderRadius:10,padding:15,textAlign:'center',marginBottom:8,border:'1px solid #2ecc71'}}><div style={{fontSize:11,color:'#888'}}>📅 Tarif location journalière</div><div style={{fontSize:24,fontWeight:'bold',color:'#2ecc71'}}>{(params?.tarif_location_journalier||15000).toLocaleString()} Ar</div><div style={{fontSize:9,color:'#666',marginTop:4}}>Défini par l'administration - Non modifiable</div></div>:<div className="form-group"><input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant (Ar)"/></div>}
-      <button onClick={handleCourse} disabled={createCourse.isPending} className="btn-primary">{createCourse.isPending?'⏳...':online?'✅ Enregistrer':'📱 Sauvegarder hors ligne'}</button></div>
-    <div className="card"><div className="card-title">📆 Cette semaine</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{semaine.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(semaine?.prix || 0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(semaine?.commission || 0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:semaine.gainNet>=0?'#27ae60':'#e74c3c'}}>{(semaine?.gainNet || 0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
-    <div className="card"><div className="card-title">📅 Ce mois</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{mois.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(mois?.prix || 0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(mois?.commission || 0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:mois.gainNet>=0?'#27ae60':'#e74c3c'}}>{(mois?.gainNet || 0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
+    <div className="card"><div className="card-title">📅 Aujourd'hui</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{stats.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(stats.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(stats.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(stats.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(stats.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
+    <div className="card">
+      <div className="card-title">➕ Nouvelle course</div>
+      {!enService&&<div style={{background:'rgba(239,68,68,0.1)',borderLeft:'3px solid #ef4444',padding:10,borderRadius:8,marginBottom:12,fontSize:12,color:'#ef4444'}}>🔒 Vous devez être EN SERVICE pour enregistrer une course. Cliquez sur DÉPART.</div>}
+      <div className="form-group">
+        <select value={typeCourse} onChange={e=>setTypeCourse(e.target.value)} disabled={!enService}
+          style={{width:'100%',padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13,opacity:enService?1:0.5}}>
+          {typesAutorises.map((t:string)=>(<option key={t} value={t}>{typeLabels[t]||t}</option>))}
+        </select>
+      </div>
+      {typeCourse==='NORMALE'&&<div>
+        <div style={{display:'flex',gap:6,marginBottom:6}}>
+          <input type="number" step="0.1" value={kmDepart} onChange={e=>setKmDepart(e.target.value)} placeholder="Km départ" disabled={!enService} style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13}}/>
+          <input type="number" step="0.1" value={kmArrivee} onChange={e=>setKmArrivee(e.target.value)} placeholder="Km arrivée" disabled={!enService} style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13}}/>
+        </div>
+        {distance>0&&<div style={{background:'#252525',borderRadius:8,padding:8,textAlign:'center',fontSize:12,marginBottom:8}}>📏 {distance.toFixed(1)} km · 💰 {((params?.prix_base||2000)+distance*(params?.prix_km||500)).toLocaleString()} Ar</div>}
+      </div>}
+      {typeCourse==='LOCATION_JOURNALIERE'&&<div style={{background:'#1a2a1a',borderRadius:10,padding:15,textAlign:'center',marginBottom:8,border:'1px solid #2ecc71'}}>
+        <div style={{fontSize:11,color:'#888'}}>📅 Tarif location journalière</div>
+        <div style={{fontSize:24,fontWeight:'bold',color:'#2ecc71'}}>{(params?.tarif_location_journalier||15000).toLocaleString()} Ar</div>
+        <div style={{fontSize:9,color:'#666',marginTop:4}}>Défini par l'administration - Non modifiable</div>
+      </div>}
+      {typeCourse==='ADY_VAROTRA'&&<div className="form-group">
+        <input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant (Ar)" disabled={!enService}/>
+      </div>}
+      <button onClick={handleCourse} disabled={!enService||createCourse.isPending} className="btn-primary" style={{opacity:enService?1:0.5}}>
+        {createCourse.isPending?'⏳...':online?'✅ Enregistrer':'📱 Sauvegarder hors ligne'}
+      </button>
+    </div>
+    <div className="card"><div className="card-title">📆 Cette semaine</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{semaine.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(semaine.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(semaine.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(semaine.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(semaine.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
+    <div className="card"><div className="card-title">📅 Ce mois</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{mois.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(mois.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(mois.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(mois.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(mois.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
     {showConfirm&&<div className="modal-overlay" onClick={()=>setShowConfirm(false)}><div className="modal-content" onClick={e=>e.stopPropagation()}><h3 style={{color:'#DAA520',marginBottom:12}}>🏁 Terminer la journée ?</h3><p style={{color:'#888',fontSize:13,marginBottom:20}}>Vous ne pourrez plus enregistrer de courses aujourd'hui sans l'autorisation de l'administrateur.</p><div style={{display:'flex',gap:8}}><button onClick={()=>setShowConfirm(false)} style={{flex:1,padding:12,background:'#333',border:'none',borderRadius:10,color:'#fff',fontWeight:600,cursor:'pointer'}}>Annuler</button><button onClick={()=>{pointer.mutate('FIN_SERVICE');setShowConfirm(false);}} style={{flex:1,padding:12,background:'#e74c3c',border:'none',borderRadius:10,color:'#fff',fontWeight:600,cursor:'pointer'}}>Confirmer</button></div></div></div>}
   </div>;
 }
@@ -153,11 +190,31 @@ function CoursesPage(){
   return <div><div className="card"><div className="card-title">📋 Mes courses</div></div>{courses.length===0?<p style={{color:'#888',textAlign:'center',padding:20}}>Aucune course</p>:courses.slice(0,100).map((course:any)=><div key={course.id} className="course-item"><div><div style={{fontWeight:'bold',color:'#DAA520',fontSize:12}}>{course.type}</div><div className="course-date">{new Date(course.createdAt).toLocaleString('fr')}</div></div><div className="course-price">{course.prix?.toLocaleString()} Ar</div></div>)}</div>;
 }
 
+// ========== VERSEMENTS ==========
+function VersementsSimplePage(){
+  const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
+  const qc=useQueryClient();
+  const {data}=useQuery({queryKey:['versements',c?.id],queryFn:()=>axios.get(`${API}/versements/chauffeur/${c?.id}`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
+  const versements=data?.versements||[];
+  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant('');qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
+  return <div>
+    {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
+    <h1 style={{color:'#DAA520',fontSize:18,fontWeight:700,marginBottom:12}}>💰 Versements</h1>
+    <p style={{fontSize:12,color:'#94a3b8',marginBottom:12}}>Solde : <strong style={{color:'#fff'}}>{c?.solde?.toLocaleString()||0} Ar</strong></p>
+    <div className="card"><div style={{display:'flex',gap:8}}><input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant à verser" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:14,outline:'none'}}/><button onClick={envoyer} disabled={!montant} style={{padding:'12px 20px',background:'#DAA520',color:'#000',border:'none',borderRadius:10,fontWeight:600,cursor:'pointer',opacity:!montant?0.5:1}}>Envoyer</button></div></div>
+    <div className="card"><div className="card-title">📋 Historique</div>
+      {versements.map((v:any)=><div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}><div><div style={{fontWeight:'bold'}}>{v.montantVerse?.toLocaleString()||0} Ar</div><div style={{fontSize:10,color:'#888'}}>{new Date(v.createdAt).toLocaleDateString('fr')}</div></div><span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:v.statut==='VALIDE'?'rgba(39,174,96,0.2)':'rgba(243,156,18,0.2)',color:v.statut==='VALIDE'?'#27ae60':'#f39c12'}}>{v.statut==='VALIDE'?'✅ Validé':'⏳ En attente'}</span></div>)}
+      {versements.length===0&&<p style={{color:'#888',textAlign:'center',padding:20}}>Aucun versement</p>}
+    </div>
+  </div>;
+}
+
+// ========== STATS ==========
 function StatsPage(){
   const c=chauffeur();
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
-  const s=(p:string)=>dash?.[p]||{count:0,prix:0,commission:0,gainNet:0};
-  return <div>{['aujourdhui','semaine','mois'].map(p=><div className="card" key={p}><div className="card-title">{p==='aujourdhui'?"📅 Aujourd'hui":p==='semaine'?'📆 Cette semaine':'🗓️ Ce mois'}</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{s(p).count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{s(p).prix.toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{s(p).commission.toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:s(p).gainNet>=0?'#27ae60':'#e74c3c'}}>{s(p).gainNet.toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>)}<div className="card" style={{background:'linear-gradient(135deg, #1a1a1a, #DAA52022)',border:'1px solid #DAA520',textAlign:'center',padding:20}}><div style={{fontSize:11,color:'#DAA520',letterSpacing:2}}>SOLDE ACTUEL</div><div style={{fontSize:30,fontWeight:800,color:'#DAA520'}}>{dash?.solde?.toLocaleString()||0} Ar</div></div></div>;
+  const s=(p:string)=>({count:0,prix:0,commission:0,gainNet:0,...(dash?.[p]??{})});
+  return <div>{['aujourdhui','semaine','mois'].map(p=><div className="card" key={p}><div className="card-title">{p==='aujourdhui'?"📅 Aujourd'hui":p==='semaine'?'📆 Cette semaine':'🗓️ Ce mois'}</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{s(p).count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(s(p).prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(s(p).commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(s(p).gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(s(p).gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>)}<div className="card" style={{background:'linear-gradient(135deg, #1a1a1a, #DAA52022)',border:'1px solid #DAA520',textAlign:'center',padding:20}}><div style={{fontSize:11,color:'#DAA520',letterSpacing:2}}>SOLDE ACTUEL</div><div style={{fontSize:30,fontWeight:800,color:'#DAA520'}}>{dash?.solde?.toLocaleString()||0} Ar</div></div></div>;
 }
 
 // ========== PROFIL ==========
@@ -178,42 +235,7 @@ function NotificationsPage({onBack}:{onBack:()=>void}){
 }
 
 // ========== BOTTOM NAV ==========
-
-function VersementsSimplePage(){
-  const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
-  const qc=useQueryClient();
-  const {data}=useQuery({queryKey:['versements',c?.id],queryFn:()=>axios.get(`${API}/versements/chauffeur/${c?.id}`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
-  const versements=data?.versements||[];
-  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant('');qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
-  return (
-    <div>
-      {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
-      <h1 style={{color:'#DAA520',fontSize:18,fontWeight:700,marginBottom:12}}>💰 Versements</h1>
-      <p style={{fontSize:12,color:'#94a3b8',marginBottom:12}}>Solde : <strong style={{color:'#fff'}}>{c?.solde?.toLocaleString()||0} Ar</strong></p>
-      <div className="card">
-        <div style={{display:'flex',gap:8}}>
-          <input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant à verser" style={{flex:1,padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:14,outline:'none'}}/>
-          <button onClick={envoyer} disabled={!montant} style={{padding:'12px 20px',background:'#DAA520',color:'#000',border:'none',borderRadius:10,fontWeight:600,cursor:'pointer',opacity:!montant?0.5:1}}>Envoyer</button>
-        </div>
-      </div>
-      <div className="card">
-        <div className="card-title">📋 Historique</div>
-        {versements.map((v:any)=>(
-          <div key={v.id} style={{background:'#252525',borderRadius:10,padding:10,marginBottom:6,display:'flex',justifyContent:'space-between'}}>
-            <div>
-              <div style={{fontWeight:'bold'}}>{v.montantVerse?.toLocaleString()||0} Ar</div>
-              <div style={{fontSize:10,color:'#888'}}>{new Date(v.createdAt).toLocaleDateString('fr')}</div>
-            </div>
-            <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:v.statut==='VALIDE'?'rgba(39,174,96,0.2)':'rgba(243,156,18,0.2)',color:v.statut==='VALIDE'?'#27ae60':'#f39c12'}}>{v.statut==='VALIDE'?'✅ Validé':'⏳ En attente'}</span>
-          </div>
-        ))}
-        {versements.length===0&&<p style={{color:'#888',textAlign:'center',padding:20}}>Aucun versement</p>}
-      </div>
-    </div>
-  );
-}
 function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   const tabs=[{key:'accueil',label:'Accueil',icon:'🏠'},{key:'courses',label:'Courses',icon:'📋'},{key:'versements',label:'Versements',icon:'💰'},{key:'stats',label:'Stats',icon:'📊'},{key:'profil',label:'Profil',icon:'👤'}];
   return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
 }
-// force rebuild 1782544940
