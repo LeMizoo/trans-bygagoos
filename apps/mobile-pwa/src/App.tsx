@@ -114,6 +114,7 @@ function DashboardPage({online}:{online:boolean}){
   const {data:typesData}=useQuery({queryKey:['types-autorises'],queryFn:()=>axios.get(`${API}/parametres/types-autorises`).then(r=>r.data?.types||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']).catch(()=>['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']),staleTime:300000});
   const typesAutorises=typesData||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE'];
   const enService=c?.statut==='EN_SERVICE';
+  useEffect(()=>{if(typesAutorises.length===1)setTypeCourse(typesAutorises[0]);else if(!typesAutorises.includes(typeCourse))setTypeCourse(typesAutorises[0]);},[typesAutorises]);
 
   const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.statut=type==='ARRIVEE'||type==='REPRISE'?'EN_SERVICE':type==='PAUSE'?'EN_PAUSE':'HORS_SERVICE';localStorage.setItem('chauffeur',JSON.stringify(cd));setMsg(type==='ARRIVEE'?'✅ Service débuté !':type==='PAUSE'?'⏸️ Pause':type==='REPRISE'?'🔄 Reprise':'🏁 Service terminé');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg('');window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
