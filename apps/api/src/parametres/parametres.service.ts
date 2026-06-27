@@ -42,3 +42,39 @@ export class ParametresService {
     }
   }
 }
+
+  // Types de courses autorisés
+  async getTypesAutorises() {
+    const types = await this.prisma.parametre.findFirst({
+      where: { nom: 'types_courses_autorises' },
+    });
+    const defaut = ['NORMALE', 'ADY_VAROTRA', 'LOCATION_JOURNALIERE'];
+    return {
+      types: types?.valeur ? JSON.parse(types.valeur) : defaut,
+      actif: types?.valeur ? true : false,
+    };
+  }
+
+  async setTypesAutorises(types: string[]) {
+    await this.upsert('types_courses_autorises', JSON.stringify(types));
+    return { success: true, types };
+  }
+
+  // Coup d'envoi avec types
+  async coupEnvoi(types: string[], heure: string) {
+    // Réinitialiser les pointages du jour
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    await this.prisma.pointage.deleteMany({ where: { datePointage: { gte: today } } });
+    await this.prisma.chauffeur.updateMany({ data: { statut: 'HORS_SERVICE' } });
+    
+    // Sauvegarder les types autorisés
+    await this.upsert('types_courses_autorises', JSON.stringify(types));
+    await this.upsert('coup_envoi_heure', heure);
+    await this.upsert('coup_envoi_actif', '1');
+    
+    return {
+      success: true,
+      message: `Coup d'envoi lancé à ${heure} avec ${types.length} type(s) de course autorisé(s)`,
+      types,
+    };
+  }
