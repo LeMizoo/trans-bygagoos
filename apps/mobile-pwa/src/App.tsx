@@ -224,6 +224,7 @@ function CoursesPage(){
 }
 
 function VersementsSimplePage(){
+  const c=chauffeur();
   const {data:dash}=useQuery({queryKey:["dashboard",c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
   const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
   const qc=useQueryClient();
