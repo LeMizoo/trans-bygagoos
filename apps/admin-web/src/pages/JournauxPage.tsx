@@ -1,145 +1,150 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Clock, FileText, HandCoins, AlertCircle, BarChart3, Calendar } from 'lucide-react';
+import { Clock, MapPin, DollarSign, AlertCircle, Wrench, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
+const tabs = [
+  { key: 'pointages', label: 'Pointages', icon: Clock, color: 'text-blue-500' },
+  { key: 'courses', label: 'Courses', icon: MapPin, color: 'text-green-500' },
+  { key: 'versements', label: 'Versements', icon: DollarSign, color: 'text-yellow-500' },
+  { key: 'depenses', label: 'Dépenses', icon: Wrench, color: 'text-red-500' },
+  { key: 'assistance', label: 'Assistance', icon: AlertCircle, color: 'text-purple-500' },
+];
+
 export function JournauxPage() {
   const [tab, setTab] = useState('pointages');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [page, setPage] = useState(1);
+  const [date, setDate] = useState('');
 
-  const { data: stats } = useQuery({
-    queryKey: ['journaux-stats'],
-    queryFn: () => axios.get(`${API}/journaux/stats`).then(r => r.data),
+  const { data, isLoading } = useQuery({
+    queryKey: ['journaux', tab, page, date],
+    queryFn: () => axios.get(`${API}/journaux/${tab}?page=${page}&limit=25${date ? `&date=${date}` : ''}`).then(r => r.data),
   });
-
-  const { data: pointages } = useQuery({
-    queryKey: ['journaux-pointages', date, page],
-    queryFn: () => axios.get(`${API}/journaux/pointages?date=${date}&page=${page}`).then(r => r.data),
-    enabled: tab === 'pointages',
-  });
-
-  const { data: courses } = useQuery({
-    queryKey: ['journaux-courses', date, page],
-    queryFn: () => axios.get(`${API}/journaux/courses?date=${date}&page=${page}`).then(r => r.data),
-    enabled: tab === 'courses',
-  });
-
-  const { data: versements } = useQuery({
-    queryKey: ['journaux-versements', page],
-    queryFn: () => axios.get(`${API}/journaux/versements?page=${page}`).then(r => r.data),
-    enabled: tab === 'versements',
-  });
-
-  const { data: assistance } = useQuery({
-    queryKey: ['journaux-assistance', page],
-    queryFn: () => axios.get(`${API}/journaux/assistance?page=${page}`).then(r => r.data),
-    enabled: tab === 'assistance',
-  });
-
-  const tabs = [
-    { key: 'pointages', label: '📍 Pointages', icon: Clock, color: 'text-blue-500' },
-    { key: 'courses', label: '🚖 Courses', icon: FileText, color: 'text-green-500' },
-    { key: 'versements', label: '💰 Versements', icon: HandCoins, color: 'text-yellow-500' },
-    { key: 'assistance', label: '🆘 Assistance', icon: AlertCircle, color: 'text-red-500' },
-  ];
-
-  const currentData = tab === 'pointages' ? pointages : tab === 'courses' ? courses : tab === 'versements' ? versements : assistance;
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📋 Journaux d'activité</h1>
-
-      {/* Stats globales */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{stats.totalCourses}</div>
-            <div className="text-xs text-gray-500">Courses totales</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-green-500">{stats.caTotal?.toLocaleString()} Ar</div>
-            <div className="text-xs text-gray-500">CA total</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-500">{stats.totalVersements}</div>
-            <div className="text-xs text-gray-500">Versements</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-red-500">{stats.totalAssistance}</div>
-            <div className="text-xs text-gray-500">Assistance</div>
-          </div>
-        </div>
-      )}
-
-      {/* Filtre date */}
-      <div className="flex items-center gap-3">
-        <Calendar size={18} className="text-gray-400" />
-        <input type="date" value={date} onChange={e => { setDate(e.target.value); setPage(1); }} className="px-3 py-1.5 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
-      </div>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        📋 Journaux d'activité
+      </h1>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b pb-2">
+      <div className="flex gap-2 flex-wrap">
         {tabs.map(t => (
           <button key={t.key} onClick={() => { setTab(t.key); setPage(1); }}
-            className={`px-4 py-2 rounded-t-lg text-sm font-medium flex items-center gap-1 ${tab === t.key ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>
-            <t.icon size={14} className={t.color} /> {t.label}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              tab === t.key ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+            }`}>
+            <t.icon size={16} className={tab === t.key ? 'text-white' : t.color} /> {t.label}
           </button>
         ))}
       </div>
 
-      {/* Tableau */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50 dark:bg-gray-700 text-left text-gray-500 dark:text-gray-400">
-            {tab === 'pointages' && <><th className="p-3">Date/Heure</th><th className="p-3">Chauffeur</th><th className="p-3">Type</th></>}
-            {tab === 'courses' && <><th className="p-3">Date</th><th className="p-3">Chauffeur</th><th className="p-3">Moto</th><th className="p-3">Type</th><th className="p-3 text-right">Prix</th></>}
-            {tab === 'versements' && <><th className="p-3">Date</th><th className="p-3">Chauffeur</th><th className="p-3 text-right">Montant dû</th><th className="p-3 text-right">Versé</th><th className="p-3">Statut</th></>}
-            {tab === 'assistance' && <><th className="p-3">Date</th><th className="p-3">Chauffeur</th><th className="p-3">Type</th><th className="p-3">Urgence</th><th className="p-3">Statut</th></>}
-          </tr></thead>
-          <tbody className="divide-y dark:divide-gray-700">
-            {currentData?.items?.map((item: any) => (
-              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                {tab === 'pointages' && <>
-                  <td className="p-3">{new Date(item.datePointage).toLocaleString('fr')}</td>
-                  <td className="p-3 font-medium">{item.chauffeur?.nom}</td>
-                  <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${item.type === 'ARRIVEE' ? 'bg-green-100 text-green-700' : item.type === 'PAUSE' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{item.type}</span></td>
-                </>}
-                {tab === 'courses' && <>
-                  <td className="p-3">{new Date(item.createdAt).toLocaleString('fr')}</td>
-                  <td className="p-3 font-medium">{item.chauffeur?.nom}</td>
-                  <td className="p-3">{item.moto?.immatriculation}</td>
-                  <td className="p-3">{item.type}</td>
-                  <td className="p-3 text-right font-medium">{item.prix?.toLocaleString()} Ar</td>
-                </>}
-                {tab === 'versements' && <>
-                  <td className="p-3">{new Date(item.createdAt).toLocaleDateString('fr')}</td>
-                  <td className="p-3 font-medium">{item.chauffeur?.nom}</td>
-                  <td className="p-3 text-right">{item.montantDu?.toLocaleString()} Ar</td>
-                  <td className="p-3 text-right">{item.montantVerse?.toLocaleString()} Ar</td>
-                  <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${item.statut === 'VALIDE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{item.statut}</span></td>
-                </>}
-                {tab === 'assistance' && <>
-                  <td className="p-3">{new Date(item.createdAt).toLocaleDateString('fr')}</td>
-                  <td className="p-3 font-medium">{item.chauffeur?.nom}</td>
-                  <td className="p-3">{item.type}</td>
-                  <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${item.urgence === 'CRITIQUE' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{item.urgence}</span></td>
-                  <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${item.statut === 'OUVERT' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{item.statut}</span></td>
-                </>}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {currentData?.pages > 1 && (
-          <div className="flex justify-center gap-2 p-3">
-            {Array.from({ length: currentData.pages }, (_, i) => (
-              <button key={i} onClick={() => setPage(i + 1)} className={`px-3 py-1 rounded text-sm ${page === i + 1 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>{i + 1}</button>
-            ))}
-          </div>
-        )}
+      {/* Filtre date */}
+      <div className="flex gap-3 items-center">
+        <input type="date" value={date} onChange={e => { setDate(e.target.value); setPage(1); }}
+          className="px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 text-sm" />
+        {date && <button onClick={() => setDate('')} className="text-xs text-red-500">✕ Effacer</button>}
+        <span className="text-sm text-gray-500">{data?.total || 0} entrées</span>
       </div>
+
+      {/* Liste */}
+      <div className="space-y-2">
+        {isLoading ? <div className="text-center py-12 text-gray-400">Chargement...</div> :
+         !data?.items?.length ? <div className="text-center py-12 text-gray-400">Aucune entrée</div> :
+         data.items.map((item: any) => (
+          <div key={item.id} className="bg-white dark:bg-gray-800 rounded-xl border p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                tab === 'pointages' ? 'bg-blue-100 dark:bg-blue-500/10' :
+                tab === 'courses' ? 'bg-green-100 dark:bg-green-500/10' :
+                tab === 'versements' ? 'bg-yellow-100 dark:bg-yellow-500/10' :
+                tab === 'depenses' ? 'bg-red-100 dark:bg-red-500/10' :
+                'bg-purple-100 dark:bg-purple-500/10'
+              }`}>
+                {tabs.find(t => t.key === tab)?.icon && <tabs.find(t=>t.key===tab)!.icon size={18} className={tabs.find(t=>t.key===tab)!.color} />}
+              </div>
+              <div>
+                {tab === 'pointages' && <PointageRow item={item} />}
+                {tab === 'courses' && <CourseRow item={item} />}
+                {tab === 'versements' && <VersementRow item={item} />}
+                {tab === 'depenses' && <DepenseRow item={item} />}
+                {tab === 'assistance' && <AssistanceRow item={item} />}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {data?.pages > 1 && (
+        <div className="flex justify-center gap-2">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 disabled:opacity-30"><ChevronLeft size={16} /></button>
+          <span className="px-4 py-2 text-sm text-gray-500">Page {page} / {data.pages}</span>
+          <button onClick={() => setPage(p => Math.min(data.pages, p + 1))} disabled={page === data.pages}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 disabled:opacity-30"><ChevronRight size={16} /></button>
+        </div>
+      )}
     </div>
+  );
+}
+
+function PointageRow({ item }: any) {
+  const typeLabels: Record<string, string> = { ARRIVEE: '🟢 Arrivée', PAUSE: '🟠 Pause', REPRISE: '🔵 Reprise', FIN_SERVICE: '🔴 Fin' };
+  return (
+    <>
+      <p className="font-medium text-sm">{item.chauffeur?.nom || 'Inconnu'}</p>
+      <p className="text-xs text-gray-500">
+        {typeLabels[item.type] || item.type} · {new Date(item.datePointage).toLocaleString('fr')}
+      </p>
+    </>
+  );
+}
+
+function CourseRow({ item }: any) {
+  return (
+    <>
+      <p className="font-medium text-sm">{item.chauffeur?.nom || 'Inconnu'} · 🏍️ {item.moto?.immatriculation || '?'}</p>
+      <p className="text-xs text-gray-500">
+        {item.type} · {item.prix?.toLocaleString()} Ar · {new Date(item.createdAt).toLocaleString('fr')}
+      </p>
+    </>
+  );
+}
+
+function VersementRow({ item }: any) {
+  const statutColors: Record<string, string> = { VALIDE: 'text-green-600', EN_ATTENTE: 'text-yellow-600', REFUSE: 'text-red-600' };
+  return (
+    <>
+      <p className="font-medium text-sm">{item.chauffeur?.nom || 'Inconnu'}</p>
+      <p className="text-xs text-gray-500">
+        Dû: {item.montantDu?.toLocaleString()} Ar · Versé: {item.montantVerse?.toLocaleString()} Ar ·
+        <span className={statutColors[item.statut] || ''}> {item.statut}</span> · {new Date(item.createdAt).toLocaleDateString('fr')}
+      </p>
+    </>
+  );
+}
+
+function DepenseRow({ item }: any) {
+  return (
+    <>
+      <p className="font-medium text-sm">{item.description} · 🏍️ {item.moto?.immatriculation || '?'}</p>
+      <p className="text-xs text-gray-500">
+        {item.categorie} · -{item.montant?.toLocaleString()} Ar · {new Date(item.date).toLocaleDateString('fr')}
+      </p>
+    </>
+  );
+}
+
+function AssistanceRow({ item }: any) {
+  return (
+    <>
+      <p className="font-medium text-sm">{item.chauffeur?.nom || 'Inconnu'} · {item.type}</p>
+      <p className="text-xs text-gray-500">
+        {item.description} · {item.urgence} · {new Date(item.createdAt).toLocaleString('fr')}
+      </p>
+    </>
   );
 }
