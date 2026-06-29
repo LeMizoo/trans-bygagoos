@@ -23,8 +23,20 @@ export class DepensesService {
     return { items, total, page, pages: Math.ceil(total / limit) };
   }
 
+  async findByChauffeur(chauffeurId: string) {
+    const chauffeur = await this.prisma.chauffeur.findUnique({
+      where: { id: chauffeurId },
+      select: { motoId: true },
+    });
+    if (!chauffeur?.motoId) return { items: [], total: 0 };
+    const items = await this.prisma.depense.findMany({
+      where: { motoId: chauffeur.motoId },
+      orderBy: { date: 'desc' },
+    });
+    return { items, total: items.length };
+  }
+
   async create(data: any) {
-    // Nettoyer les champs inconnus selon le schéma
     const clean: any = {
       description: data.description,
       montant: parseFloat(data.montant) || 0,
@@ -33,7 +45,6 @@ export class DepensesService {
     if (data.motoId) clean.motoId = data.motoId;
     if (data.litres) clean.litres = parseFloat(data.litres);
     if (data.station) clean.station = data.station;
-    // chauffeurId n'est pas dans le schéma Depense, on le retire
     return this.prisma.depense.create({ data: clean });
   }
 
@@ -48,7 +59,6 @@ export class DepensesService {
   async stats(periode: string = 'mois') {
     const now = new Date();
     let dateDebut: Date;
-
     if (periode === 'jour') {
       dateDebut = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (periode === 'semaine') {
