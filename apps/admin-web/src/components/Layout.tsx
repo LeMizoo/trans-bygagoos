@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Bike, UserCog, MapPin, Clock,
   DollarSign, AlertCircle, Settings, Bell,
   MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
-  BarChart3, ClipboardList, Wrench, ChevronDown, ChevronRight
+  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield
 } from 'lucide-react';
 import { Header } from './Header';
 
@@ -55,8 +55,10 @@ const menuSections = [
   {
     title: 'Système',
     items: [
-      { label: 'Notifications', icon: Bell, path: '/notifications' },
+      { label: 'Utilisateurs', icon: Shield, path: '/utilisateurs' },
       { label: 'Paramètres', icon: Settings, path: '/parametres' },
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+      { label: 'Journaux', icon: ClipboardList, path: '/journaux' },
     ],
   },
 ];
