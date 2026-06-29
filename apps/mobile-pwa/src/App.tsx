@@ -1,7 +1,3 @@
-import MessagesPage from './pages/MessagesPage';
-import DepensesChauffeurPage from './pages/DepensesChauffeurPage';
-import AlertesMotoPage from './pages/AlertesMotoPage';
-/* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
 import MessagesPage from './pages/MessagesPage';
 import DepensesChauffeurPage from './pages/DepensesChauffeurPage';
@@ -54,8 +50,10 @@ export default function App() {
   return <QueryClientProvider client={queryClient}><AppContent /></QueryClientProvider>;
 }
 
+type Page = 'login'|'accueil'|'courses'|'versements'|'stats'|'profil'|'notifications'|'messages'|'depenses'|'alertes';
+
 function AppContent() {
-  const [page, setPage] = useState<'login'|'accueil'|'courses'|'versements'|'stats'|'profil'|'notifications'|'messages'|'depenses'|'alertes'|'messages'|'depenses'|'alertes'>(tk()?'accueil':'login');
+  const [page, setPage] = useState<Page>(tk()?'accueil':'login');
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
     const go=()=>setOnline(true), goff=()=>setOnline(false);
@@ -77,18 +75,6 @@ function AppContent() {
         {page==='stats'&&<StatsPage/>}
         {page==='profil'&&<ProfilPage onLogout={()=>{localStorage.clear();setPage('login');}}/>}
         {page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}
-        {page==='messages'&&<MessagesPage/>}
-        {page==='depenses'&&<DepensesChauffeurPage/>}
-        {page==='alertes'&&<AlertesMotoPage/>}
-        {page==='messages'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<MessagesPage/>}
-        {page==='messages'&&<MessagesPage/>}
-        {page==='depenses'&&<DepensesChauffeurPage/>}
-        {page==='alertes'&&<AlertesMotoPage/>}
-        {page==='depenses'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<DepensesChauffeurPage/>}
-        {page==='messages'&&<MessagesPage/>}
-        {page==='depenses'&&<DepensesChauffeurPage/>}
-        {page==='alertes'&&<AlertesMotoPage/>}
-        {page==='alertes'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<AlertesMotoPage/>}
         {page==='messages'&&<MessagesPage/>}
         {page==='depenses'&&<DepensesChauffeurPage/>}
         {page==='alertes'&&<AlertesMotoPage/>}
@@ -119,7 +105,7 @@ function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
   const s:any={EN_SERVICE:{class:'presence-present',icon:'🟢',label:'En service'},EN_PAUSE:{class:'presence-pause',icon:'🟠',label:'En pause'},HORS_SERVICE:{class:'presence-absent',icon:'🔴',label:'Hors service'}};
   const st=s[c?.statut]||s.HORS_SERVICE;
-  return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()}>🔄</button><button className="icon-btn" onClick={()=>{}} style={{position:'relative'}}>🔔</button><button className="icon-btn logout" onClick={onLogout}>🚪</button><button className={`icon-btn ${online?'online':'offline'}`}>{online?'📶':'📡'}</button></div></div></div>;
+  return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()}>🔄</button><button className="icon-btn">🔔</button><button className="icon-btn logout" onClick={onLogout}>🚪</button><button className={`icon-btn ${online?'online':'offline'}`}>{online?'📶':'📡'}</button></div></div></div>;
 }
 
 // ========== DASHBOARD ==========
@@ -258,6 +244,15 @@ function NotificationsPage({onBack}:{onBack:()=>void}){
 
 // ========== BOTTOM NAV ==========
 function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
-  const tabs=[{key:'accueil',label:'Accueil',icon:'🏠'},{key:'courses',label:'Courses',icon:'📋'},{key:'versements',label:'Versements',icon:'💰'},{key:'stats',label:'Stats',icon:'📊'},{key:'profil',label:'Profil',icon:'👤'}];
-  return <nav className="bottom-nav"><div className="nav-items">{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`}><span style={{fontSize:18}}>{t.icon}</span><span>{t.label}</span></button>)}</div></nav>;
+  const tabs=[
+    {key:'accueil',label:'Accueil',icon:'🏠'},
+    {key:'courses',label:'Courses',icon:'📋'},
+    {key:'depenses',label:'Dépenses',icon:'🔧'},
+    {key:'versements',label:'Versements',icon:'💰'},
+    {key:'messages',label:'Chat',icon:'💬'},
+    {key:'alertes',label:'Moto',icon:'⚠️'},
+    {key:'stats',label:'Stats',icon:'📊'},
+    {key:'profil',label:'Profil',icon:'👤'},
+  ];
+  return <nav className="bottom-nav"><div className="nav-items" style={{overflowX:'auto',justifyContent:'flex-start',gap:2,padding:'0 4px'}}>{tabs.map(t=><button key={t.key} onClick={()=>onChange(t.key)} className={`nav-item ${current===t.key?'active':''}`} style={{minWidth:50,flex:'0 0 auto'}}><span style={{fontSize:16}}>{t.icon}</span><span style={{fontSize:9}}>{t.label}</span></button>)}</div></nav>;
 }
