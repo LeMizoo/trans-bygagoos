@@ -126,6 +126,7 @@ function DashboardPage({online}:{online:boolean}){
   const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.statut=type==='ARRIVEE'||type==='REPRISE'?'EN_SERVICE':type==='PAUSE'?'EN_PAUSE':'HORS_SERVICE';localStorage.setItem('chauffeur',JSON.stringify(cd));setMsg(type==='ARRIVEE'?'✅ Service débuté !':type==='PAUSE'?'⏸️ Pause':type==='REPRISE'?'🔄 Reprise':'🏁 Service terminé');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg('');window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
   const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const {data:dep}=useQuery({queryKey:["dep-dash",m?.id],queryFn:()=>axios.get(`${API}/depenses?motoId=${m?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id,refetchInterval:30000});
 
   const handleCourse=()=>{
     if(!enService){setMsg('❌ Vous devez être EN SERVICE');return;}
@@ -243,6 +244,22 @@ function NotificationsPage({onBack}:{onBack:()=>void}){
 }
 
 // ========== BOTTOM NAV ==========
+function DepensesResume({dep,m}:{dep:any,m:any}){
+  if(!m)return null;
+  const now=new Date();
+  const debutJour=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const items=dep?.items||[];
+  const depJour=items.filter((d:any)=>new Date(d.date)>=debutJour).reduce((s:number,d:any)=>s+d.montant,0);
+  const catLabels:Record<string,string>={CARBURANT:"⛽ Carburant",ENTRETIEN:"🔧 Entretien",PIECE:"🔩 Pièces",ASSURANCE:"🛡️ Assurance",PNEU:"🛞 Pneu",REPARATION:"🔨 Réparation",AUTRE:"📝 Autre"};
+  const byCat:Record<string,number>={};
+  items.forEach((d:any)=>{byCat[d.categorie]=(byCat[d.categorie]||0)+d.montant});
+  return (<div className="card"><div className="card-title" style={{color:"#ef4444"}}>💸 Mes dépenses du jour</div>
+    {depJour>0?<div style={{textAlign:"center",marginBottom:10}}><span style={{fontSize:28,fontWeight:800,color:"#ef4444"}}>-{depJour.toLocaleString()} Ar</span></div>
+    :<p style={{color:"#888",textAlign:"center",fontSize:12,marginBottom:10}}>Aucune dépense aujourd'hui</p>}
+    {Object.keys(byCat).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4}}>{Object.entries(byCat).slice(0,4).map(([cat,montant])=><span key={cat} style={{padding:"3px 8px",background:"rgba(239,68,68,0.1)",borderRadius:20,fontSize:10,color:"#f87171"}}>{catLabels[cat]||cat}: {montant.toLocaleString()} Ar</span>)}</div>}
+  </div>);
+}
+
 function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
   const tabs=[
     {key:'accueil',label:'Accueil',icon:'🏠'},
