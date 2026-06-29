@@ -61,7 +61,6 @@ export function LoginPage() {
               <LogIn size={18} /> {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
-          <p className="text-center text-xs text-gray-400 mt-4">admin@bygagoos.com / Admin123!</p>
         </div>
       </div>
     </div>
