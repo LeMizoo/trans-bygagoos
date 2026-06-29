@@ -1,3 +1,5 @@
 {
-  "edge.webhint.enabled": false
+  "eslint.enable": false,
+  "edge.webhint.enabled": false,
+  "css.lint.validProperties.enabled": false
 }
