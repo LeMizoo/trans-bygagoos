@@ -162,15 +162,19 @@ model Notification {
 }
 
 model Depense {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   description String
   montant     Float
   categorie   String
   motoId      String?
-  moto        Moto?    @relation(fields: [motoId], references: [id])
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  moto        Moto?      @relation(fields: [motoId], references: [id])
+  chauffeurId String?
+  chauffeur   Chauffeur? @relation(fields: [chauffeurId], references: [id])
+  litres      Float?
+  station     String?
+  date        DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Contrat {
