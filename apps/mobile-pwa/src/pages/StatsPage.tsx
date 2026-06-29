@@ -4,83 +4,216 @@ import axios from 'axios';
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 const tk = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
+const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || chauffeur()?.moto;
 
-export function StatsPage() {
+const catLabels: Record<string, string> = {
+  CARBURANT: '⛽ Carburant',
+  ENTRETIEN: '🔧 Entretien',
+  PIECE: '🔩 Pièces',
+  ASSURANCE: '🛡️ Assurance',
+  PNEU: '🛞 Pneu',
+  REPARATION: '🔨 Réparation',
+  AUTRE: '📝 Autre',
+};
+
+export default function StatsPage() {
   const c = chauffeur();
+  const m = moto();
+
   const { data: dash } = useQuery({
     queryKey: ['dashboard', c?.id],
     queryFn: () => axios.get(`${API}/chauffeurs/${c?.id}/dashboard`, { headers: { Authorization: `Bearer ${tk()}` } }).then(r => r.data),
     enabled: !!c?.id,
   });
 
-  const s = (p: string) => dash?.[p] || { count: 0, prix: 0, commission: 0, gainNet: 0 };
+  const { data: depensesStats } = useQuery({
+    queryKey: ['depenses-chauffeur-stats', m?.id],
+    queryFn: () => axios.get(`${API}/depenses?motoId=${m?.id}`).then(r => r.data).catch(() => ({ items: [] })),
+    enabled: !!m?.id,
+  });
 
-  const Bar = ({ label, value, max, color }: { label: string; value: number; max: number; color: string }) => (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12 }}>
-        <span style={{ color: '#888' }}>{label}</span>
-        <span style={{ color, fontWeight: 600 }}>{value.toLocaleString()} Ar</span>
-      </div>
-      <div style={{ height: 8, background: '#252525', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${max > 0 ? Math.min(100, (value / max) * 100) : 0}%`, background: color, borderRadius: 4, transition: 'width 0.5s' }} />
-      </div>
-    </div>
-  );
+  const { data: statsMoto } = useQuery({
+    queryKey: ['moto-stats-resume', m?.id],
+    queryFn: () => axios.get(`${API}/motos/${m?.id}/stats`).then(r => r.data).catch(() => null),
+    enabled: !!m?.id,
+  });
 
-  const maxCA = Math.max(s('aujourdhui').prix, s('semaine').prix, s('mois').prix, 1);
+  const s = (p: string) => ({ count: 0, prix: 0, commission: 0, gainNet: 0, ...(dash?.[p] ?? {}) });
+  const depenses = Array.isArray(depensesStats?.items) ? depensesStats.items : [];
+
+  // Totaux dépenses par période
+  const now = new Date();
+  const debutJour = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const debutSemaine = new Date(now);
+  debutSemaine.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+  debutSemaine.setHours(0, 0, 0, 0);
+  const debutMois = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const depensesJour = depenses.filter((d: any) => new Date(d.date) >= debutJour).reduce((sum: number, d: any) => sum + d.montant, 0);
+  const depensesSemaine = depenses.filter((d: any) => new Date(d.date) >= debutSemaine).reduce((sum: number, d: any) => sum + d.montant, 0);
+  const depensesMois = depenses.filter((d: any) => new Date(d.date) >= debutMois).reduce((sum: number, d: any) => sum + d.montant, 0);
+
+  // Dépenses par catégorie
+  const depensesByCat: Record<string, number> = {};
+  depenses.forEach((d: any) => {
+    depensesByCat[d.categorie] = (depensesByCat[d.categorie] || 0) + d.montant;
+  });
+
+  const periodes = [
+    {
+      key: 'aujourdhui',
+      titre: "📅 Aujourd'hui",
+      stats: s('aujourdhui'),
+      depenses: depensesJour,
+    },
+    {
+      key: 'semaine',
+      titre: '📆 Cette semaine',
+      stats: s('semaine'),
+      depenses: depensesSemaine,
+    },
+    {
+      key: 'mois',
+      titre: '🗓️ Ce mois',
+      stats: s('mois'),
+      depenses: depensesMois,
+    },
+  ];
 
   return (
-    <div style={{ padding: 12 }}>
-      <h1 style={{ color: '#DAA520', fontSize: 18, fontWeight: 700, marginBottom: 16 }}>📊 Statistiques</h1>
+    <div>
+      {/* Cartes par période avec dépenses intégrées */}
+      {periodes.map(p => (
+        <div className="card" key={p.key}>
+          <div className="card-title">{p.titre}</div>
 
-      {/* Barres CA */}
-      <div className="card">
-        <div className="card-title">💰 Chiffre d'affaires</div>
-        <Bar label="Aujourd'hui" value={s('aujourdhui').prix} max={maxCA} color="#DAA520" />
-        <Bar label="Cette semaine" value={s('semaine').prix} max={maxCA} color="#3b82f6" />
-        <Bar label="Ce mois" value={s('mois').prix} max={maxCA} color="#10b981" />
-      </div>
+          {/* Stats courses */}
+          <div className="stats-grid">
+            <div className="stat-item">
+              <div className="stat-value">{p.stats.count}</div>
+              <div className="stat-label">Courses</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: '#10b981' }}>
+                {(p.stats.prix || 0).toLocaleString()} Ar
+              </div>
+              <div className="stat-label">CA brut</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: '#ef4444' }}>
+                -{p.depenses.toLocaleString()} Ar
+              </div>
+              <div className="stat-label">Dépenses</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: '#f59e0b' }}>
+                -{(p.stats.commission || 0).toLocaleString()} Ar
+              </div>
+              <div className="stat-label">Commission</div>
+            </div>
+          </div>
 
-      {/* Stats détaillées */}
-      <div className="card">
-        <div className="card-title">📅 Aujourd'hui</div>
-        <div className="stats-grid">
-          <div className="stat-item"><div className="stat-value">{s('aujourdhui').count}</div><div className="stat-label">Courses</div></div>
-          <div className="stat-item"><div className="stat-value">{s('aujourdhui').prix.toLocaleString()} Ar</div><div className="stat-label">CA</div></div>
-          <div className="stat-item"><div className="stat-value" style={{ color: '#eab308' }}>{s('aujourdhui').commission.toLocaleString()} Ar</div><div className="stat-label">Commission</div></div>
-          <div className="stat-item"><div className="stat-value" style={{ color: s('aujourdhui').gainNet >= 0 ? '#27ae60' : '#e74c3c' }}>{s('aujourdhui').gainNet.toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div>
+          {/* Barre de résumé */}
+          <div style={{
+            marginTop: 10,
+            padding: 10,
+            background: '#252525',
+            borderRadius: 10,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <span style={{ fontSize: 12, color: '#888' }}>Gain net</span>
+            <span style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: (p.stats.gainNet || 0) - p.depenses >= 0 ? '#10b981' : '#ef4444',
+            }}>
+              {((p.stats.gainNet || 0) - p.depenses).toLocaleString()} Ar
+            </span>
+          </div>
         </div>
-      </div>
+      ))}
 
-      {/* Performance */}
-      <div className="card">
-        <div className="card-title">📈 Performance</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, textAlign: 'center' }}>
-          <div>
-            <div style={{ fontSize: 10, color: '#888' }}>Courses/jour</div>
-            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#DAA520' }}>
-              {dash?.aujourdhui?.count ? (dash.aujourdhui.count).toFixed(0) : '0'}
+      {/* Dépenses par catégorie */}
+      {Object.keys(depensesByCat).length > 0 && (
+        <div className="card">
+          <div className="card-title">🔧 Dépenses par catégorie</div>
+          {Object.entries(depensesByCat).map(([cat, montant]) => (
+            <div key={cat} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '8px 0',
+              borderBottom: '1px solid #333',
+            }}>
+              <span style={{ fontSize: 13 }}>{catLabels[cat] || cat}</span>
+              <span style={{ color: '#ef4444', fontWeight: 600, fontSize: 13 }}>
+                -{montant.toLocaleString()} Ar
+              </span>
             </div>
+          ))}
+          <div style={{
+            marginTop: 10,
+            padding: 10,
+            background: 'rgba(239,68,68,0.1)',
+            borderRadius: 10,
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: 12, color: '#f87171' }}>Total dépenses</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#ef4444' }}>
+              -{Object.values(depensesByCat).reduce((a, b) => a + b, 0).toLocaleString()} Ar
+            </span>
           </div>
-          <div>
-            <div style={{ fontSize: 10, color: '#888' }}>CA moyen</div>
-            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#3b82f6' }}>
-              {dash?.aujourdhui?.count > 0 ? Math.round(dash.aujourdhui.prix / dash.aujourdhui.count).toLocaleString() : 0} Ar
+        </div>
+      )}
+
+      {/* Stats moto */}
+      {statsMoto && (
+        <div className="card">
+          <div className="card-title">🏍️ Ma moto : {m?.immatriculation}</div>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: '#10b981' }}>
+                {statsMoto.stats?.totalCA?.toLocaleString()} Ar
+              </div>
+              <div className="stat-label">CA total moto</div>
             </div>
-          </div>
-          <div>
-            <div style={{ fontSize: 10, color: '#888' }}>Km totaux</div>
-            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#10b981' }}>
-              {dash?.aujourdhui?.count || 0} courses
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: '#ef4444' }}>
+                -{statsMoto.stats?.totalDepenses?.toLocaleString()} Ar
+              </div>
+              <div className="stat-label">Dépenses moto</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">{statsMoto.stats?.totalCourses || 0}</div>
+              <div className="stat-label">Total courses</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value" style={{ color: statsMoto.stats?.gainNet >= 0 ? '#10b981' : '#ef4444' }}>
+                {statsMoto.stats?.gainNet?.toLocaleString()} Ar
+              </div>
+              <div className="stat-label">Gain net moto</div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Solde */}
-      <div className="card" style={{ background: 'linear-gradient(135deg, #1a1a1a, #DAA52022)', border: '1px solid #DAA520', textAlign: 'center', padding: 20 }}>
+      {/* Solde actuel */}
+      <div className="card" style={{
+        background: 'linear-gradient(135deg, #1a1a1a, #DAA52022)',
+        border: '1px solid #DAA520',
+        textAlign: 'center',
+        padding: 20,
+      }}>
         <div style={{ fontSize: 11, color: '#DAA520', letterSpacing: 2 }}>SOLDE ACTUEL</div>
-        <div style={{ fontSize: 30, fontWeight: 800, color: '#DAA520' }}>{dash?.solde?.toLocaleString() || 0} Ar</div>
+        <div style={{ fontSize: 30, fontWeight: 800, color: '#DAA520' }}>
+          {((dash?.solde || c?.solde) || 0).toLocaleString()} Ar
+        </div>
+        <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
+          CA net - commissions - dépenses
+        </div>
       </div>
     </div>
   );
