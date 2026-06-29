@@ -8,65 +8,49 @@ export class DashboardService {
   async getStats() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const debutMois = new Date(today.getFullYear(), today.getMonth(), 1);
 
     const [
-      totalChauffeurs,
-      chauffeursActifs,
-      totalMotos,
-      coursesJour,
-      caJour,
-      caMois,
-      versementsEnAttente,
-      assistanceOuverte,
+      totalChauffeurs, chauffeursActifs, totalMotos, totalProprietaires,
+      coursesJour, caJour, caMois, depensesMois,
+      versementsEnAttente, assistanceOuverte,
     ] = await Promise.all([
       this.prisma.chauffeur.count(),
       this.prisma.chauffeur.count({ where: { statut: 'EN_SERVICE' } }),
       this.prisma.moto.count(),
+      this.prisma.proprietaire.count(),
       this.prisma.course.count({ where: { createdAt: { gte: today } } }),
-      this.prisma.course.aggregate({
-        _sum: { prix: true },
-        where: { createdAt: { gte: today } },
-      }),
-      this.prisma.course.aggregate({
-        _sum: { prix: true },
-        where: { createdAt: { gte: debutMois } },
-      }),
+      this.prisma.course.aggregate({ _sum: { prix: true }, where: { createdAt: { gte: today } } }),
+      this.prisma.course.aggregate({ _sum: { prix: true }, where: { createdAt: { gte: debutMois } } }),
+      this.prisma.depense.aggregate({ _sum: { montant: true }, where: { date: { gte: debutMois } } }),
       this.prisma.versement.count({ where: { statut: 'EN_ATTENTE' } }),
       this.prisma.assistance.count({ where: { statut: 'OUVERT' } }),
     ]);
 
     return {
-      totalChauffeurs,
-      chauffeursActifs,
-      totalMotos,
+      totalChauffeurs, chauffeursActifs, totalMotos, totalProprietaires,
       coursesJour,
       caJour: caJour._sum.prix || 0,
       caMois: caMois._sum.prix || 0,
-      versementsEnAttente,
-      assistanceOuverte,
+      depensesMois: depensesMois._sum.montant || 0,
+      versementsEnAttente, assistanceOuverte,
     };
   }
 
   async getTopChauffeurs() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    const debutMois = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const courses = await this.prisma.course.groupBy({
       by: ['chauffeurId'],
-      where: { createdAt: { gte: today } },
+      where: { createdAt: { gte: debutMois } },
       _count: { id: true },
       _sum: { prix: true },
       orderBy: { _sum: { prix: 'desc' } },
       take: 5,
     });
-
     const chauffeurs = await this.prisma.chauffeur.findMany({
       where: { id: { in: courses.map((c) => c.chauffeurId) } },
       select: { id: true, nom: true },
     });
-
     return courses.map((c) => ({
       chauffeur: chauffeurs.find((ch) => ch.id === c.chauffeurId),
       courses: c._count.id,
@@ -82,17 +66,40 @@ export class DashboardService {
       date.setHours(0, 0, 0, 0);
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
-
-      const ca = await this.prisma.course.aggregate({
-        _sum: { prix: true },
-        where: { createdAt: { gte: date, lt: nextDate } },
-      });
-
+      const [ca, depenses] = await Promise.all([
+        this.prisma.course.aggregate({ _sum: { prix: true }, where: { createdAt: { gte: date, lt: nextDate } } }),
+        this.prisma.depense.aggregate({ _sum: { montant: true }, where: { date: { gte: date, lt: nextDate } } }),
+      ]);
       result.push({
         date: date.toISOString().split('T')[0],
         ca: ca._sum.prix || 0,
+        depenses: depenses._sum.montant || 0,
       });
     }
     return result;
+  }
+
+  async getAlertesFlotte() {
+    const maintenant = new Date();
+
+    const [assuranceExpiree, vignetteExpiree] = await Promise.all([
+      this.prisma.moto.count({ where: { finAssurance: { lt: maintenant } } }),
+      this.prisma.moto.count({ where: { finVignette: { lt: maintenant } } }),
+    ]);
+
+    const motos = await this.prisma.moto.findMany({
+      where: { kmProchaineVidange: { not: null }, kmActuel: { not: null } },
+      select: { immatriculation: true, kmActuel: true, kmProchaineVidange: true },
+    });
+
+    const vidangeProche = motos.filter(
+      m => m.kmActuel && m.kmProchaineVidange && m.kmActuel >= m.kmProchaineVidange - 500
+    );
+
+    return {
+      assuranceExpiree,
+      vignetteExpiree,
+      vidangeProche: vidangeProche.length,
+    };
   }
 }
