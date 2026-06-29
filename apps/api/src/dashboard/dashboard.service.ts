@@ -80,26 +80,33 @@ export class DashboardService {
   }
 
   async getAlertesFlotte() {
-    const maintenant = new Date();
+    try {
+      const maintenant = new Date();
+      const toutesLesMotos = await this.prisma.moto.findMany({
+        select: {
+          immatriculation: true,
+          finAssurance: true,
+          finVignette: true,
+          kmActuel: true,
+          kmProchaineVidange: true,
+        },
+      });
 
-    const [assuranceExpiree, vignetteExpiree] = await Promise.all([
-      this.prisma.moto.count({ where: { finAssurance: { lt: maintenant } } }),
-      this.prisma.moto.count({ where: { finVignette: { lt: maintenant } } }),
-    ]);
+      const assuranceExpiree = toutesLesMotos.filter(
+        m => m.finAssurance && new Date(m.finAssurance) < maintenant
+      ).length;
 
-    const motos = await this.prisma.moto.findMany({
-      where: { kmProchaineVidange: { not: null }, kmActuel: { not: null } },
-      select: { immatriculation: true, kmActuel: true, kmProchaineVidange: true },
-    });
+      const vignetteExpiree = toutesLesMotos.filter(
+        m => m.finVignette && new Date(m.finVignette) < maintenant
+      ).length;
 
-    const vidangeProche = motos.filter(
-      m => m.kmActuel && m.kmProchaineVidange && m.kmActuel >= m.kmProchaineVidange - 500
-    );
+      const vidangeProche = toutesLesMotos.filter(
+        m => m.kmActuel && m.kmProchaineVidange && m.kmActuel >= m.kmProchaineVidange - 500
+      ).length;
 
-    return {
-      assuranceExpiree,
-      vignetteExpiree,
-      vidangeProche: vidangeProche.length,
-    };
+      return { assuranceExpiree, vignetteExpiree, vidangeProche };
+    } catch (error) {
+      return { assuranceExpiree: 0, vignetteExpiree: 0, vidangeProche: 0 };
+    }
   }
 }
