@@ -147,7 +147,7 @@ function DashboardPage({online}:{online:boolean}){
         const horsService = !c?.statut || c.statut==='HORS_SERVICE';
         if(horsService){
           const km=prompt('🏍️ KM au compteur au départ:');
-          if(km){setKmDebut(km);pointer.mutate('ARRIVEE');}
+          if(km){setKmDebut(km);localStorage.setItem('kmDebut',km);pointer.mutate('ARRIVEE');}
         }else{pointer.mutate('ARRIVEE');}
       }} className="status-btn debut">▶️ Début</button>
       <button onClick={()=>pointer.mutate(c?.statut==='EN_PAUSE'?'REPRISE':'PAUSE')} className="status-btn standby">{c?.statut==='EN_PAUSE'?'▶️ Reprendre':'⏸️ Standby'}</button>
