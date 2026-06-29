@@ -9,3 +9,5 @@ uploads/*
 # Local Netlify folder
 .netlify
 apps/api/tsconfig.build.tsbuildinfo
+apps/api/prisma/schema.prisma.bak
+apps/api/prisma/schema_patch.txt
