@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Receipt, Plus, Edit, Trash2, X, Save, Search, Filter } from 'lucide-react';
+import { Receipt, Plus, Edit, Trash2, X, Save, Search } from 'lucide-react';
 import { useState } from 'react';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
