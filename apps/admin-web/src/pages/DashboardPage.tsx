@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Users, Bike, MapPin, DollarSign, AlertCircle, TrendingUp, Clock, ShoppingCart, Star, Wrench, QrCode, Trophy, Percent } from 'lucide-react';
+import { Users, Bike, MapPin, DollarSign, AlertCircle, TrendingUp, Wrench, Star, Bell } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement,
+  PointElement, ArcElement, Title, Tooltip, Legend, Filler
+} from 'chart.js';
+import { Bar, Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
@@ -35,18 +42,31 @@ export function DashboardPage() {
     refetchInterval: 30000,
   });
 
+  const { data: statsDepenses } = useQuery({
+    queryKey: ['depenses-stats'],
+    queryFn: () => axios.get(`${API}/depenses/stats`).then(r => r.data).catch(() => ({ totalDepenses: 0, parCategorie: [] })),
+  });
+
+  const { data: statsGlobales } = useQuery({
+    queryKey: ['journaux-stats'],
+    queryFn: () => axios.get(`${API}/journaux/stats`).then(r => r.data).catch(() => ({})),
+  });
+
   const { data: alertes } = useQuery({
     queryKey: ['alertes-dashboard'],
     queryFn: async () => {
-      const [versements, assistance, chauffeurs] = await Promise.all([
-        axios.get(`${API}/versements`).then(r => r.data),
-        axios.get(`${API}/assistance`).then(r => r.data),
-        axios.get(`${API}/chauffeurs`).then(r => r.data),
-      ]);
-      const vEnAttente = Array.isArray(versements) ? versements.filter((v: any) => v.statut === 'EN_ATTENTE').length : 0;
-      const aOuvert = Array.isArray(assistance) ? assistance.filter((a: any) => a.statut === 'OUVERT').length : 0;
-      const sansMoto = Array.isArray(chauffeurs) ? chauffeurs.filter((c: any) => !c.motoId).length : 0;
-      return { versementsEnAttente: vEnAttente, assistanceOuverte: aOuvert, sansMoto };
+      try {
+        const [v, a, c] = await Promise.all([
+          axios.get(`${API}/versements`).then(r => Array.isArray(r.data) ? r.data : (r.data?.items || [])),
+          axios.get(`${API}/assistance`).then(r => Array.isArray(r.data) ? r.data : (r.data?.items || [])),
+          axios.get(`${API}/chauffeurs`).then(r => Array.isArray(r.data) ? r.data : []),
+        ]);
+        return {
+          versementsEnAttente: v.filter((x: any) => x.statut === 'EN_ATTENTE').length,
+          assistanceOuverte: a.filter((x: any) => x.statut === 'OUVERT').length,
+          sansMoto: c.filter((x: any) => !x.motoId).length,
+        };
+      } catch { return { versementsEnAttente: 0, assistanceOuverte: 0, sansMoto: 0 }; }
     },
     refetchInterval: 30000,
   });
@@ -54,112 +74,180 @@ export function DashboardPage() {
   const dateStr = currentTime.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-  const cards = [
-    { label: 'CA aujourd\'hui', value: `${(stats?.caJour || 0).toLocaleString()} Ar`, icon: DollarSign, color: 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400', border: 'border-green-500' },
-    { label: 'CA ce mois', value: `${(stats?.caMois || 0).toLocaleString()} Ar`, icon: TrendingUp, color: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400', border: 'border-blue-500' },
-    { label: 'Courses du jour', value: stats?.coursesJour || 0, icon: MapPin, color: 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400', border: 'border-purple-500' },
-    { label: 'Chauffeurs actifs', value: `${stats?.chauffeursActifs || 0}/${stats?.totalChauffeurs || 0}`, icon: Users, color: 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400', border: 'border-orange-500' },
-    { label: 'Motos', value: stats?.totalMotos || 0, icon: Bike, color: 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400', border: 'border-cyan-500' },
-    { label: 'Propriétaires', value: stats?.totalProprietaires || 0, icon: Star, color: 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400', border: 'border-pink-500' },
-  ];
+  // Données graphiques
+  const caChartData = {
+    labels: caJournalier?.map((d: any) => new Date(d.date).toLocaleDateString('fr', { weekday: 'short', day: 'numeric' })) || [],
+    datasets: [{
+      label: 'CA (Ar)',
+      data: caJournalier?.map((d: any) => d.ca) || [],
+      borderColor: '#e94560',
+      backgroundColor: 'rgba(233,69,96,0.1)',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: '#e94560',
+    }],
+  };
 
-  const alertCards = [
-    { label: 'Versements en attente', value: alertes?.versementsEnAttente || 0, icon: DollarSign, color: 'bg-red-50 dark:bg-red-500/10 text-red-600', pulse: true, href: '/versements' },
-    { label: 'Assistance ouverte', value: alertes?.assistanceOuverte || 0, icon: AlertCircle, color: 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600', pulse: true, href: '/assistance' },
-    { label: 'Sans moto', value: alertes?.sansMoto || 0, icon: Wrench, color: 'bg-purple-50 dark:bg-purple-500/10 text-purple-600', pulse: true, href: '/chauffeurs' },
-    { label: 'Notifications', value: 0, icon: Bell, color: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600', href: '/notifications' },
-  ];
+  const topChauffeursData = {
+    labels: topChauffeurs?.map((c: any) => c.chauffeur?.nom) || [],
+    datasets: [{
+      label: 'CA (Ar)',
+      data: topChauffeurs?.map((c: any) => c.ca) || [],
+      backgroundColor: ['#e94560', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'],
+      borderRadius: 8,
+    }],
+  };
+
+  const depensesData = {
+    labels: statsDepenses?.parCategorie?.map((c: any) => c.categorie) || [],
+    datasets: [{
+      data: statsDepenses?.parCategorie?.map((c: any) => c._sum?.montant || 0) || [],
+      backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899'],
+      borderWidth: 0,
+    }],
+  };
+
+  const flotteData = {
+    labels: ['En service', 'En pause', 'Hors service', 'Sans moto'],
+    datasets: [{
+      label: 'Chauffeurs',
+      data: [stats?.chauffeursActifs || 0, 0, (stats?.totalChauffeurs || 0) - (stats?.chauffeursActifs || 0), alertes?.sansMoto || 0],
+      backgroundColor: ['#10b981', '#f59e0b', '#6b7280', '#ef4444'],
+      borderRadius: 6,
+    }],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#9ca3af', font: { size: 11 } } } },
+    scales: {
+      y: { ticks: { color: '#9ca3af', callback: (v: any) => (v / 1000).toFixed(0) + 'k Ar' } },
+      x: { ticks: { color: '#9ca3af', font: { size: 10 } } },
+    },
+  };
 
   return (
     <div className="p-6 space-y-6">
       {/* En-tête */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <TrendingUp size={28} className="text-primary" /> Tableau de bord
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            📅 {dateStr} | 🕐 {timeStr}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <a href="/pointages" className="px-3 py-1.5 bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 rounded-lg text-xs font-medium">⏱️ Pointages</a>
-          <a href="/courses" className="px-3 py-1.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium">🚖 Courses</a>
-          <a href="/depenses" className="px-3 py-1.5 bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 rounded-lg text-xs font-medium">💰 Dépenses</a>
+          <p className="text-sm text-gray-500 mt-1">📅 {dateStr} | 🕐 {timeStr}</p>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {cards.map((card) => (
-          <div key={card.label} className={`bg-white dark:bg-gray-800 rounded-xl border-t-4 ${card.border} p-4 shadow-sm hover:shadow-md transition-shadow`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">{card.label}</span>
-              <card.icon size={18} className={card.color} />
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'CA jour', value: `${(stats?.caJour || 0).toLocaleString()} Ar`, icon: DollarSign, color: 'text-green-600' },
+          { label: 'CA mois', value: `${(stats?.caMois || 0).toLocaleString()} Ar`, icon: TrendingUp, color: 'text-blue-600' },
+          { label: 'Courses jour', value: stats?.coursesJour || 0, icon: MapPin, color: 'text-purple-600' },
+          { label: 'Chauffeurs', value: `${stats?.chauffeursActifs || 0}/${stats?.totalChauffeurs || 0}`, icon: Users, color: 'text-orange-600' },
+          { label: 'Motos', value: stats?.totalMotos || 0, icon: Bike, color: 'text-cyan-600' },
+          { label: 'Propriétaires', value: stats?.totalProprietaires || 0, icon: Star, color: 'text-pink-600' },
+        ].map((card) => (
+          <div key={card.label} className="bg-white dark:bg-gray-800 rounded-xl border p-3 shadow-sm">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+              <card.icon size={14} className={card.color} /> {card.label}
             </div>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{card.value}</div>
           </div>
         ))}
       </div>
 
       {/* Alertes */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {alertCards.map((card) => (
-          <a key={card.label} href={card.href} className={`bg-white dark:bg-gray-800 rounded-xl border p-4 hover:shadow-md transition-all ${card.pulse && card.value > 0 ? 'animate-pulse border-red-300 dark:border-red-500' : 'border-gray-200 dark:border-gray-700'}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-gray-500">{card.label}</span>
-              <card.icon size={18} className={card.color} />
-            </div>
-            <p className={`text-xl font-bold ${card.value > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'}`}>{card.value}</p>
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: 'Versements', value: alertes?.versementsEnAttente || 0, icon: DollarSign, color: 'border-red-500', href: '/versements' },
+          { label: 'Assistance', value: alertes?.assistanceOuverte || 0, icon: AlertCircle, color: 'border-yellow-500', href: '/assistance' },
+          { label: 'Sans moto', value: alertes?.sansMoto || 0, icon: Wrench, color: 'border-purple-500', href: '/chauffeurs' },
+          { label: 'Notifications', value: 0, icon: Bell, color: 'border-blue-500', href: '/notifications' },
+        ].map((card) => (
+          <a key={card.label} href={card.href}
+            className={`bg-white dark:bg-gray-800 rounded-xl border-t-4 ${card.color} p-3 text-center hover:shadow-md transition-shadow ${card.value > 0 ? 'animate-pulse' : ''}`}>
+            <card.icon size={16} className="mx-auto mb-1 text-gray-400" />
+            <div className={`text-xl font-bold ${card.value > 0 ? 'text-red-500' : 'text-gray-400'}`}>{card.value}</div>
+            <div className="text-xs text-gray-500">{card.label}</div>
           </a>
         ))}
       </div>
 
-      {/* Top chauffeurs + CA journalier */}
+      {/* GRAPHIQUES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        {/* CA 7 jours */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Trophy size={18} className="text-primary" /> Top chauffeurs du mois
+            <TrendingUp size={18} className="text-primary" /> CA des 7 derniers jours
           </h2>
-          <div className="space-y-3">
-            {topChauffeurs?.map((item: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    i === 0 ? 'bg-yellow-400 text-black' : i === 1 ? 'bg-gray-300 text-black' : i === 2 ? 'bg-orange-400 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>{i + 1}</span>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{item.chauffeur?.nom}</p>
-                    <p className="text-xs text-gray-500">{item.courses} courses</p>
-                  </div>
-                </div>
-                <p className="font-semibold text-primary">{item.ca?.toLocaleString()} Ar</p>
-              </div>
-            ))}
+          <div style={{ height: 250 }}>
+            <Line data={caChartData} options={chartOptions} />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        {/* Top chauffeurs */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-green-500" /> CA des 7 derniers jours
+            <Users size={18} className="text-primary" /> Top 5 chauffeurs
           </h2>
-          <div className="space-y-2">
-            {caJournalier?.map((item: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg">
-                <span className="text-sm text-gray-600 dark:text-gray-300">{new Date(item.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{item.ca?.toLocaleString()} Ar</span>
-              </div>
-            ))}
+          <div style={{ height: 250 }}>
+            <Bar data={topChauffeursData} options={{ ...chartOptions, indexAxis: 'y' as const }} />
+          </div>
+        </div>
+
+        {/* Dépenses par catégorie */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <DollarSign size={18} className="text-red-500" /> Dépenses par catégorie
+          </h2>
+          <div style={{ height: 250 }}>
+            {statsDepenses?.parCategorie?.length > 0 ? (
+              <Doughnut data={depensesData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } } }} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">Aucune dépense</div>
+            )}
+          </div>
+        </div>
+
+        {/* État de la flotte */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Bike size={18} className="text-cyan-500" /> État de la flotte
+          </h2>
+          <div style={{ height: 250 }}>
+            <Bar data={flotteData} options={{ ...chartOptions, indexAxis: 'x' as const }} />
           </div>
         </div>
       </div>
 
-      {/* Timer rafraîchissement */}
+      {/* Stats globales */}
+      {statsGlobales && (
+        <div className="grid grid-cols-4 gap-3">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{statsGlobales.totalCourses || 0}</div>
+            <div className="text-xs text-gray-500">Total courses</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-green-500">{(statsGlobales.caTotal || 0).toLocaleString()} Ar</div>
+            <div className="text-xs text-gray-500">CA total</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-yellow-500">{statsGlobales.totalVersements || 0}</div>
+            <div className="text-xs text-gray-500">Versements</div>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
+            <div className="text-2xl font-bold text-red-500">{statsGlobales.totalAssistance || 0}</div>
+            <div className="text-xs text-gray-500">Assistance</div>
+          </div>
+        </div>
+      )}
+
+      {/* Timer */}
       <div className="text-center text-xs text-gray-400">
-        🔄 Rafraîchissement automatique dans {countdown}s
+        🔄 Rafraîchissement dans {countdown}s
       </div>
     </div>
   );
 }
-
-import { Bell } from 'lucide-react';
