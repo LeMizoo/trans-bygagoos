@@ -157,7 +157,7 @@ function DashboardPage({online}:{online:boolean}){
       <button onClick={()=>setShowConfirm(true)} className="status-btn fin">⏹️ Fin</button>
     </div>
     <div className="card"><div className="card-title">📅 Aujourd'hui</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{stats.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(stats.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(stats.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(stats.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(stats.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
-    <DepensesResume dep={dep} m={m} />
+    <DepensesResume dep={dep} m={m} stats={stats} />
     <div className="card">
       <div className="card-title">➕ Nouvelle course</div>
       {!enService&&<div style={{background:'rgba(239,68,68,0.1)',borderLeft:'3px solid #ef4444',padding:10,borderRadius:8,marginBottom:12,fontSize:12,color:'#ef4444'}}>🔒 Vous devez être EN SERVICE pour enregistrer une course. Cliquez sur DÉPART.</div>}
@@ -245,21 +245,21 @@ function NotificationsPage({onBack}:{onBack:()=>void}){
   </div>;
 }
 
-// ========== BOTTOM NAV ==========
-function DepensesResume({dep,m}:{dep:any,m:any}){
-  if(!m)return null;
-  const now=new Date();
-  const debutJour=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  const items=dep?.items||[];
-  const depJour=items.filter((d:any)=>new Date(d.date)>=debutJour).reduce((s:number,d:any)=>s+d.montant,0);
-  const catLabels:Record<string,string>={CARBURANT:"⛽ Carburant",ENTRETIEN:"🔧 Entretien",PIECE:"🔩 Pièces",ASSURANCE:"🛡️ Assurance",PNEU:"🛞 Pneu",REPARATION:"🔨 Réparation",AUTRE:"📝 Autre"};
-  const byCat:Record<string,number>={};
-  items.forEach((d:any)=>{byCat[d.categorie]=(byCat[d.categorie]||0)+d.montant});
-  return (<div className="card"><div className="card-title" style={{color:"#ef4444"}}>💸 Mes dépenses du jour</div>
-    {depJour>0?<div style={{textAlign:"center",marginBottom:10}}><span style={{fontSize:28,fontWeight:800,color:"#ef4444"}}>-{depJour.toLocaleString()} Ar</span></div>
-    :<p style={{color:"#888",textAlign:"center",fontSize:12,marginBottom:10}}>Aucune dépense aujourd'hui</p>}
-    {Object.keys(byCat).length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4}}>{Object.entries(byCat).slice(0,4).map(([cat,montant])=><span key={cat} style={{padding:"3px 8px",background:"rgba(239,68,68,0.1)",borderRadius:20,fontSize:10,color:"#f87171"}}>{catLabels[cat]||cat}: {montant.toLocaleString()} Ar</span>)}</div>}
-  </div>);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 function BottomNav({current,onChange}:{current:string;onChange:(p:any)=>void}){
