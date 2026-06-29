@@ -19,7 +19,7 @@ export class MotosService {
         proprietaire: true,
         chauffeur: true,
         depenses: { orderBy: { date: 'desc' } },
-        courses: { orderBy: { date: 'desc' }, take: 50 },
+        courses: { orderBy: { createdAt: 'desc' }, take: 50 },
       },
     });
   }
@@ -31,7 +31,7 @@ export class MotosService {
         proprietaire: true,
         chauffeur: true,
         depenses: { orderBy: { date: 'desc' } },
-        courses: { orderBy: { date: 'desc' }, take: 100 },
+        courses: { orderBy: { createdAt: 'desc' }, take: 100 },
       },
     });
 
