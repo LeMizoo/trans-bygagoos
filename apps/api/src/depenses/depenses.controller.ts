@@ -12,10 +12,7 @@ export class DepensesController {
   @Put(':id') update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
   @Delete(':id') delete(@Param('id') id: string) { return this.service.delete(id); }
   @Get('stats') getStats(@Query('periode') periode?: string) { return this.service.stats(periode || 'mois'); }
-}
-
-// Ajouter dans la classe DepensesController :
-  @Get('chauffeur/:chauffeurId')
-  getByChauffeur(@Param('chauffeurId') chauffeurId: string) {
+  @Get('chauffeur/:chauffeurId') getByChauffeur(@Param('chauffeurId') chauffeurId: string) {
     return this.service.findByChauffeur(chauffeurId);
   }
+}
