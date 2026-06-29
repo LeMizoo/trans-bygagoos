@@ -91,8 +91,10 @@ function AppContent() {
 
 // ========== LOGIN ==========
 function LoginPage({onLogin}:{onLogin:()=>void}){
-  const [code,setCode]=useState(''); const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
-  const submit=async(e:React.FormEvent)=>{e.preventDefault();setError('');if(!code||code.length<3){setError('Code requis');return;}setLoading(true);
+  const [code,setCode]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);` const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
+  const submit=async(e:React.FormEvent)=>{e.preventDefault();setError(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`if(!code||code.length<3){setError('Code requis');return;}setLoading(true);
     try{const{data}=await axios.post(`${API}/auth/chauffeur/code`,{code:code.toUpperCase()});localStorage.setItem('chauffeur-token',data.accessToken);localStorage.setItem('chauffeur',JSON.stringify(data.chauffeur));if(data.chauffeur?.moto)localStorage.setItem('moto',JSON.stringify(data.chauffeur.moto));onLogin();}catch{setError('Code introuvable');}finally{setLoading(false);}};
   return <div style={{minHeight:'100vh',background:'#0a0a0a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'system-ui, sans-serif'}}>
     <div className="app-header" style={{position:'fixed',top:0}}><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>Trans ByGagoos</h1><p>Application Chauffeur</p></div></div></div></div>
@@ -111,10 +113,17 @@ function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
 // ========== DASHBOARD ==========
 function DashboardPage({online}:{online:boolean}){
   const qc=useQueryClient(); const c=chauffeur(); const m=moto();
-  const [msg,setMsg]=useState(''); const [showConfirm,setShowConfirm]=useState(false);
+  const [msg,setMsg]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);` const [showConfirm,setShowConfirm]=useState(false);
   const [typeCourse,setTypeCourse]=useState('NORMALE');
-  const [kmDepart,setKmDepart]=useState(''); const [kmArrivee,setKmArrivee]=useState('');
-  const [montant,setMontant]=useState('');
+  const [kmDepart,setKmDepart]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);` const [kmArrivee,setKmArrivee]=useState('');
+  const [montant,setMontant]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`
+  const [kmDebut,setKmDebut]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`
+  const [kmFin,setKmFin]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`
 
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
   const {data:params}=useQuery({queryKey:['parametres'],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
@@ -123,9 +132,11 @@ function DashboardPage({online}:{online:boolean}){
   const enService=c?.statut==='EN_SERVICE';
   useEffect(()=>{if(typesAutorises.length===1)setTypeCourse(typesAutorises[0]);else if(!typesAutorises.includes(typeCourse))setTypeCourse(typesAutorises[0]);},[typesAutorises]);
 
-  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.statut=type==='ARRIVEE'||type==='REPRISE'?'EN_SERVICE':type==='PAUSE'?'EN_PAUSE':'HORS_SERVICE';localStorage.setItem('chauffeur',JSON.stringify(cd));setMsg(type==='ARRIVEE'?'✅ Service débuté !':type==='PAUSE'?'⏸️ Pause':type==='REPRISE'?'🔄 Reprise':'🏁 Service terminé');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg('');window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const pointer=useMutation({mutationFn:(type:string)=>axios.post(`${API}/pointages`,{chauffeurId:c?.id,type},{headers:{Authorization:`Bearer ${tk()}`}}),onSuccess:(_,type)=>{const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.statut=type==='ARRIVEE'||type==='REPRISE'?'EN_SERVICE':type==='PAUSE'?'EN_PAUSE':'HORS_SERVICE';localStorage.setItem('chauffeur',JSON.stringify(cd));setMsg(type==='ARRIVEE'?'✅ Service débuté !':type==='PAUSE'?'⏸️ Pause':type==='REPRISE'?'🔄 Reprise':'🏁 Service terminé');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>{setMsg(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`window.location.reload();},1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
 
-  const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart('');setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
+  const createCourse=useMutation({mutationFn:(data:any)=>{if(!online){saveOffline(data);return Promise.resolve({data:{offline:true}});}return axios.post(`${API}/courses`,data,{headers:{Authorization:`Bearer ${tk()}`}});},onSuccess:(res:any)=>{setMsg(res.data?.offline?'📱 Sauvegardé hors ligne':'✅ Course enregistrée');setKmDepart(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`setKmArrivee('');setMontant('');qc.invalidateQueries({queryKey:['dashboard']});setTimeout(()=>window.location.reload(),1500);},onError:(err:any)=>setMsg('❌ '+(err?.response?.data?.message||'Erreur'))});
   const {data:dep}=useQuery({queryKey:["dep-dash",m?.id],queryFn:()=>axios.get(`${API}/depenses?motoId=${m?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id,refetchInterval:30000});
 
   const handleCourse=()=>{
@@ -151,9 +162,9 @@ function DashboardPage({online}:{online:boolean}){
   return <div>
     {msg&&<div className={`floating-alert ${msg.includes('✅')||msg.includes('📱')?'success':'warning'}`}>{msg}</div>}
     {dash?.messageStatus&&<div style={{background:'rgba(52,152,219,0.15)',borderLeft:'3px solid #3498db',padding:10,borderRadius:8,marginBottom:12,fontSize:12,color:'#3498db'}}>{dash.messageStatus}</div>}
-    <div className="status-buttons">
-      <button onClick={()=>pointer.mutate('ARRIVEE')} className="status-btn debut">▶️ Début</button>
-      <button onClick={()=>pointer.mutate(c?.statut==='EN_PAUSE'?'REPRISE':'PAUSE')} className="status-btn standby">{c?.statut==='EN_PAUSE'?'▶️ Reprendre':'⏸️ Standby'}</button>
+<div className="status-buttons">
+      <button onClick={()=>{if(!c?.statut||c.statut==="HORS_SERVICE"){const km=prompt("🏍️ KM au compteur au d00E9part:");if(km){setKmDebut(km);pointer.mutate("ARRIVEE");}}else{pointer.mutate("ARRIVEE");}}} className="status-btn debut">▶️ Début</button>
+      <button onClick={()=>pointer.mutate(c?.statut==="EN_PAUSE"?"REPRISE":"PAUSE")} className="status-btn standby">{c?.statut==="EN_PAUSE"?"▶️ Reprendre":"⏸️ Standby"}</button>
       <button onClick={()=>setShowConfirm(true)} className="status-btn fin">⏹️ Fin</button>
     </div>
     <div className="card"><div className="card-title">📅 Aujourd'hui</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{stats.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(stats.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(stats.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(stats.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(stats.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
@@ -180,7 +191,7 @@ function DashboardPage({online}:{online:boolean}){
         <div style={{fontSize:9,color:'#666',marginTop:4}}>Défini par l'administration - Non modifiable</div>
       </div>}
       {typeCourse==='ADY_VAROTRA'&&<div className="form-group">
-        <input type="number" value={montant} onChange={e=>setMontant(e.target.value)} placeholder="Montant (Ar)" disabled={!enService}/>
+    {showConfirm&&<div className="modal-overlay" onClick={()=>setShowConfirm(false)}><div className="modal-content" onClick={e=>e.stopPropagation()}><h3 style={{color:"#DAA520",marginBottom:12}}>🏁 Terminer la journée ?</h3><div className="form-group"><input type="number" value={kmFin} onChange={e=>{setKmFin(e.target.value);if(kmDebut&&e.target.value){const d=parseFloat(e.target.value)-parseFloat(kmDebut);setDistanceJour(d>0?d:0);}}} placeholder="🏍️ KM au compteur (arrivée)" style={{width:"100%",padding:10,background:"#252525",border:"1px solid #333",borderRadius:10,color:"#fff",fontSize:14}}/></div>{distanceJour>0&&<div style={{textAlign:"center",padding:10,background:"#1a2a1a",borderRadius:10,marginBottom:8}}>📏 Distance totale : <strong style={{color:"#2ecc71"}}>{distanceJour.toFixed(1)} km</strong></div>}<p style={{color:"#888",fontSize:13,marginBottom:20}}>Vous ne pourrez plus enregistrer de courses aujourd'hui.</p><div style={{display:"flex",gap:8}}><button onClick={()=>{setShowConfirm(false);setKmFin("");setDistanceJour(0);}} style={{flex:1,padding:12,background:"#333",border:"none",borderRadius:10,color:"#fff",fontWeight:600,cursor:"pointer"}}>Annuler</button><button onClick={()=>{pointer.mutate("FIN_SERVICE");setShowConfirm(false);}} style={{flex:1,padding:12,background:"#e74c3c",border:"none",borderRadius:10,color:"#fff",fontWeight:600,cursor:"pointer"}}>Confirmer</button></div></div></div>}
       </div>}
       <button onClick={handleCourse} disabled={!enService||createCourse.isPending} className="btn-primary" style={{opacity:enService?1:0.5}}>
         {createCourse.isPending?'⏳...':online?'✅ Enregistrer':'📱 Sauvegarder hors ligne'}
@@ -189,7 +200,7 @@ function DashboardPage({online}:{online:boolean}){
     </div>
     <div className="card"><div className="card-title">📆 Cette semaine</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{semaine.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(semaine.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(semaine.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(semaine.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(semaine.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
     <div className="card"><div className="card-title">📅 Ce mois</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{mois.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(mois.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(mois.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(mois.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(mois.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
-    {showConfirm&&<div className="modal-overlay" onClick={()=>setShowConfirm(false)}><div className="modal-content" onClick={e=>e.stopPropagation()}><h3 style={{color:'#DAA520',marginBottom:12}}>🏁 Terminer la journée ?</h3><p style={{color:'#888',fontSize:13,marginBottom:20}}>Vous ne pourrez plus enregistrer de courses aujourd'hui sans l'autorisation de l'administrateur.</p><div style={{display:'flex',gap:8}}><button onClick={()=>setShowConfirm(false)} style={{flex:1,padding:12,background:'#333',border:'none',borderRadius:10,color:'#fff',fontWeight:600,cursor:'pointer'}}>Annuler</button><button onClick={()=>{pointer.mutate('FIN_SERVICE');setShowConfirm(false);}} style={{flex:1,padding:12,background:'#e74c3c',border:'none',borderRadius:10,color:'#fff',fontWeight:600,cursor:'pointer'}}>Confirmer</button></div></div></div>}
+    {showConfirm&&<div className="modal-overlay" onClick={()=>setShowConfirm(false)}><div className="modal-content" onClick={e=>e.stopPropagation()}><h3 style={{color:"#DAA520",marginBottom:12}}>🏁 Terminer la journée ?</h3><div className="form-group"><input type="number" id="kmFin" placeholder="🏍️ KM au compteur (arrivée)" style={{width:"100%",padding:10,background:"#252525",border:"1px solid #333",borderRadius:10,color:"#fff",fontSize:14}}/></div>{kmDebut&&<div id="distanceTotale" style={{textAlign:"center",padding:10,background:"#1a2a1a",borderRadius:10,marginBottom:8,display:"none"}}>📏 Distance totale : <strong style={{color:"#2ecc71"}}>0 km</strong></div>}<p style={{color:"#888",fontSize:13,marginBottom:20}}>Vous ne pourrez plus enregistrer de courses aujourd'hui.</p><div style={{display:"flex",gap:8}}><button onClick={()=>setShowConfirm(false)} style={{flex:1,padding:12,background:"#333",border:"none",borderRadius:10,color:"#fff",fontWeight:600,cursor:"pointer"}}>Annuler</button><button onClick={()=>{const kmFinInput=document.getElementById("kmFin")as HTMLInputElement;const kmFinVal=kmFinInput?.value;if(kmFinVal&&kmDebut){const dist=parseFloat(kmFinVal)-parseFloat(kmDebut);if(dist>0){pointer.mutate("FIN_SERVICE");setKmFin(kmFinVal);setShowConfirm(false);}}else{pointer.mutate("FIN_SERVICE");setShowConfirm(false);}}} style={{flex:1,padding:12,background:"#e74c3c",border:"none",borderRadius:10,color:"#fff",fontWeight:600,cursor:"pointer"}}>Confirmer</button></div></div></div>}
   </div>;
 }
 
@@ -203,11 +214,17 @@ function CoursesPage(){
 
 // ========== VERSEMENTS ==========
 function VersementsSimplePage(){
-  const c=chauffeur(); const [montant,setMontant]=useState(''); const [msg,setMsg]=useState('');
+  const c=chauffeur(); const [montant,setMontant]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`
+  const [kmDebut,setKmDebut]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`
+  const [kmFin,setKmFin]=useState(`'');
+  const [distanceJour,setDistanceJour]=useState(0);` const [msg,setMsg]=useState('');
   const qc=useQueryClient();
   const {data}=useQuery({queryKey:['versements',c?.id],queryFn:()=>axios.get(`${API}/versements/chauffeur/${c?.id}`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
   const versements=data?.versements||[];
-  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant('');qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
+  const envoyer=()=>{if(!montant)return;axios.post(`${API}/versements`,{chauffeurId:c?.id,montantVerse:parseFloat(montant)},{headers:{Authorization:`Bearer ${tk()}`}}).then(()=>{setMsg('✅ Demande envoyée');setMontant(`'');
+  const [distanceJour,setDistanceJour]=useState(0);`qc.invalidateQueries({queryKey:['versements']});}).catch((err:any)=>setMsg('❌ '+(err.response?.data?.message||'Erreur')));};
   return <div>
     {msg&&<div className={`floating-alert ${msg.includes('✅')?'success':'warning'}`}>{msg}</div>}
     <h1 style={{color:'#DAA520',fontSize:18,fontWeight:700,marginBottom:12}}>💰 Versements</h1>
