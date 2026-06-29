@@ -63,7 +63,7 @@ export function JournauxPage() {
                 tab === 'depenses' ? 'bg-red-100 dark:bg-red-500/10' :
                 'bg-purple-100 dark:bg-purple-500/10'
               }`}>
-                {tabs.find(t => t.key === tab)?.icon && <tabs.find(t=>t.key===tab)!.icon size={18} className={tabs.find(t=>t.key===tab)!.color} />}
+                {tabs.find(t => t.key === tab)?.icon && {(()=>{const Icon=tabs.find(t=>t.key===tab)?.icon;return Icon?<Icon size={18}/>:null;})()}}
               </div>
               <div>
                 {tab === 'pointages' && <PointageRow item={item} />}
