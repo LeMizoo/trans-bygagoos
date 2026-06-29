@@ -1,32 +1,3 @@
 {
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/.turbo": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/pnpm-lock.yaml": true
-  },
-  "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-  ],
-  "material-icon-theme.folders.associations": {
-    "admin-web": "react-components",
-    "mobile-pwa": "mobile",
-    "api": "server",
-    "types": "typescript",
-    "ui": "components",
-    "utils": "tools",
-    "api-client": "api"
-  },
-  "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
-  }
+  "edge.webhint.enabled": false
 }
