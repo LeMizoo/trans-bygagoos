@@ -110,7 +110,7 @@ function DashboardPage({online}:{online:boolean}){
   const [typeCourse,setTypeCourse]=useState('NORMALE');
   const [kmDepart,setKmDepart]=useState(''); const [kmArrivee,setKmArrivee]=useState('');
   const [montant,setMontant]=useState('');
-  const [kmDebut,setKmDebut]=useState('');
+  const [kmDebut,setKmDebut]=useState(localStorage.getItem('kmDebut')||'');
   const [kmFinJour,setKmFinJour]=useState('');
   const [distanceJour,setDistanceJour]=useState(0);
 
