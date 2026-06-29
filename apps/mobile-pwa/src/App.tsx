@@ -1,5 +1,11 @@
+import MessagesPage from './pages/MessagesPage';
+import DepensesChauffeurPage from './pages/DepensesChauffeurPage';
+import AlertesMotoPage from './pages/AlertesMotoPage';
 /* eslint-disable */
 import { useState, useEffect, useRef } from 'react';
+import MessagesPage from './pages/MessagesPage';
+import DepensesChauffeurPage from './pages/DepensesChauffeurPage';
+import AlertesMotoPage from './pages/AlertesMotoPage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
@@ -49,7 +55,7 @@ export default function App() {
 }
 
 function AppContent() {
-  const [page, setPage] = useState<'login'|'accueil'|'courses'|'versements'|'stats'|'profil'|'notifications'>(tk()?'accueil':'login');
+  const [page, setPage] = useState<'login'|'accueil'|'courses'|'versements'|'stats'|'profil'|'notifications'|'messages'|'depenses'|'alertes'|'messages'|'depenses'|'alertes'>(tk()?'accueil':'login');
   const [online, setOnline] = useState(navigator.onLine);
   useEffect(() => {
     const go=()=>setOnline(true), goff=()=>setOnline(false);
@@ -71,6 +77,21 @@ function AppContent() {
         {page==='stats'&&<StatsPage/>}
         {page==='profil'&&<ProfilPage onLogout={()=>{localStorage.clear();setPage('login');}}/>}
         {page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}
+        {page==='messages'&&<MessagesPage/>}
+        {page==='depenses'&&<DepensesChauffeurPage/>}
+        {page==='alertes'&&<AlertesMotoPage/>}
+        {page==='messages'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<MessagesPage/>}
+        {page==='messages'&&<MessagesPage/>}
+        {page==='depenses'&&<DepensesChauffeurPage/>}
+        {page==='alertes'&&<AlertesMotoPage/>}
+        {page==='depenses'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<DepensesChauffeurPage/>}
+        {page==='messages'&&<MessagesPage/>}
+        {page==='depenses'&&<DepensesChauffeurPage/>}
+        {page==='alertes'&&<AlertesMotoPage/>}
+        {page==='alertes'{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}{page==='notifications'&&<NotificationsPage onBack={()=>setPage('accueil')}/>}<AlertesMotoPage/>}
+        {page==='messages'&&<MessagesPage/>}
+        {page==='depenses'&&<DepensesChauffeurPage/>}
+        {page==='alertes'&&<AlertesMotoPage/>}
       </div>
       <BottomNav current={page} onChange={setPage}/>
       <button className="fab-refresh" onClick={()=>window.location.reload()}>🔄</button>
