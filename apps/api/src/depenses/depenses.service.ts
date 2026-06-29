@@ -5,10 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DepensesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page = 1, limit = 20, categorie?: string) {
+  async findAll(page = 1, limit = 20, categorie?: string, motoId?: string) {
     const where: any = {};
     if (categorie && categorie !== 'tous') where.categorie = categorie;
-    
+    if (motoId) where.motoId = motoId;
+
     const [total, items] = await Promise.all([
       this.prisma.depense.count({ where }),
       this.prisma.depense.findMany({
@@ -22,11 +23,18 @@ export class DepensesService {
     return { items, total, page, pages: Math.ceil(total / limit) };
   }
 
-  async create(data: {
-    description: string; montant: number; categorie: string;
-    motoId?: string;  litres?: number; station?: string;
-  }) {
-    return this.prisma.depense.create({ data });
+  async create(data: any) {
+    // Nettoyer les champs inconnus selon le schéma
+    const clean: any = {
+      description: data.description,
+      montant: parseFloat(data.montant) || 0,
+      categorie: data.categorie || 'AUTRE',
+    };
+    if (data.motoId) clean.motoId = data.motoId;
+    if (data.litres) clean.litres = parseFloat(data.litres);
+    if (data.station) clean.station = data.station;
+    // chauffeurId n'est pas dans le schéma Depense, on le retire
+    return this.prisma.depense.create({ data: clean });
   }
 
   async update(id: string, data: any) {
@@ -40,7 +48,7 @@ export class DepensesService {
   async stats(periode: string = 'mois') {
     const now = new Date();
     let dateDebut: Date;
-    
+
     if (periode === 'jour') {
       dateDebut = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (periode === 'semaine') {
