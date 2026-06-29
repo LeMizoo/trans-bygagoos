@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Users, Bike, MapPin, DollarSign, AlertCircle, TrendingUp, Wrench, Star, Bell } from 'lucide-react';
+import { Users, Bike, MapPin, DollarSign, AlertCircle, TrendingUp, Wrench, Star, Bell, Shield, Gauge } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement,
@@ -47,9 +47,10 @@ export function DashboardPage() {
     queryFn: () => axios.get(`${API}/depenses/stats`).then(r => r.data).catch(() => ({ totalDepenses: 0, parCategorie: [] })),
   });
 
-  const { data: statsGlobales } = useQuery({
-    queryKey: ['journaux-stats'],
-    queryFn: () => axios.get(`${API}/journaux/stats`).then(r => r.data).catch(() => ({})),
+  const { data: alertesFlotte } = useQuery({
+    queryKey: ['alertes-flotte'],
+    queryFn: () => axios.get(`${API}/dashboard/alertes-flotte`).then(r => r.data).catch(() => ({ assuranceExpiree: 0, vignetteExpiree: 0, vidangeProche: 0 })),
+    refetchInterval: 60000,
   });
 
   const { data: alertes } = useQuery({
@@ -77,21 +78,33 @@ export function DashboardPage() {
   // Données graphiques
   const caChartData = {
     labels: caJournalier?.map((d: any) => new Date(d.date).toLocaleDateString('fr', { weekday: 'short', day: 'numeric' })) || [],
-    datasets: [{
-      label: 'CA (Ar)',
-      data: caJournalier?.map((d: any) => d.ca) || [],
-      borderColor: '#e94560',
-      backgroundColor: 'rgba(233,69,96,0.1)',
-      fill: true,
-      tension: 0.3,
-      pointBackgroundColor: '#e94560',
-    }],
+    datasets: [
+      {
+        label: 'CA (Ar)',
+        data: caJournalier?.map((d: any) => d.ca) || [],
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#10b981',
+      },
+      {
+        label: 'Dépenses (Ar)',
+        data: caJournalier?.map((d: any) => d.depenses) || [],
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239,68,68,0.05)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#ef4444',
+        borderDash: [4, 4],
+      },
+    ],
   };
 
   const topChauffeursData = {
     labels: topChauffeurs?.map((c: any) => c.chauffeur?.nom) || [],
     datasets: [{
-      label: 'CA (Ar)',
+      label: 'CA du mois (Ar)',
       data: topChauffeurs?.map((c: any) => c.ca) || [],
       backgroundColor: ['#e94560', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'],
       borderRadius: 8,
@@ -99,20 +112,20 @@ export function DashboardPage() {
   };
 
   const depensesData = {
-    labels: statsDepenses?.parCategorie?.map((c: any) => c.categorie) || [],
+    labels: statsDepenses?.parCategorie?.map((c: any) => c.label || c.categorie) || [],
     datasets: [{
-      data: statsDepenses?.parCategorie?.map((c: any) => c._sum?.montant || 0) || [],
-      backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899'],
+      data: statsDepenses?.parCategorie?.map((c: any) => c.montant || 0) || [],
+      backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899', '#6b7280'],
       borderWidth: 0,
     }],
   };
 
   const flotteData = {
-    labels: ['En service', 'En pause', 'Hors service', 'Sans moto'],
+    labels: ['En service', 'Hors service'],
     datasets: [{
       label: 'Chauffeurs',
-      data: [stats?.chauffeursActifs || 0, 0, (stats?.totalChauffeurs || 0) - (stats?.chauffeursActifs || 0), alertes?.sansMoto || 0],
-      backgroundColor: ['#10b981', '#f59e0b', '#6b7280', '#ef4444'],
+      data: [stats?.chauffeursActifs || 0, (stats?.totalChauffeurs || 0) - (stats?.chauffeursActifs || 0)],
+      backgroundColor: ['#10b981', '#6b7280'],
       borderRadius: 6,
     }],
   };
@@ -144,10 +157,10 @@ export function DashboardPage() {
         {[
           { label: 'CA jour', value: `${(stats?.caJour || 0).toLocaleString()} Ar`, icon: DollarSign, color: 'text-green-600' },
           { label: 'CA mois', value: `${(stats?.caMois || 0).toLocaleString()} Ar`, icon: TrendingUp, color: 'text-blue-600' },
+          { label: 'Dépenses mois', value: `${(stats?.depensesMois || 0).toLocaleString()} Ar`, icon: Wrench, color: 'text-red-600' },
           { label: 'Courses jour', value: stats?.coursesJour || 0, icon: MapPin, color: 'text-purple-600' },
-          { label: 'Chauffeurs', value: `${stats?.chauffeursActifs || 0}/${stats?.totalChauffeurs || 0}`, icon: Users, color: 'text-orange-600' },
+          { label: 'Chauffeurs', value: `${stats?.chauffeursActifs || 0}/${stats?.totalChauffeurs || 0}`, icon: Users, color: 'text-orange-600'},
           { label: 'Motos', value: stats?.totalMotos || 0, icon: Bike, color: 'text-cyan-600' },
-          { label: 'Propriétaires', value: stats?.totalProprietaires || 0, icon: Star, color: 'text-pink-600' },
         ].map((card) => (
           <div key={card.label} className="bg-white dark:bg-gray-800 rounded-xl border p-3 shadow-sm">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
@@ -159,15 +172,17 @@ export function DashboardPage() {
       </div>
 
       {/* Alertes */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Versements', value: alertes?.versementsEnAttente || 0, icon: DollarSign, color: 'border-red-500', href: '/versements' },
-          { label: 'Assistance', value: alertes?.assistanceOuverte || 0, icon: AlertCircle, color: 'border-yellow-500', href: '/assistance' },
-          { label: 'Sans moto', value: alertes?.sansMoto || 0, icon: Wrench, color: 'border-purple-500', href: '/chauffeurs' },
-          { label: 'Notifications', value: 0, icon: Bell, color: 'border-blue-500', href: '/notifications' },
+          { label: 'Versements', value: alertes?.versementsEnAttente || 0, icon: DollarSign, color: 'border-red-500 bg-red-50 dark:bg-red-500/5', href: '/versements' },
+          { label: 'Assistance', value: alertes?.assistanceOuverte || 0, icon: AlertCircle, color: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/5', href: '/assistance' },
+          { label: 'Sans moto', value: alertes?.sansMoto || 0, icon: Bike, color: 'border-purple-500 bg-purple-50 dark:bg-purple-500/5', href: '/chauffeurs' },
+          { label: 'Assurance exp.', value: alertesFlotte?.assuranceExpiree || 0, icon: Shield, color: 'border-red-400 bg-red-50 dark:bg-red-500/5', href: '/motos' },
+          { label: 'Vignette exp.', value: alertesFlotte?.vignetteExpiree || 0, icon: AlertCircle, color: 'border-orange-400 bg-orange-50 dark:bg-orange-500/5', href: '/motos' },
+          { label: 'Vidange proche', value: alertesFlotte?.vidangeProche || 0, icon: Gauge, color: 'border-blue-400 bg-blue-50 dark:bg-blue-500/5', href: '/motos' },
         ].map((card) => (
           <a key={card.label} href={card.href}
-            className={`bg-white dark:bg-gray-800 rounded-xl border-t-4 ${card.color} p-3 text-center hover:shadow-md transition-shadow ${card.value > 0 ? 'animate-pulse' : ''}`}>
+            className={`rounded-xl border-t-4 ${card.color} p-3 text-center hover:shadow-md transition-shadow ${card.value > 0 ? 'animate-pulse' : ''}`}>
             <card.icon size={16} className="mx-auto mb-1 text-gray-400" />
             <div className={`text-xl font-bold ${card.value > 0 ? 'text-red-500' : 'text-gray-400'}`}>{card.value}</div>
             <div className="text-xs text-gray-500">{card.label}</div>
@@ -177,10 +192,10 @@ export function DashboardPage() {
 
       {/* GRAPHIQUES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CA 7 jours */}
+        {/* CA 7 jours + Dépenses */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-primary" /> CA des 7 derniers jours
+            <TrendingUp size={18} className="text-primary" /> CA vs Dépenses (7 jours)
           </h2>
           <div style={{ height: 250 }}>
             <Line data={caChartData} options={chartOptions} />
@@ -190,7 +205,7 @@ export function DashboardPage() {
         {/* Top chauffeurs */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Users size={18} className="text-primary" /> Top 5 chauffeurs
+            <Users size={18} className="text-primary" /> Top 5 chauffeurs (mois)
           </h2>
           <div style={{ height: 250 }}>
             <Bar data={topChauffeursData} options={{ ...chartOptions, indexAxis: 'y' as const }} />
@@ -200,7 +215,7 @@ export function DashboardPage() {
         {/* Dépenses par catégorie */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
           <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <DollarSign size={18} className="text-red-500" /> Dépenses par catégorie
+            <Wrench size={18} className="text-red-500" /> Dépenses par catégorie
           </h2>
           <div style={{ height: 250 }}>
             {statsDepenses?.parCategorie?.length > 0 ? (
@@ -221,28 +236,6 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Stats globales */}
-      {statsGlobales && (
-        <div className="grid grid-cols-4 gap-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{statsGlobales.totalCourses || 0}</div>
-            <div className="text-xs text-gray-500">Total courses</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-green-500">{(statsGlobales.caTotal || 0).toLocaleString()} Ar</div>
-            <div className="text-xs text-gray-500">CA total</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-500">{statsGlobales.totalVersements || 0}</div>
-            <div className="text-xs text-gray-500">Versements</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-            <div className="text-2xl font-bold text-red-500">{statsGlobales.totalAssistance || 0}</div>
-            <div className="text-xs text-gray-500">Assistance</div>
-          </div>
-        </div>
-      )}
 
       {/* Timer */}
       <div className="text-center text-xs text-gray-400">
