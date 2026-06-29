@@ -157,6 +157,7 @@ function DashboardPage({online}:{online:boolean}){
       <button onClick={()=>setShowConfirm(true)} className="status-btn fin">⏹️ Fin</button>
     </div>
     <div className="card"><div className="card-title">📅 Aujourd'hui</div><div className="stats-grid"><div className="stat-item"><div className="stat-value">{stats.count}</div><div className="stat-label">Courses</div></div><div className="stat-item"><div className="stat-value">{(stats.prix||0).toLocaleString()} Ar</div><div className="stat-label">CA</div></div><div className="stat-item"><div className="stat-value">{(stats.commission||0).toLocaleString()} Ar</div><div className="stat-label">Commission</div></div><div className="stat-item"><div className="stat-value" style={{color:(stats.gainNet||0)>=0?'#27ae60':'#e74c3c'}}>{(stats.gainNet||0).toLocaleString()} Ar</div><div className="stat-label">Gain net</div></div></div></div>
+    <DepensesResume dep={dep} m={m} />
     <div className="card">
       <div className="card-title">➕ Nouvelle course</div>
       {!enService&&<div style={{background:'rgba(239,68,68,0.1)',borderLeft:'3px solid #ef4444',padding:10,borderRadius:8,marginBottom:12,fontSize:12,color:'#ef4444'}}>🔒 Vous devez être EN SERVICE pour enregistrer une course. Cliquez sur DÉPART.</div>}
