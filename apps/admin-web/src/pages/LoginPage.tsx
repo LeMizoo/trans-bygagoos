@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('admin@bygagoos.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('Admin123!');
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
