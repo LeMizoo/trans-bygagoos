@@ -117,7 +117,7 @@ function DashboardPage({online}:{online:boolean}){
   const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
   const {data:params}=useQuery({queryKey:['parametres'],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
   const {data:typesData}=useQuery({queryKey:['types-autorises'],queryFn:()=>axios.get(`${API}/parametres/types-autorises`).then(r=>r.data?.types||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']).catch(()=>['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']),staleTime:300000});
-  const {data:dep}=useQuery({queryKey:['dep-dash',m?.id],queryFn:()=>axios.get(`${API}/depenses?motoId=${m?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id,refetchInterval:30000});
+  const {data:dep}=useQuery({queryKey:['dep-dash',m?.id],queryFn:()=>axios.get(`${API}/depenses/chauffeur/${c?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id,refetchInterval:30000});
   const typesAutorises=typesData||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE'];
   const enService=c?.statut==='EN_SERVICE';
   useEffect(()=>{if(typesAutorises.length===1)setTypeCourse(typesAutorises[0]);else if(!typesAutorises.includes(typeCourse))setTypeCourse(typesAutorises[0]);},[typesAutorises]);
@@ -235,7 +235,7 @@ function VersementsSimplePage(){
 function StatsPage(){
   const c=chauffeur();const m=moto();
   const {data:dash}=useQuery({queryKey:["dashboard",c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id});
-  const {data:dep}=useQuery({queryKey:["depenses-stats",m?.id],queryFn:()=>axios.get(`${API}/depenses?motoId=${m?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id});
+  const {data:dep}=useQuery({queryKey:["depenses-stats",m?.id],queryFn:()=>axios.get(`${API}/depenses/chauffeur/${c?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id});
   const s=(p:string)=>({count:0,prix:0,commission:0,gainNet:0,...(dash?.[p]??{})});
   const items=dep?.items||[];
   const now=new Date();const debutJour=new Date(now.getFullYear(),now.getMonth(),now.getDate());const debutSemaine=new Date(now);debutSemaine.setDate(now.getDate()-(now.getDay()===0?6:now.getDay()-1));debutSemaine.setHours(0,0,0,0);const debutMois=new Date(now.getFullYear(),now.getMonth(),1);
