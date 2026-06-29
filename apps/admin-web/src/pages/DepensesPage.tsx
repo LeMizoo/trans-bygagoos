@@ -152,7 +152,7 @@ export function DepensesPage() {
                 ))}
               </select>
             </div>
-            {form.categorie === 'CARBURANT' && (
+            {form.categorie === "CARBURANT" && (
               <>
                 <div>
                   <label className="text-xs text-gray-500">Litres</label>

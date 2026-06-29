@@ -24,7 +24,7 @@ export class DepensesService {
 
   async create(data: {
     description: string; montant: number; categorie: string;
-    motoId?: string; chauffeurId?: string; litres?: number; station?: string;
+    motoId?: string;  litres?: number; station?: string;
   }) {
     return this.prisma.depense.create({ data });
   }
