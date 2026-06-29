@@ -98,7 +98,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
 
 function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
   const c=chauffeur(); const m=moto();
-  const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
+  const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000,onSuccess:(d:any)=>{if(d?.solde!==undefined){const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.solde=d.solde;localStorage.setItem('chauffeur',JSON.stringify(cd));}});
   const s:any={EN_SERVICE:{class:'presence-present',icon:'🟢',label:'En service'},EN_PAUSE:{class:'presence-pause',icon:'🟠',label:'En pause'},HORS_SERVICE:{class:'presence-absent',icon:'🔴',label:'Hors service'}};
   const st=s[c?.statut]||s.HORS_SERVICE;
   return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()}>🔄</button><button className="icon-btn">🔔</button><button className="icon-btn logout" onClick={onLogout}>🚪</button><button className={`icon-btn ${online?'online':'offline'}`}>{online?'📶':'📡'}</button></div></div></div>;
@@ -114,7 +114,7 @@ function DashboardPage({online}:{online:boolean}){
   const [kmFinJour,setKmFinJour]=useState('');
   const [distanceJour,setDistanceJour]=useState(0);
 
-  const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
+  const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000,onSuccess:(d:any)=>{if(d?.solde!==undefined){const cd=JSON.parse(localStorage.getItem('chauffeur')||'{}');cd.solde=d.solde;localStorage.setItem('chauffeur',JSON.stringify(cd));}});
   const {data:params}=useQuery({queryKey:['parametres'],queryFn:()=>axios.get(`${API}/parametres`).then(r=>r.data).catch(()=>({prix_base:2000,prix_km:500,tarif_location_journalier:15000})),staleTime:300000});
   const {data:typesData}=useQuery({queryKey:['types-autorises'],queryFn:()=>axios.get(`${API}/parametres/types-autorises`).then(r=>r.data?.types||['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']).catch(()=>['NORMALE','ADY_VAROTRA','LOCATION_JOURNALIERE']),staleTime:300000});
   const {data:dep}=useQuery({queryKey:['dep-dash',m?.id],queryFn:()=>axios.get(`${API}/depenses?motoId=${m?.id}`).then(r=>r.data).catch(()=>({items:[]})),enabled:!!m?.id,refetchInterval:30000});
