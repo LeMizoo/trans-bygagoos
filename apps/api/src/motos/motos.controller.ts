@@ -7,6 +7,7 @@ export class MotosController {
 
   @Get() findAll() { return this.service.findAll(); }
   @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(id); }
+  @Get(':id/stats') getStats(@Param('id') id: string) { return this.service.getStatsMoto(id); }
   @Post() create(@Body() data: any) { return this.service.create(data); }
   @Put(':id') update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
   @Delete(':id') delete(@Param('id') id: string) { return this.service.delete(id); }
