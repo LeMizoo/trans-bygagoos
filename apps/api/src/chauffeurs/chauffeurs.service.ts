@@ -12,6 +12,17 @@ export class ChauffeursService {
     return this.prisma.chauffeur.findMany({ where, include: { moto: true }, orderBy: { nom: 'asc' } });
   }
 
+  async findByProprietaire(proprietaireId: string, search?: string) {
+    const motos = await this.prisma.moto.findMany({
+      where: { proprietaireId },
+      select: { id: true },
+    });
+    const motosIds = motos.map(m => m.id);
+    const where: any = { motoId: { in: motosIds } };
+    if (search) where.OR = [{ nom: { contains: search } }, { codeAcces: { contains: search } }];
+    return this.prisma.chauffeur.findMany({ where, include: { moto: true }, orderBy: { nom: "asc" } });
+  }
+
   async findOne(id: string) {
     const c = await this.prisma.chauffeur.findUnique({
       where: { id },
