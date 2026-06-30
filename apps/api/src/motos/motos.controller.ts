@@ -3,25 +3,35 @@ import { MotosService } from './motos.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { User } from '../common/decorators/user.decorator';
+import { ProprietaireFilter } from '../auth/proprietaire.filter';
 
 @Controller('motos')
 @UseGuards(JwtAuthGuard)
 export class MotosController {
-  constructor(private readonly service: MotosService) {}
+  constructor(
+    private readonly service: MotosService,
+    private readonly proprioFilter: ProprietaireFilter,
+  ) {}
 
   @Get()
-  findAll(@User() user: any) {
-    return this.service.findAll(user);
+  @Roles('SUPER_ADMIN', 'ADMIN', 'LOGISTIQUE', 'PROPRIETAIRE')
+  async findAll(@User() user: any) {
+    if (user?.role === 'PROPRIETAIRE' && user?.email) {
+      const proprioId = await this.proprioFilter.getProprietaireId(user.email);
+      if (!proprioId) return [];
+      return this.service.findByProprietaire(proprioId);
+    }
+    return this.service.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @User() user: any) {
-    return this.service.findOne(id, user);
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
   }
 
   @Get(':id/stats')
-  getStats(@Param('id') id: string, @User() user: any) {
-    return this.service.getStatsMoto(id, user);
+  getStats(@Param('id') id: string) {
+    return this.service.getStatsMoto(id);
   }
 
   @Post()
