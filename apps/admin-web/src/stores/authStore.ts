@@ -8,6 +8,8 @@ interface User {
   nom: string;
   email: string;
   role: string;
+  flotteId?: string;
+  flotte?: { id: string; nom: string };
 }
 
 interface AuthStore {

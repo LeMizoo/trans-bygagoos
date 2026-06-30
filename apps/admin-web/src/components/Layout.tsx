@@ -1,23 +1,19 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useState } from 'react';
 import {
   LayoutDashboard, Users, Bike, UserCog, MapPin, Clock,
   DollarSign, AlertCircle, Settings, Bell,
   MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
-  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield
+  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield, Building2
 } from 'lucide-react';
 import { Header } from './Header';
-
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 const menusByRole: Record<string, { title: string; items: { label: string; icon: any; path: string }[] }[]> = {
   SUPER_ADMIN: [
     { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
-    { title: 'Flotte', items: [
+    { title: 'Flottes', items: [
       { label: 'Motos', icon: Bike, path: '/app/motos' },
       { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
       { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
@@ -75,6 +71,7 @@ const menusByRole: Record<string, { title: string; items: { label: string; icon:
     { title: 'Ma Flotte', items: [
       { label: 'Motos', icon: Bike, path: '/app/motos' },
       { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
+      { label: 'Mon Profil', icon: Building2, path: '/app/proprietaires' },
     ]},
     { title: 'Activité', items: [
       { label: 'Courses', icon: MapPin, path: '/app/courses' },
@@ -99,10 +96,6 @@ const menusByRole: Record<string, { title: string; items: { label: string; icon:
     { title: 'Flotte', items: [
       { label: 'Motos', icon: Bike, path: '/app/motos' },
       { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    ]},
-    { title: 'Activité', items: [
-      { label: 'Courses', icon: MapPin, path: '/app/courses' },
-      { label: 'Pointages', icon: Clock, path: '/app/pointages' },
     ]},
   ],
   SUPPORT: [
@@ -130,12 +123,18 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
       <aside className="hidden lg:flex lg:flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-          <img src="/assets/logo/b-trans.png" alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate">Trans ByGagoos</h1>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500">{user?.role || 'Admin'}</p>
-          </div>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <a href="/" className="flex items-center gap-3">
+            <img src="/assets/logo/b-trans.png" alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
+            <div className="min-w-0">
+              <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                {user?.flotte?.nom || 'Trans ByGagoos'}
+              </h1>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : user?.role === 'PROPRIETAIRE' ? '🏢 Propriétaire' : user?.role || 'Admin'}
+              </p>
+            </div>
+          </a>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           {menuSections.map((section) => {
@@ -195,7 +194,7 @@ export function Layout() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <img src="/assets/logo/b-trans.png" alt="Logo" className="w-8 h-8" />
-                <h1 className="text-sm font-bold">Trans ByGagoos</h1>
+                <h1 className="text-sm font-bold">{user?.flotte?.nom || 'Trans ByGagoos'}</h1>
               </div>
               <button onClick={() => setSidebarOpen(false)}><X size={20} /></button>
             </div>
