@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { LogIn, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,6 +29,11 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Retour à l'accueil */}
+        <button onClick={() => navigate('/')} className="flex items-center gap-2 text-gray-500 hover:text-primary mb-6 transition-colors">
+          <ArrowLeft size={18} /> Retour à l'accueil
+        </button>
+
         <div className="text-center mb-8">
           <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-20 h-20 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trans ByGagoos</h1>
@@ -63,6 +68,10 @@ export function LoginPage() {
               <LogIn size={18} /> {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
+          <p className="text-center text-sm text-gray-400 mt-4">
+            Pas encore de flotte ?{' '}
+            <button onClick={() => navigate('/register')} className="text-primary hover:underline">Créez-en une</button>
+          </p>
         </div>
       </div>
     </div>
