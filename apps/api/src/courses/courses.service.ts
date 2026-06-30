@@ -9,17 +9,37 @@ const COMMISSION_RATE = 0.20;
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(user?: any) {
-    const where: any = {};
-    if (user?.role === 'PROPRIETAIRE') {
-      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
-      if (proprio) where.moto = { proprietaireId: proprio.id };
-    }
-    return this.prisma.course.findMany({
-      where,
-      include: { chauffeur: true, moto: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(page?: number, limit?: number) {
+    const p = page || 1;
+    const l = limit || 50;
+    const [total, items] = await Promise.all([
+      this.prisma.course.count(),
+      this.prisma.course.findMany({
+        include: { chauffeur: true, moto: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (p - 1) * l,
+        take: l,
+      }),
+    ]);
+    return { items, total, page: p, pages: Math.ceil(total / l) };
+  }
+
+  async findByMotosIds(motosIds: string[], page?: number, limit?: number) {
+    if (!motosIds || motosIds.length === 0) return { items: [], total: 0, page: 1, pages: 0 };
+    const p = page || 1;
+    const l = limit || 50;
+    const where = { motoId: { in: motosIds } };
+    const [total, items] = await Promise.all([
+      this.prisma.course.count({ where }),
+      this.prisma.course.findMany({
+        where,
+        include: { chauffeur: true, moto: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (p - 1) * l,
+        take: l,
+      }),
+    ]);
+    return { items, total, page: p, pages: Math.ceil(total / l) };
   }
 
   async create(data: { chauffeurId: string; motoId: string; type: string; distance?: number; prix?: number }) {
@@ -68,15 +88,10 @@ export class CoursesService {
 
   async getStats(user?: any) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const whereBase: any = {};
-    if (user?.role === 'PROPRIETAIRE') {
-      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
-      if (proprio) whereBase.moto = { proprietaireId: proprio.id };
-    }
     const [total, todayCourses, ca] = await Promise.all([
-      this.prisma.course.count({ where: whereBase }),
-      this.prisma.course.count({ where: { ...whereBase, createdAt: { gte: today } } }),
-      this.prisma.course.aggregate({ _sum: { prix: true, commission: true, gainNet: true }, where: { ...whereBase, createdAt: { gte: today } } }),
+      this.prisma.course.count(),
+      this.prisma.course.count({ where: { createdAt: { gte: today } } }),
+      this.prisma.course.aggregate({ _sum: { prix: true, commission: true, gainNet: true }, where: { createdAt: { gte: today } } }),
     ]);
     return { totalCourses: total, coursesAujourdhui: todayCourses, caAujourdhui: ca._sum.prix || 0, commissionAujourdhui: ca._sum.commission || 0, gainNetAujourdhui: ca._sum.gainNet || 0 };
   }

@@ -5,14 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DepensesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page = 1, limit = 20, categorie?: string, user?: any) {
+  async findAll(page = 1, limit = 20, categorie?: string) {
     const where: any = {};
     if (categorie && categorie !== 'tous') where.categorie = categorie;
-    if (user?.role === 'PROPRIETAIRE') {
-      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
-      if (proprio) where.moto = { proprietaireId: proprio.id };
-    }
-
     const [total, items] = await Promise.all([
       this.prisma.depense.count({ where }),
       this.prisma.depense.findMany({
@@ -23,15 +18,23 @@ export class DepensesService {
     return { items, total, page, pages: Math.ceil(total / limit) };
   }
 
-  async findByChauffeur(chauffeurId: string, user?: any) {
+  async findByMotosIds(motosIds: string[], page = 1, limit = 20, categorie?: string) {
+    if (!motosIds || motosIds.length === 0) return { items: [], total: 0, page, pages: 0 };
+    const where: any = { motoId: { in: motosIds } };
+    if (categorie && categorie !== 'tous') where.categorie = categorie;
+    const [total, items] = await Promise.all([
+      this.prisma.depense.count({ where }),
+      this.prisma.depense.findMany({
+        where, include: { moto: { select: { immatriculation: true } } },
+        orderBy: { date: 'desc' }, skip: (page - 1) * limit, take: limit,
+      }),
+    ]);
+    return { items, total, page, pages: Math.ceil(total / limit) };
+  }
+
+  async findByChauffeur(chauffeurId: string) {
     const chauffeur = await this.prisma.chauffeur.findUnique({ where: { id: chauffeurId }, select: { motoId: true } });
     if (!chauffeur?.motoId) return { items: [], total: 0 };
-    // Vérifier proprio
-    if (user?.role === 'PROPRIETAIRE') {
-      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
-      const moto = await this.prisma.moto.findUnique({ where: { id: chauffeur.motoId } });
-      if (!proprio || moto?.proprietaireId !== proprio.id) return { items: [], total: 0 };
-    }
     const items = await this.prisma.depense.findMany({ where: { motoId: chauffeur.motoId }, orderBy: { date: 'desc' } });
     return { items, total: items.length };
   }
@@ -58,17 +61,11 @@ export class DepensesService {
     } else dateDebut = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const where: any = { date: { gte: dateDebut } };
-    if (user?.role === 'PROPRIETAIRE') {
-      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
-      if (proprio) where.moto = { proprietaireId: proprio.id };
-    }
-
     const [total, parCategorie, parJour] = await Promise.all([
       this.prisma.depense.aggregate({ _sum: { montant: true }, where }),
       this.prisma.depense.groupBy({ by: ['categorie'], _sum: { montant: true }, where }),
       this.prisma.depense.groupBy({ by: ['date'], _sum: { montant: true }, where, orderBy: { date: 'asc' } }),
     ]);
-
     return {
       totalDepenses: total._sum.montant || 0,
       parCategorie: parCategorie.map(c => ({ categorie: c.categorie, montant: c._sum.montant || 0, label: labels[c.categorie] || c.categorie })),
