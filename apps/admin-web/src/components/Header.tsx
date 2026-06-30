@@ -62,6 +62,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <button onClick={onMenuClick} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
             <Menu size={20} className="dark:text-gray-200" />
           </button>
+          {/* Logo cliquable → accueil public */}
+          <a href="/" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="/assets/logo/b-trans.png" alt="Accueil" className="w-8 h-8 object-contain" />
+          </a>
           <div className="hidden sm:flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <span>📅 {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
             <span>🕐 {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -73,17 +77,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <Search size={18} className="dark:text-gray-300" />
           </button>
 
-          <button onClick={() => navigate('/versements')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Versements">
+          <button onClick={() => navigate('/app/versements')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Versements">
             <HandCoins size={18} className="dark:text-gray-300" />
             {badgeVersements > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">{badgeVersements}</span>}
           </button>
 
-          <button onClick={() => navigate('/assistance')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Assistance">
+          <button onClick={() => navigate('/app/assistance')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Assistance">
             <Wrench size={18} className="dark:text-gray-300" />
             {badgeAssistance > 0 && <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">{badgeAssistance}</span>}
           </button>
 
-          <button onClick={() => navigate('/notifications')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Notifications">
+          <button onClick={() => navigate('/app/notifications')} className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title="Notifications">
             <Bell size={18} className="dark:text-gray-300" />
             {badgeNotifs > 0 && <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">{badgeNotifs}</span>}
           </button>

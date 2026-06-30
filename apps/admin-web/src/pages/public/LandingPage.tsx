@@ -13,6 +13,11 @@ const slides = [
     title: 'Yamaha Cygnus C1 ByGagoos',
     subtitle: 'La moto idéale pour vos chauffeurs',
   },
+  {
+    image: '/assets/photos/taxi-motos.jpg',
+    title: 'Taxi Moto ByGagoos',
+    subtitle: 'Vos chauffeurs prêts à servir vos clients',
+  },
 ];
 
 export function LandingPage() {
@@ -20,7 +25,6 @@ export function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Auto-slide toutes les 5 secondes
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -37,10 +41,10 @@ export function LandingPage() {
       <nav className="bg-white/90 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-3">
+            <a href="/" className="flex items-center gap-3">
               <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-10 h-10 object-contain" />
               <span className="text-xl font-bold text-gray-900">Trans ByGagoos</span>
-            </div>
+            </a>
             <div className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-gray-600 hover:text-primary">Fonctionnalités</a>
               <a href="#galerie" className="text-gray-600 hover:text-primary">Galerie</a>
@@ -99,7 +103,6 @@ export function LandingPage() {
           </div>
 
           <div className="relative">
-            {/* Slides */}
             <div className="relative overflow-hidden rounded-2xl aspect-[16/9] max-h-[500px] bg-gray-800">
               {slides.map((slide, index) => (
                 <div
@@ -112,12 +115,7 @@ export function LandingPage() {
                     src={slide.image}
                     alt={slide.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback si l'image n'existe pas
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
-                  {/* Overlay texte */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
                     <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">{slide.title}</h3>
                     <p className="text-white/70">{slide.subtitle}</p>
@@ -126,21 +124,13 @@ export function LandingPage() {
               ))}
             </div>
 
-            {/* Flèches navigation */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
-            >
+            <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
               <ChevronLeft size={24} />
             </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
-            >
+            <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
               <ChevronRight size={24} />
             </button>
 
-            {/* Indicateurs */}
             <div className="flex justify-center gap-3 mt-6">
               {slides.map((_, index) => (
                 <button
