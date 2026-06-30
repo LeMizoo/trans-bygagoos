@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, User, Mail, Phone, MapPin, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Building2, User, Eye, EyeOff, CheckCircle, Upload, X } from 'lucide-react';
 import axios from 'axios';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<'form' | 'success'>('form');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
   const [form, setForm] = useState({
     nomFlotte: '',
     description: '',
@@ -21,12 +24,31 @@ export function RegisterPage() {
     password: '',
   });
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Logo trop volumineux (max 5 MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      setLogoPreview(base64);
+      setLogoBase64(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await axios.post(`${API}/flottes/register`, form);
+      await axios.post(`${API}/flottes/register`, {
+        ...form,
+        logo: logoBase64,
+      });
       setStep('success');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erreur lors de l\'inscription');
@@ -44,8 +66,7 @@ export function RegisterPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Flotte créée ! 🎉</h2>
           <p className="text-gray-500 mb-6">
-            Votre flotte <strong>{form.nomFlotte}</strong> est prête. 
-            Vous pouvez maintenant vous connecter et commencer à la gérer.
+            Votre flotte <strong>{form.nomFlotte}</strong> est prête.
           </p>
           <button onClick={() => navigate('/login')} className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-primary/90 transition-all">
             Se connecter
@@ -73,6 +94,34 @@ export function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Logo */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h3 className="font-semibold text-gray-700 mb-3">Logo de la flotte (optionnel)</h3>
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-gray-200 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 size={32} className="text-gray-400" />
+                  )}
+                </div>
+                <div>
+                  <button type="button" onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm hover:bg-gray-50 transition-all">
+                    <Upload size={16} /> Choisir un logo
+                  </button>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  <p className="text-xs text-gray-400 mt-1">PNG, JPG. Max 5 MB</p>
+                  {logoPreview && (
+                    <button type="button" onClick={() => { setLogoPreview(null); setLogoBase64(null); }}
+                      className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <X size={12} /> Supprimer
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Infos Flotte */}
             <div className="bg-gray-50 rounded-xl p-4 space-y-4">
               <h3 className="font-semibold text-gray-700 flex items-center gap-2">
