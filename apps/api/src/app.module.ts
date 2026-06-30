@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ChauffeursModule } from './chauffeurs/chauffeurs.module';
@@ -18,8 +17,6 @@ import { AlertesModule } from './alertes/alertes.module';
 import { ProprietairesModule } from './proprietaires/proprietaires.module';
 import { JournauxModule } from './journaux/journaux.module';
 import { UsersModule } from './users/users.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { ProprietaireFilter } from './auth/proprietaire.filter';
 
 @Module({
   imports: [
@@ -28,10 +25,6 @@ import { ProprietaireFilter } from './auth/proprietaire.filter';
     DepensesModule, ContratsModule, DashboardModule, MotosModule,
     NotificationsModule, MessagesModule, ParametresModule, AlertesModule,
     ProprietairesModule, JournauxModule, UsersModule,
-  ],
-  providers: [
-    ProprietaireFilter,
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
 export class AppModule {}

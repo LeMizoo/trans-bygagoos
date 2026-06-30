@@ -1,7 +1,6 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -10,24 +9,29 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    // Si pas de @Roles, la route est publique
+    if (!roles || roles.length === 0) {
+      return true;
+    }
+    // Sinon, vérifier le JWT
     return super.canActivate(context);
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (err || !user) {
-      // Autoriser l'accès si pas de rôles requis (routes publiques)
-      if (!requiredRoles) return null;
-      throw err || new Error('Non authentifié');
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    // Si public, on laisse passer même sans user
+    if (!roles || roles.length === 0) {
+      return user || null;
     }
-
-    if (!requiredRoles) return user;
-    if (!requiredRoles.includes(user.role)) {
-      throw new Error('Accès non autorisé pour ce rôle');
+    // Si protégé mais pas d'utilisateur
+    if (err || !user) {
+      throw err || new UnauthorizedException('Authentification requise');
+    }
+    // Vérifier le rôle
+    const userRole = user.role;
+    if (!roles.includes(userRole)) {
+      throw new UnauthorizedException(`Rôle ${userRole} non autorisé. Rôles acceptés : ${roles.join(', ')}`);
     }
     return user;
   }
