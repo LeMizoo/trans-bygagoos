@@ -15,7 +15,7 @@ const adminMenu = [
   { title: 'Ma Flotte', items: [
     { label: 'Motos', icon: Bike, path: '/app/motos' },
     { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
+    { label: 'Gérants', icon: UserCog, path: '/app/proprietaires' },
   ]},
   { title: 'Activité', items: [
     { label: 'Courses', icon: MapPin, path: '/app/courses' },
@@ -43,7 +43,7 @@ const superAdminMenu = [
   { title: 'Flottes', items: [
     { label: 'Motos', icon: Bike, path: '/app/motos' },
     { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
+    { label: 'Gérants', icon: UserCog, path: '/app/proprietaires' },
   ]},
   { title: 'Activité', items: [
     { label: 'Courses', icon: MapPin, path: '/app/courses' },
@@ -70,7 +70,7 @@ const superAdminMenu = [
 const menusByRole: Record<string, any> = {
   SUPER_ADMIN: superAdminMenu,
   ADMIN: adminMenu,
-  PROPRIETAIRE: adminMenu,
+  GERANT: adminMenu,
   FINANCE: [
     { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
     { title: 'Finances', items: [
@@ -110,7 +110,7 @@ export function Layout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/'); // ← Retour à l'accueil public
+    navigate('/login'); // ← Retour à l'accueil public
   };
 
   return (
@@ -128,7 +128,7 @@ export function Layout() {
                 {user?.flotte?.nom || 'Trans ByGagoos'}
               </h1>
               <p className="text-[10px] text-gray-400 dark:text-gray-500">
-                {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : user?.role === 'PROPRIETAIRE' ? '🏢 Propriétaire' : user?.role || 'Admin'}
+                {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : user?.role === 'GERANT' ? '🏢 Gérant' : user?.role || 'Admin'}
               </p>
             </div>
           </a>

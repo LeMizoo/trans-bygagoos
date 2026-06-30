@@ -1,6 +1,8 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class FlottesService {
@@ -14,26 +16,28 @@ export class FlottesService {
     nom: string;
     email: string;
     password: string;
+    logo?: string; // base64
   }) {
-    // Vérifier si l'email existe déjà
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: data.email },
-    });
-    if (existingUser) {
-      throw new ConflictException('Cet email est déjà utilisé');
+    const existingUser = await this.prisma.user.findUnique({ where: { email: data.email } });
+    if (existingUser) throw new ConflictException('Cet email est déjà utilisé');
+
+    const existingFlotte = await this.prisma.flotte.findFirst({ where: { nom: data.nomFlotte } });
+    if (existingFlotte) throw new ConflictException('Ce nom de flotte existe déjà');
+
+    // Gérer le logo
+    let logoUrl: string | null = null;
+    if (data.logo && data.logo.startsWith('data:image')) {
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'logos');
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      
+      const ext = data.logo.split(';')[0].split('/')[1] || 'png';
+      const filename = `flotte-${Date.now()}.${ext}`;
+      const base64Data = data.logo.replace(/^data:image\/\w+;base64,/, '');
+      fs.writeFileSync(path.join(uploadsDir, filename), base64Data, 'base64');
+      logoUrl = `/uploads/logos/${filename}`;
     }
 
-    // Vérifier si le nom de flotte existe déjà
-    const existingFlotte = await this.prisma.flotte.findFirst({
-      where: { nom: data.nomFlotte },
-    });
-    if (existingFlotte) {
-      throw new ConflictException('Ce nom de flotte existe déjà');
-    }
-
-    // Créer la flotte et le propriétaire dans une transaction
     const result = await this.prisma.$transaction(async (prisma) => {
-      // 1. Créer la flotte
       const flotte = await prisma.flotte.create({
         data: {
           nom: data.nomFlotte,
@@ -41,10 +45,10 @@ export class FlottesService {
           telephone: data.telephone || null,
           email: data.email,
           adresse: data.adresse || null,
+          logo: logoUrl,
         },
       });
 
-      // 2. Créer le propriétaire (User)
       const hashedPassword = await bcrypt.hash(data.password, 10);
       const user = await prisma.user.create({
         data: {
@@ -56,30 +60,14 @@ export class FlottesService {
         },
       });
 
-      // 3. Créer les paramètres par défaut pour la flotte
-      await prisma.parametre.createMany({
-        data: [
-          { nom: `flotte_${flotte.id}_prix_base`, valeur: '2000', type: 'number' },
-          { nom: `flotte_${flotte.id}_prix_km`, valeur: '500', type: 'number' },
-          { nom: `flotte_${flotte.id}_tarif_location`, valeur: '15000', type: 'number' },
-        ],
-      });
-
       return { flotte, user };
     });
 
     return {
       success: true,
       message: 'Flotte créée avec succès !',
-      flotte: {
-        id: result.flotte.id,
-        nom: result.flotte.nom,
-      },
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        role: result.user.role,
-      },
+      flotte: { id: result.flotte.id, nom: result.flotte.nom, logo: result.flotte.logo },
+      user: { id: result.user.id, email: result.user.email, role: result.user.role },
     };
   }
 }

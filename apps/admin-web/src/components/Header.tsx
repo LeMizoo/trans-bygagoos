@@ -57,7 +57,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/'); // ← Retour à l'accueil public
+    navigate('/login'); // ← Retour à l'accueil public
   };
 
   return (

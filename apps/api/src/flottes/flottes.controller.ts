@@ -14,6 +14,7 @@ export class FlottesController {
     nom: string;
     email: string;
     password: string;
+    logo?: string;
   }) {
     return this.service.register(data);
   }
