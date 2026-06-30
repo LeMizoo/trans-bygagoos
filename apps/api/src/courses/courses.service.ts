@@ -9,10 +9,13 @@ export class CoursesService {
 
   async findAll(page = 1, limit = 50, flotteId?: string) {
     const where: any = {};
-    if (flotteId) where.flotteId = flotteId;
+    if (flotteId) where.moto = { flotteId };
     const [total, items] = await Promise.all([
       this.prisma.course.count({ where }),
-      this.prisma.course.findMany({ where, include: { chauffeur: true, moto: true }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+      this.prisma.course.findMany({
+        where, include: { chauffeur: true, moto: true },
+        orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit,
+      }),
     ]);
     return { items, total, page, pages: Math.ceil(total / limit) };
   }
@@ -32,10 +35,12 @@ export class CoursesService {
     }
     if (prix <= 0) throw new BadRequestException('Montant invalide');
     const gainNet = prix - commission;
-    const flotteId = chauffeur.flotteId;
 
     const course = await this.prisma.course.create({
-      data: { type: data.type, distance: data.distance || 0, prix, commission, gainNet, chauffeurId: data.chauffeurId, motoId: data.motoId, flotteId },
+      data: {
+        type: data.type, distance: data.distance || 0, prix, commission, gainNet,
+        chauffeurId: data.chauffeurId, motoId: data.motoId,
+      },
     });
     await this.prisma.chauffeur.update({ where: { id: data.chauffeurId }, data: { solde: { decrement: gainNet } } });
     if (data.distance && data.distance > 0) {
@@ -47,19 +52,28 @@ export class CoursesService {
   async syncOffline(data: { chauffeurId: string; courses: any[] }) {
     const results = [];
     for (const c of data.courses) {
-      try { const course = await this.create({ chauffeurId: data.chauffeurId, motoId: c.motoId, type: c.type, distance: c.distance, prix: c.prix }); results.push({ success: true, id: course.course_id }); }
-      catch (e: any) { results.push({ success: false, error: e?.message }); }
+      try {
+        const course = await this.create({ chauffeurId: data.chauffeurId, motoId: c.motoId, type: c.type, distance: c.distance, prix: c.prix });
+        results.push({ success: true, id: course.course_id });
+      } catch (e: any) { results.push({ success: false, error: e?.message }); }
     }
     return { synced: results.filter((r: any) => r.success).length, results };
   }
 
-  async getStats() {
+  async getStats(flotteId?: string) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const where: any = {};
+    if (flotteId) where.moto = { flotteId };
+    const whereToday = { ...where, createdAt: { gte: today } };
     const [total, todayCourses, ca] = await Promise.all([
-      this.prisma.course.count(),
-      this.prisma.course.count({ where: { createdAt: { gte: today } } }),
-      this.prisma.course.aggregate({ _sum: { prix: true, commission: true, gainNet: true }, where: { createdAt: { gte: today } } }),
+      this.prisma.course.count({ where }),
+      this.prisma.course.count({ where: whereToday }),
+      this.prisma.course.aggregate({ _sum: { prix: true, commission: true, gainNet: true }, where: whereToday }),
     ]);
-    return { totalCourses: total, coursesAujourdhui: todayCourses, caAujourdhui: ca._sum.prix || 0, commissionAujourdhui: ca._sum.commission || 0, gainNetAujourdhui: ca._sum.gainNet || 0 };
+    return {
+      totalCourses: total, coursesAujourdhui: todayCourses,
+      caAujourdhui: ca._sum.prix || 0, commissionAujourdhui: ca._sum.commission || 0,
+      gainNetAujourdhui: ca._sum.gainNet || 0,
+    };
   }
 }
