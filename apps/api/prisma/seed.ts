@@ -42,9 +42,9 @@ async function main() {
 
   // Créer quelques chauffeurs de test
   const chauffeurs = [
-    { codeAcces: 'CH001', nom: 'Jean Rakoto', pin: '1234' },
-    { codeAcces: 'CH002', nom: 'Pierre Rabe', pin: '1234' },
-    { codeAcces: 'CH003', nom: 'Michel Andry', pin: '1234' },
+    { codeAcces: 'CH001', nom: 'Jean Rakoto', telephone: '0320000001', pin: '1234' },
+    { codeAcces: 'CH002', nom: 'Pierre Rabe', telephone: '0320000002', pin: '1234' },
+    { codeAcces: 'CH003', nom: 'Michel Andry', telephone: '0320000003', pin: '1234' },
   ];
 
   for (const ch of chauffeurs) {
@@ -52,11 +52,13 @@ async function main() {
       where: { codeAcces: ch.codeAcces },
       update: {
         nom: ch.nom,
+        telephone: ch.telephone,
         pin: ch.pin,
       },
       create: {
         codeAcces: ch.codeAcces,
         nom: ch.nom,
+        telephone: ch.telephone,
         pin: ch.pin,
         statut: 'ACTIF',
         solde: 50000,
