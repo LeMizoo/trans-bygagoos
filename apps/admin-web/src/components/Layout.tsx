@@ -14,54 +14,117 @@ import { Header } from './Header';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
-const menuSections = [
-  {
-    title: 'Principal',
-    items: [
-      { label: 'Tableau de bord', icon: LayoutDashboard, path: '/' },
-    ],
-  },
-  {
-    title: 'Flotte',
-    items: [
+// Définition des menus par rôle
+const menusByRole: Record<string, { title: string; items: { label: string; icon: any; path: string }[] }[]> = {
+  SUPER_ADMIN: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Flotte', items: [
       { label: 'Motos', icon: Bike, path: '/motos' },
       { label: 'Chauffeurs', icon: Users, path: '/chauffeurs' },
       { label: 'Propriétaires', icon: UserCog, path: '/proprietaires' },
-    ],
-  },
-  {
-    title: 'Activité',
-    items: [
+    ]},
+    { title: 'Activité', items: [
       { label: 'Courses', icon: MapPin, path: '/courses' },
       { label: 'Pointages', icon: Clock, path: '/pointages' },
       { label: 'Versements', icon: DollarSign, path: '/versements' },
       { label: 'Contrats', icon: ClipboardList, path: '/contrats' },
-    ],
-  },
-  {
-    title: 'Finances',
-    items: [
+    ]},
+    { title: 'Finances', items: [
       { label: 'Dépenses', icon: Receipt, path: '/depenses' },
       { label: 'Rapports', icon: BarChart3, path: '/rapports' },
-    ],
-  },
-  {
-    title: 'Support',
-    items: [
+    ]},
+    { title: 'Support', items: [
       { label: 'Assistance', icon: AlertCircle, path: '/assistance' },
       { label: 'Messages', icon: MessageSquare, path: '/messages' },
-    ],
-  },
-  {
-    title: 'Système',
-    items: [
+    ]},
+    { title: 'Système', items: [
       { label: 'Utilisateurs', icon: Shield, path: '/utilisateurs' },
       { label: 'Paramètres', icon: Settings, path: '/parametres' },
       { label: 'Notifications', icon: Bell, path: '/notifications' },
       { label: 'Journaux', icon: ClipboardList, path: '/journaux' },
-    ],
-  },
-];
+    ]},
+  ],
+  ADMIN: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Flotte', items: [
+      { label: 'Motos', icon: Bike, path: '/motos' },
+      { label: 'Chauffeurs', icon: Users, path: '/chauffeurs' },
+      { label: 'Propriétaires', icon: UserCog, path: '/proprietaires' },
+    ]},
+    { title: 'Activité', items: [
+      { label: 'Courses', icon: MapPin, path: '/courses' },
+      { label: 'Pointages', icon: Clock, path: '/pointages' },
+      { label: 'Versements', icon: DollarSign, path: '/versements' },
+      { label: 'Contrats', icon: ClipboardList, path: '/contrats' },
+    ]},
+    { title: 'Finances', items: [
+      { label: 'Dépenses', icon: Receipt, path: '/depenses' },
+      { label: 'Rapports', icon: BarChart3, path: '/rapports' },
+    ]},
+    { title: 'Support', items: [
+      { label: 'Assistance', icon: AlertCircle, path: '/assistance' },
+      { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    ]},
+    { title: 'Système', items: [
+      { label: 'Paramètres', icon: Settings, path: '/parametres' },
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+      { label: 'Journaux', icon: ClipboardList, path: '/journaux' },
+    ]},
+  ],
+  FINANCE: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Finances', items: [
+      { label: 'Versements', icon: DollarSign, path: '/versements' },
+      { label: 'Dépenses', icon: Receipt, path: '/depenses' },
+      { label: 'Rapports', icon: BarChart3, path: '/rapports' },
+    ]},
+    { title: 'Support', items: [
+      { label: 'Messages', icon: MessageSquare, path: '/messages' },
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+    ]},
+  ],
+  LOGISTIQUE: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Flotte', items: [
+      { label: 'Motos', icon: Bike, path: '/motos' },
+      { label: 'Chauffeurs', icon: Users, path: '/chauffeurs' },
+      { label: 'Propriétaires', icon: UserCog, path: '/proprietaires' },
+    ]},
+    { title: 'Activité', items: [
+      { label: 'Courses', icon: MapPin, path: '/courses' },
+      { label: 'Pointages', icon: Clock, path: '/pointages' },
+      { label: 'Contrats', icon: ClipboardList, path: '/contrats' },
+    ]},
+    { title: 'Système', items: [
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+    ]},
+  ],
+  PROPRIETAIRE: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Mes motos', items: [
+      { label: 'Motos', icon: Bike, path: '/motos' },
+      { label: 'Propriétaires', icon: UserCog, path: '/proprietaires' },
+    ]},
+    { title: 'Activité', items: [
+      { label: 'Courses', icon: MapPin, path: '/courses' },
+      { label: 'Dépenses', icon: Receipt, path: '/depenses' },
+    ]},
+    { title: 'Support', items: [
+      { label: 'Messages', icon: MessageSquare, path: '/messages' },
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+    ]},
+  ],
+  SUPPORT: [
+    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/' }] },
+    { title: 'Support', items: [
+      { label: 'Assistance', icon: AlertCircle, path: '/assistance' },
+      { label: 'Messages', icon: MessageSquare, path: '/messages' },
+    ]},
+    { title: 'Système', items: [
+      { label: 'Notifications', icon: Bell, path: '/notifications' },
+    ]},
+  ],
+};
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -70,6 +133,8 @@ export function Layout() {
   const { theme, toggle } = useThemeStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const menuSections = menusByRole[user?.role || 'ADMIN'] || menusByRole.ADMIN;
 
   const { data: badgeVersements = 0 } = useQuery({
     queryKey: ['badge-versements'],
@@ -94,7 +159,7 @@ export function Layout() {
           <img src="/assets/logo/b-trans.png" alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate">Trans ByGagoos</h1>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500">Administration</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">{user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : user?.role || 'Admin'}</p>
           </div>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
