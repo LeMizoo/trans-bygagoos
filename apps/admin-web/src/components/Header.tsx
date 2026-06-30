@@ -55,6 +55,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     refetchInterval: 30000,
   });
 
+  const handleLogout = () => {
+    logout();
+    navigate('/'); // ← Retour à l'accueil public
+  };
+
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 h-16">
@@ -62,7 +67,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <button onClick={onMenuClick} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
             <Menu size={20} className="dark:text-gray-200" />
           </button>
-          {/* Logo cliquable → accueil public */}
           <a href="/" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img src="/assets/logo/b-trans.png" alt="Accueil" className="w-8 h-8 object-contain" />
           </a>
@@ -106,7 +110,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
           </div>
 
-          <button onClick={() => { logout(); navigate('/login'); }} className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-red-500" title="Déconnexion">
+          <button onClick={handleLogout} className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-red-500" title="Déconnexion">
             <LogOut size={18} />
           </button>
         </div>

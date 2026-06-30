@@ -10,79 +10,67 @@ import {
 } from 'lucide-react';
 import { Header } from './Header';
 
-const menusByRole: Record<string, { title: string; items: { label: string; icon: any; path: string }[] }[]> = {
-  SUPER_ADMIN: [
-    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
-    { title: 'Flottes', items: [
-      { label: 'Motos', icon: Bike, path: '/app/motos' },
-      { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-      { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
-    ]},
-    { title: 'Activité', items: [
-      { label: 'Courses', icon: MapPin, path: '/app/courses' },
-      { label: 'Pointages', icon: Clock, path: '/app/pointages' },
-      { label: 'Versements', icon: DollarSign, path: '/app/versements' },
-      { label: 'Contrats', icon: ClipboardList, path: '/app/contrats' },
-    ]},
-    { title: 'Finances', items: [
-      { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
-      { label: 'Rapports', icon: BarChart3, path: '/app/rapports' },
-    ]},
-    { title: 'Support', items: [
-      { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
-      { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
-    ]},
-    { title: 'Système', items: [
-      { label: 'Utilisateurs', icon: Shield, path: '/app/utilisateurs' },
-      { label: 'Paramètres', icon: Settings, path: '/app/parametres' },
-      { label: 'Notifications', icon: Bell, path: '/app/notifications' },
-      { label: 'Journaux', icon: ClipboardList, path: '/app/journaux' },
-    ]},
-  ],
-  ADMIN: [
-    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
-    { title: 'Flotte', items: [
-      { label: 'Motos', icon: Bike, path: '/app/motos' },
-      { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-      { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
-    ]},
-    { title: 'Activité', items: [
-      { label: 'Courses', icon: MapPin, path: '/app/courses' },
-      { label: 'Pointages', icon: Clock, path: '/app/pointages' },
-      { label: 'Versements', icon: DollarSign, path: '/app/versements' },
-      { label: 'Contrats', icon: ClipboardList, path: '/app/contrats' },
-    ]},
-    { title: 'Finances', items: [
-      { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
-      { label: 'Rapports', icon: BarChart3, path: '/app/rapports' },
-    ]},
-    { title: 'Support', items: [
-      { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
-      { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
-    ]},
-    { title: 'Système', items: [
-      { label: 'Paramètres', icon: Settings, path: '/app/parametres' },
-      { label: 'Notifications', icon: Bell, path: '/app/notifications' },
-      { label: 'Journaux', icon: ClipboardList, path: '/app/journaux' },
-    ]},
-  ],
-  PROPRIETAIRE: [
-    { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
-    { title: 'Ma Flotte', items: [
-      { label: 'Motos', icon: Bike, path: '/app/motos' },
-      { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-      { label: 'Mon Profil', icon: Building2, path: '/app/proprietaires' },
-    ]},
-    { title: 'Activité', items: [
-      { label: 'Courses', icon: MapPin, path: '/app/courses' },
-      { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
-      { label: 'Versements', icon: DollarSign, path: '/app/versements' },
-    ]},
-    { title: 'Support', items: [
-      { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
-      { label: 'Notifications', icon: Bell, path: '/app/notifications' },
-    ]},
-  ],
+const adminMenu = [
+  { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
+  { title: 'Ma Flotte', items: [
+    { label: 'Motos', icon: Bike, path: '/app/motos' },
+    { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
+    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
+  ]},
+  { title: 'Activité', items: [
+    { label: 'Courses', icon: MapPin, path: '/app/courses' },
+    { label: 'Pointages', icon: Clock, path: '/app/pointages' },
+    { label: 'Versements', icon: DollarSign, path: '/app/versements' },
+    { label: 'Contrats', icon: ClipboardList, path: '/app/contrats' },
+  ]},
+  { title: 'Finances', items: [
+    { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
+    { label: 'Rapports', icon: BarChart3, path: '/app/rapports' },
+  ]},
+  { title: 'Support', items: [
+    { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
+    { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
+  ]},
+  { title: 'Paramètres', items: [
+    { label: 'Profil Flotte', icon: Building2, path: '/app/proprietaires' },
+    { label: 'Paramètres', icon: Settings, path: '/app/parametres' },
+    { label: 'Notifications', icon: Bell, path: '/app/notifications' },
+  ]},
+];
+
+const superAdminMenu = [
+  { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
+  { title: 'Flottes', items: [
+    { label: 'Motos', icon: Bike, path: '/app/motos' },
+    { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
+    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
+  ]},
+  { title: 'Activité', items: [
+    { label: 'Courses', icon: MapPin, path: '/app/courses' },
+    { label: 'Pointages', icon: Clock, path: '/app/pointages' },
+    { label: 'Versements', icon: DollarSign, path: '/app/versements' },
+    { label: 'Contrats', icon: ClipboardList, path: '/app/contrats' },
+  ]},
+  { title: 'Finances', items: [
+    { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
+    { label: 'Rapports', icon: BarChart3, path: '/app/rapports' },
+  ]},
+  { title: 'Support', items: [
+    { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
+    { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
+  ]},
+  { title: 'Système', items: [
+    { label: 'Utilisateurs', icon: Shield, path: '/app/utilisateurs' },
+    { label: 'Paramètres', icon: Settings, path: '/app/parametres' },
+    { label: 'Notifications', icon: Bell, path: '/app/notifications' },
+    { label: 'Journaux', icon: ClipboardList, path: '/app/journaux' },
+  ]},
+];
+
+const menusByRole: Record<string, any> = {
+  SUPER_ADMIN: superAdminMenu,
+  ADMIN: adminMenu,
+  PROPRIETAIRE: adminMenu,
   FINANCE: [
     { title: 'Principal', items: [{ label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' }] },
     { title: 'Finances', items: [
@@ -114,10 +102,15 @@ export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuSections = menusByRole[user?.role || 'ADMIN'] || menusByRole.ADMIN;
+  const menuSections = menusByRole[user?.role || 'ADMIN'] || adminMenu;
 
   const toggleCollapse = (title: string) => {
     setCollapsed(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/'); // ← Retour à l'accueil public
   };
 
   return (
@@ -125,7 +118,11 @@ export function Layout() {
       <aside className="hidden lg:flex lg:flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <a href="/" className="flex items-center gap-3">
-            <img src="/assets/logo/b-trans.png" alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
+            {user?.flotte?.logo ? (
+              <img src={user.flotte.logo} alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
+            ) : (
+              <img src="/assets/logo/b-trans.png" alt="Logo" className="w-9 h-9 object-contain rounded-lg" />
+            )}
             <div className="min-w-0">
               <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate">
                 {user?.flotte?.nom || 'Trans ByGagoos'}
@@ -137,7 +134,7 @@ export function Layout() {
           </a>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-          {menuSections.map((section) => {
+          {menuSections.map((section: any) => {
             const isCollapsed = collapsed.includes(section.title);
             return (
               <div key={section.title}>
@@ -148,7 +145,7 @@ export function Layout() {
                 </button>
                 {!isCollapsed && (
                   <div className="space-y-0.5 mb-1">
-                    {section.items.map((item) => {
+                    {section.items.map((item: any) => {
                       const isActive = location.pathname === item.path;
                       const Icon = item.icon;
                       return (
@@ -180,7 +177,7 @@ export function Layout() {
               {theme === 'dark' ? <Sun size={14} className="text-yellow-400" /> : <Moon size={14} />}
             </button>
           </div>
-          <button onClick={() => { logout(); navigate('/login'); }}
+          <button onClick={handleLogout}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50">
             <LogOut size={14} /> Déconnexion
           </button>
@@ -193,15 +190,19 @@ export function Layout() {
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 p-4 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <img src="/assets/logo/b-trans.png" alt="Logo" className="w-8 h-8" />
+                {user?.flotte?.logo ? (
+                  <img src={user.flotte.logo} alt="Logo" className="w-8 h-8 object-contain" />
+                ) : (
+                  <img src="/assets/logo/b-trans.png" alt="Logo" className="w-8 h-8" />
+                )}
                 <h1 className="text-sm font-bold">{user?.flotte?.nom || 'Trans ByGagoos'}</h1>
               </div>
               <button onClick={() => setSidebarOpen(false)}><X size={20} /></button>
             </div>
-            {menuSections.map((section) => (
+            {menuSections.map((section: any) => (
               <div key={section.title} className="mb-2">
                 <div className="text-[10px] font-semibold text-gray-400 uppercase px-2 py-1">{section.title}</div>
-                {section.items.map((item) => {
+                {section.items.map((item: any) => {
                   const Icon = item.icon;
                   return (
                     <button key={item.path} onClick={() => { navigate(item.path); setSidebarOpen(false); }}
@@ -214,6 +215,10 @@ export function Layout() {
                 })}
               </div>
             ))}
+            <button onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 mt-4">
+              <LogOut size={14} /> Déconnexion
+            </button>
           </div>
         </div>
       )}
