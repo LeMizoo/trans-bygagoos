@@ -10,29 +10,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   canActivate(context: ExecutionContext) {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    // Si pas de @Roles, la route est publique
-    if (!roles || roles.length === 0) {
-      return true;
-    }
-    // Sinon, vérifier le JWT
+    if (!roles || roles.length === 0) return true;
     return super.canActivate(context);
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
     const roles = this.reflector.get<string[]>('roles', context.getHandler());
-    // Si public, on laisse passer même sans user
-    if (!roles || roles.length === 0) {
-      return user || null;
-    }
-    // Si protégé mais pas d'utilisateur
-    if (err || !user) {
-      throw err || new UnauthorizedException('Authentification requise');
-    }
-    // Vérifier le rôle
-    const userRole = user.role;
-    if (!roles.includes(userRole)) {
-      throw new UnauthorizedException(`Rôle ${userRole} non autorisé. Rôles acceptés : ${roles.join(', ')}`);
-    }
+    if (!roles || roles.length === 0) return user || null;
+    if (err || !user) throw err || new UnauthorizedException('Authentification requise');
+    if (!roles.includes(user.role)) throw new UnauthorizedException(`Rôle ${user.role} non autorisé`);
     return user;
   }
 }

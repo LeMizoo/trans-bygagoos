@@ -17,6 +17,7 @@ import { AlertesModule } from './alertes/alertes.module';
 import { ProprietairesModule } from './proprietaires/proprietaires.module';
 import { JournauxModule } from './journaux/journaux.module';
 import { UsersModule } from './users/users.module';
+import { ProprietaireFilter } from './auth/proprietaire.filter';
 
 @Module({
   imports: [
@@ -26,5 +27,6 @@ import { UsersModule } from './users/users.module';
     NotificationsModule, MessagesModule, ParametresModule, AlertesModule,
     ProprietairesModule, JournauxModule, UsersModule,
   ],
+  providers: [ProprietaireFilter],
 })
 export class AppModule {}
