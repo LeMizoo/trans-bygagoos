@@ -21,21 +21,40 @@ export class ChauffeursController {
       if (!proprioId) return [];
       return this.service.findByProprietaire(proprioId, search);
     }
-    return this.service.findAll(search);
+    return this.service.findAll();
+  }
+
+  @Get('dashboard')
+  getDashboard(@User() user: any) {
+    return this.service.getDashboard(user.sub);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) { return this.service.findOne(id); }
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
+  }
 
   @Post()
   @Roles('SUPER_ADMIN', 'ADMIN', 'LOGISTIQUE')
-  create(@Body() data: any) { return this.service.create(data); }
+  create(@Body() data: any) {
+    return this.service.create(data);
+  }
 
   @Put(':id')
   @Roles('SUPER_ADMIN', 'ADMIN', 'LOGISTIQUE')
-  update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.service.update(id, data);
+  }
 
   @Delete(':id')
   @Roles('SUPER_ADMIN', 'ADMIN')
-  delete(@Param('id') id: string) { return this.service.delete(id); }
+  delete(@Param('id') id: string) {
+    return this.service.delete(id);
+  }
+
+  @Post(':id/toggle-actif')
+  @Roles('SUPER_ADMIN', 'ADMIN')
+  toggleActif(@Param('id') id: string) {
+    return this.service.toggleActif(id);
+  }
 }
