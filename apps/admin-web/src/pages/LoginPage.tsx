@@ -18,7 +18,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/');
+      navigate('/app');
     } catch {
       setError('Email ou mot de passe incorrect');
     } finally {
