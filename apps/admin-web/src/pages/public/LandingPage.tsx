@@ -1,20 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { Bike, Users, BarChart3, Shield, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { photos } from './photos';
 
 const slides = [
   {
-    image: '/assets/photos/flotte-motos.jpg',
+    image: photos.flotteMotos || photos['flotte-motos'],
     title: 'Gérez votre flotte de motos',
     subtitle: 'Suivi complet : kilométrage, vidange, assurance, vignette',
   },
   {
-    image: '/assets/photos/yamaha-cygnus.jpg',
+    image: photos.yamahaCygnus || photos['yamaha-cygnus'],
     title: 'Yamaha Cygnus C1 ByGagoos',
     subtitle: 'La moto idéale pour vos chauffeurs',
   },
   {
-    image: '/assets/photos/taxi-motos.jpg',
+    image: photos.taxiMotos || photos['taxi-motos'],
     title: 'Taxi Moto ByGagoos',
     subtitle: 'Vos chauffeurs prêts à servir vos clients',
   },
@@ -37,7 +38,6 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
       <nav className="bg-white/90 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -68,7 +68,6 @@ export function LandingPage() {
         )}
       </nav>
 
-      {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
@@ -94,7 +93,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Galerie Slider */}
+      {/* Galerie Slider avec images intégrées */}
       <section id="galerie" className="bg-gray-900 py-16">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-10">
@@ -111,11 +110,7 @@ export function LandingPage() {
                     index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
                   }`}
                 >
-                  <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
                     <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">{slide.title}</h3>
                     <p className="text-white/70">{slide.subtitle}</p>
@@ -146,7 +141,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features" className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -172,7 +166,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Prêt à lancer votre flotte ?</h2>
@@ -183,7 +176,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
         © 2026 Trans ByGagoos - Ensemble pour la famille Gagoos ❤️
       </footer>
