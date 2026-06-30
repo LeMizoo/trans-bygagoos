@@ -4,138 +4,152 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Démarrage du seed...\n');
+  console.log('🌱 Démarrage du seed multi-flottes...\n');
 
-  // ═══════════════════════════════════════
-  // 1. SUPER_ADMIN
-  // ═══════════════════════════════════════
-  const superAdmin = await prisma.user.upsert({
-    where: { email: 'tovoniaina.rahendrison@gmail.com' },
-    update: { nom: 'Tovoniaina RAHENDRISON', password: await bcrypt.hash('ByGagoos@2024!', 10), role: 'SUPER_ADMIN' },
-    create: { email: 'tovoniaina.rahendrison@gmail.com', nom: 'Tovoniaina RAHENDRISON', password: await bcrypt.hash('ByGagoos@2024!', 10), role: 'SUPER_ADMIN' },
+  // Nettoyer les données existantes (ordre inverse des dépendances)
+  await prisma.message.deleteMany();
+  await prisma.contrat.deleteMany();
+  await prisma.assistance.deleteMany();
+  await prisma.versement.deleteMany();
+  await prisma.pointage.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.depense.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.moto.deleteMany();
+  await prisma.chauffeur.deleteMany();
+  await prisma.proprietaire.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.flotte.deleteMany();
+  await prisma.parametre.deleteMany();
+  console.log('🧹 Données nettoyées');
+
+  // ═══════════════════════════════════════════
+  // Flotte 1 : Rakoto Trans
+  // ═══════════════════════════════════════════
+  const flotte1 = await prisma.flotte.create({
+    data: {
+      nom: 'Rakoto Trans',
+      description: 'Flotte de transport Rakoto',
+      telephone: '0341234567',
+      email: 'rakoto@email.com',
+      adresse: 'Antananarivo 101',
+    },
   });
-  console.log('✅ SUPER_ADMIN :', superAdmin.email);
+  console.log('🏢 Flotte créée :', flotte1.nom);
 
-  // ═══════════════════════════════════════
-  // 2. ADMINS
-  // ═══════════════════════════════════════
-  const admins = [
-    { email: 'admin@bygagoos.com', nom: 'Admin Backup', password: 'Admin123!', role: 'ADMIN' },
-    { email: 'finances@bygagoos.com', nom: 'Lova Finance', password: 'Finance123!', role: 'FINANCE' },
-    { email: 'logistique@bygagoos.com', nom: 'Andry Logistique', password: 'Logistique123!', role: 'LOGISTIQUE' },
-    { email: 'support@bygagoos.com', nom: 'Miora Support', password: 'Support123!', role: 'SUPPORT' },
-  ];
+  const user1 = await prisma.user.create({
+    data: {
+      email: 'rakoto@email.com',
+      nom: 'Rakoto Jean',
+      password: await bcrypt.hash('Proprio123!', 10),
+      role: 'PROPRIETAIRE',
+      flotteId: flotte1.id,
+    },
+  });
+  console.log('👤 Propriétaire :', user1.email);
 
-  for (const a of admins) {
-    const user = await prisma.user.upsert({
-      where: { email: a.email },
-      update: { nom: a.nom, password: await bcrypt.hash(a.password, 10), role: a.role },
-      create: { email: a.email, nom: a.nom, password: await bcrypt.hash(a.password, 10), role: a.role },
-    });
-    console.log(`✅ ${a.role} : ${user.email}`);
-  }
+  await prisma.moto.createMany({
+    data: [
+      { immatriculation: '1234TBA', marque: 'Yamaha', modele: 'YBR 125', flotteId: flotte1.id, kmActuel: 15000 },
+      { immatriculation: '5678TBB', marque: 'Honda', modele: 'CG 125', flotteId: flotte1.id, kmActuel: 22000 },
+    ],
+  });
+  console.log('🏍️ 2 motos');
 
-  // ═══════════════════════════════════════
-  // 3. PROPRIETAIRES (avec motos)
-  // ═══════════════════════════════════════
-  const proprietaires = [
-    { email: 'rakoto@email.com', nom: 'Rakoto Jean', telephone: '0341234567', cin: '117072001609', role: 'PROPRIETAIRE', password: 'Proprio123!' },
-    { email: 'rabe@email.com', nom: 'Rabe Marie', telephone: '0339876543', cin: '118083002710', role: 'PROPRIETAIRE', password: 'Proprio123!' },
-  ];
+  await prisma.chauffeur.createMany({
+    data: [
+      { codeAcces: 'CH001', nom: 'Andry', telephone: '0320000001', pin: '1234', flotteId: flotte1.id, solde: 50000 },
+      { codeAcces: 'CH002', nom: 'Hery', telephone: '0320000002', pin: '1234', flotteId: flotte1.id, solde: 50000 },
+    ],
+  });
+  console.log('👨‍🔧 2 chauffeurs');
 
-  for (const p of proprietaires) {
-    const proprietaire = await prisma.proprietaire.upsert({
-      where: { telephone: p.telephone },
-      update: { nom: p.nom, telephone: p.telephone, email: p.email },
-      create: { nom: p.nom, telephone: p.telephone, email: p.email, cin: p.cin },
-    });
+  await prisma.user.create({
+    data: {
+      email: 'finance-rakoto@email.com',
+      nom: 'Lova Finance',
+      password: await bcrypt.hash('Finance123!', 10),
+      role: 'FINANCE',
+      flotteId: flotte1.id,
+    },
+  });
+  console.log('👤 Staff Finance');
 
-    // Créer un compte utilisateur pour le propriétaire
-    await prisma.user.upsert({
-      where: { email: p.email },
-      update: { nom: p.nom, password: await bcrypt.hash(p.password, 10), role: 'PROPRIETAIRE' },
-      create: { email: p.email, nom: p.nom, password: await bcrypt.hash(p.password, 10), role: 'PROPRIETAIRE' },
-    });
+  // ═══════════════════════════════════════════
+  // Flotte 2 : Rabe Moto
+  // ═══════════════════════════════════════════
+  const flotte2 = await prisma.flotte.create({
+    data: {
+      nom: 'Rabe Moto',
+      description: 'Location et transport Rabe',
+      telephone: '0339876543',
+      email: 'rabe@email.com',
+      adresse: 'Toamasina 501',
+    },
+  });
+  console.log('🏢 Flotte créée :', flotte2.nom);
 
-    console.log(`✅ Propriétaire : ${proprietaire.nom} (${p.email})`);
-  }
+  await prisma.user.create({
+    data: {
+      email: 'rabe@email.com',
+      nom: 'Rabe Marie',
+      password: await bcrypt.hash('Proprio123!', 10),
+      role: 'PROPRIETAIRE',
+      flotteId: flotte2.id,
+    },
+  });
+  console.log('👤 Propriétaire : rabe@email.com');
 
-  // ═══════════════════════════════════════
-  // 4. MOTOS
-  // ═══════════════════════════════════════
-  const motos = [
-    { immatriculation: '1234TBA', marque: 'Yamaha', modele: 'YBR 125', proprietaireCin: '117072001609', couleur: 'Noir', kmActuel: 15000 },
-    { immatriculation: '5678TBB', marque: 'Honda', modele: 'CG 125', proprietaireCin: '117072001609', couleur: 'Rouge', kmActuel: 22000 },
-    { immatriculation: '9012TBC', marque: 'Suzuki', modele: 'GN 125', proprietaireCin: '118083002710', couleur: 'Bleu', kmActuel: 8000 },
-  ];
+  await prisma.moto.createMany({
+    data: [
+      { immatriculation: '9012TBC', marque: 'Suzuki', modele: 'GN 125', flotteId: flotte2.id, kmActuel: 8000 },
+    ],
+  });
+  console.log('🏍️ 1 moto');
 
-  const proprietairesMap: Record<string, string> = {};
-  const props = await prisma.proprietaire.findMany();
-  props.forEach(p => { if (p.cin) proprietairesMap[p.cin] = p.id; });
+  await prisma.chauffeur.createMany({
+    data: [
+      { codeAcces: 'CH003', nom: 'Fidy', telephone: '0320000003', pin: '1234', flotteId: flotte2.id, solde: 50000 },
+    ],
+  });
+  console.log('👨‍🔧 1 chauffeur');
 
-  const motosIds: string[] = [];
-  for (const m of motos) {
-    const moto = await prisma.moto.upsert({
-      where: { immatriculation: m.immatriculation },
-      update: { marque: m.marque, modele: m.modele, proprietaireId: proprietairesMap[m.proprietaireCin] },
-      create: {
-        immatriculation: m.immatriculation,
-        marque: m.marque,
-        modele: m.modele,
-        couleur: m.couleur,
-        kmActuel: m.kmActuel,
-        proprietaireId: proprietairesMap[m.proprietaireCin],
-        statut: 'disponible',
-      },
-    });
-    motosIds.push(moto.id);
-    console.log(`✅ Moto : ${moto.immatriculation} → ${m.proprietaireCin}`);
-  }
+  // ═══════════════════════════════════════════
+  // SUPER_ADMIN (hors flotte)
+  // ═══════════════════════════════════════════
+  await prisma.user.create({
+    data: {
+      email: 'tovoniaina.rahendrison@gmail.com',
+      nom: 'Tovoniaina RAHENDRISON',
+      password: await bcrypt.hash('ByGagoos@2024!', 10),
+      role: 'SUPER_ADMIN',
+    },
+  });
+  console.log('👑 SUPER_ADMIN');
 
-  // ═══════════════════════════════════════
-  // 5. CHAUFFEURS (avec motos assignées)
-  // ═══════════════════════════════════════
-  const chauffeurs = [
-    { codeAcces: 'CH001', nom: 'Andry', telephone: '0320000001', pin: '1234', moto: 0 },
-    { codeAcces: 'CH002', nom: 'Hery', telephone: '0320000002', pin: '1234', moto: 1 },
-    { codeAcces: 'CH003', nom: 'Fidy', telephone: '0320000003', pin: '1234', moto: 2 },
-  ];
+  await prisma.user.create({
+    data: {
+      email: 'admin@bygagoos.com',
+      nom: 'Admin ByGagoos',
+      password: await bcrypt.hash('Admin123!', 10),
+      role: 'ADMIN',
+    },
+  });
+  console.log('🔑 ADMIN');
 
-  for (const ch of chauffeurs) {
-    const chauffeur = await prisma.chauffeur.upsert({
-      where: { codeAcces: ch.codeAcces },
-      update: { nom: ch.nom, telephone: ch.telephone, pin: ch.pin, motoId: motosIds[ch.moto] },
-      create: {
-        codeAcces: ch.codeAcces,
-        nom: ch.nom,
-        telephone: ch.telephone,
-        pin: ch.pin,
-        motoId: motosIds[ch.moto],
-        statut: 'HORS_SERVICE',
-        solde: 0,
-      },
-    });
-    console.log(`✅ Chauffeur : ${chauffeur.codeAcces} - ${chauffeur.nom} → 🏍️ ${motos[ch.moto].immatriculation}`);
-  }
-
-  // ═══════════════════════════════════════
-  // 6. PARAMÈTRES
-  // ═══════════════════════════════════════
+  // Paramètres
   const parametres = [
-    { nom: 'prix_base', valeur: '2000', type: 'number', description: 'Prix de base course (Ar)' },
-    { nom: 'prix_km', valeur: '500', type: 'number', description: 'Prix par kilomètre (Ar)' },
-    { nom: 'tarif_location_journalier', valeur: '15000', type: 'number', description: 'Tarif location journalière (Ar)' },
-    { nom: 'commission', valeur: '20', type: 'number', description: 'Commission ByGagoos (%)' },
+    { nom: 'prix_base', valeur: '2000', type: 'number' },
+    { nom: 'prix_km', valeur: '500', type: 'number' },
+    { nom: 'tarif_location_journalier', valeur: '15000', type: 'number' },
+    { nom: 'commission', valeur: '20', type: 'number' },
   ];
-
   for (const p of parametres) {
-    await prisma.parametre.upsert({ where: { nom: p.nom }, update: { valeur: p.valeur }, create: p });
+    await prisma.parametre.create({ data: p });
   }
-  console.log('✅ Paramètres par défaut');
+  console.log('⚙️ 4 paramètres');
 
-  console.log('\n═══════════════════════════════════');
-  console.log('🎉 Seed terminé avec succès !');
-  console.log('═══════════════════════════════════\n');
+  console.log('\n🎉 Seed terminé ! 2 Flottes, 3 Motos, 3 Chauffeurs, 5 Users');
 }
 
 main()

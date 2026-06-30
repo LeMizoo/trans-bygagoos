@@ -7,6 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Flotte {
+  id          String      @id @default(cuid())
+  nom         String
+  description String?
+  logo        String?
+  telephone   String?
+  email       String?
+  adresse     String?
+  siteWeb     String?
+  motos       Moto[]
+  chauffeurs  Chauffeur[]
+  users       User[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
 model User {
   id        String   @id @default(cuid())
   nom       String
@@ -14,6 +30,8 @@ model User {
   password  String
   role      String   @default("ADMIN")
   actif     Boolean  @default(true)
+  flotteId  String?
+  flotte    Flotte?  @relation(fields: [flotteId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -46,6 +64,8 @@ model Chauffeur {
   heureFinService         String       @default("19:00")
   motoId                  String?      @unique
   moto                    Moto?        @relation(fields: [motoId], references: [id])
+  flotteId                String?
+  flotte                  Flotte?      @relation(fields: [flotteId], references: [id])
   courses                 Course[]
   pointages               Pointage[]
   versements              Versement[]
@@ -99,6 +119,8 @@ model Moto {
   fournisseurVidange    String?
   finAssurance          DateTime?
   finVignette           DateTime?
+  flotteId              String?
+  flotte                Flotte?      @relation(fields: [flotteId], references: [id])
   chauffeur             Chauffeur?
   courses               Course[]
   depenses              Depense[]
