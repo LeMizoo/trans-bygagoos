@@ -5,7 +5,7 @@ import { LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('Admin123!');
+  const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,12 +44,14 @@ export function LoginPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="tovoniaina.rahendrison@gmail.com"
                 className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mot de passe</label>
               <div className="relative">
                 <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none pr-10 transition-all" required />
                 <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -66,4 +68,3 @@ export function LoginPage() {
     </div>
   );
 }
-
