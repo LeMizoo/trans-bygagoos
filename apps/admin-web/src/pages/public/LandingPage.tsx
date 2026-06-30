@@ -5,24 +5,13 @@ import { useState, useEffect } from 'react';
 const slides = [
   {
     image: '/assets/photos/flotte-motos.jpg',
-    placeholder: '🏍️🏍️🏍️',
     title: 'Gérez votre flotte de motos',
     subtitle: 'Suivi complet : kilométrage, vidange, assurance, vignette',
-    bg: 'from-blue-600 to-blue-800',
   },
   {
     image: '/assets/photos/yamaha-cygnus.jpg',
-    placeholder: '🛵',
-    title: 'Yamaha Cygnus C1',
-    subtitle: 'La moto idéale pour vos chauffeurs • Logo ByGagoos',
-    bg: 'from-primary to-primary/80',
-  },
-  {
-    image: '/assets/photos/dashboard.jpg',
-    placeholder: '📊',
-    title: 'Tableau de bord complet',
-    subtitle: 'Visualisez vos revenus et dépenses en temps réel',
-    bg: 'from-green-600 to-green-800',
+    title: 'Yamaha Cygnus C1 ByGagoos',
+    subtitle: 'La moto idéale pour vos chauffeurs',
   },
 ];
 
@@ -31,6 +20,7 @@ export function LandingPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Auto-slide toutes les 5 secondes
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -51,40 +41,31 @@ export function LandingPage() {
               <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-10 h-10 object-contain" />
               <span className="text-xl font-bold text-gray-900">Trans ByGagoos</span>
             </div>
-            
             <div className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-gray-600 hover:text-primary">Fonctionnalités</a>
-              <a href="#slider" className="text-gray-600 hover:text-primary">Galerie</a>
-              <a href="#contact" className="text-gray-600 hover:text-primary">Contact</a>
-              <button onClick={() => navigate('/login')} className="text-gray-600 hover:text-primary font-medium">
-                Connexion
-              </button>
+              <a href="#galerie" className="text-gray-600 hover:text-primary">Galerie</a>
+              <button onClick={() => navigate('/login')} className="text-gray-600 hover:text-primary font-medium">Connexion</button>
               <button onClick={() => navigate('/register')} className="bg-primary text-white px-5 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
                 Créer ma flotte
               </button>
             </div>
-
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2">
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-white px-4 py-4 space-y-3">
             <a href="#features" className="block text-gray-600 py-2">Fonctionnalités</a>
-            <a href="#slider" className="block text-gray-600 py-2">Galerie</a>
-            <a href="#contact" className="block text-gray-600 py-2">Contact</a>
+            <a href="#galerie" className="block text-gray-600 py-2">Galerie</a>
             <button onClick={() => navigate('/login')} className="block w-full text-left text-gray-600 py-2">Connexion</button>
-            <button onClick={() => navigate('/register')} className="block w-full bg-primary text-white text-center py-3 rounded-xl font-medium">
-              Créer ma flotte
-            </button>
+            <button onClick={() => navigate('/register')} className="block w-full bg-primary text-white text-center py-3 rounded-xl font-medium">Créer ma flotte</button>
           </div>
         )}
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
             🚀 Plateforme SaaS de gestion de flotte
@@ -109,8 +90,8 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Slider Section */}
-      <section id="slider" className="bg-gray-900 py-16">
+      {/* Galerie Slider */}
+      <section id="galerie" className="bg-gray-900 py-16">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-white">Notre flotte en images</h2>
@@ -118,8 +99,8 @@ export function LandingPage() {
           </div>
 
           <div className="relative">
-            {/* Slide */}
-            <div className="relative overflow-hidden rounded-2xl aspect-[16/9] max-h-[500px]">
+            {/* Slides */}
+            <div className="relative overflow-hidden rounded-2xl aspect-[16/9] max-h-[500px] bg-gray-800">
               {slides.map((slide, index) => (
                 <div
                   key={index}
@@ -127,23 +108,35 @@ export function LandingPage() {
                     index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
                   }`}
                 >
-                  {/* Fond dégradé + emoji placeholder */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg} flex flex-col items-center justify-center p-8 text-center`}>
-                    <span className="text-8xl mb-6">{slide.placeholder}</span>
-                    <h3 className="text-3xl sm:text-4xl font-bold text-white mb-4">{slide.title}</h3>
-                    <p className="text-lg text-white/80">{slide.subtitle}</p>
+                  <img
+                    src={slide.image}
+                    alt={slide.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback si l'image n'existe pas
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  {/* Overlay texte */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">{slide.title}</h3>
+                    <p className="text-white/70">{slide.subtitle}</p>
                   </div>
-                  {/* Remplacer par vraie image quand disponible : */}
-                  {/* <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" /> */}
                 </div>
               ))}
             </div>
 
-            {/* Flèches */}
-            <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
+            {/* Flèches navigation */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+            >
               <ChevronLeft size={24} />
             </button>
-            <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all"
+            >
               <ChevronRight size={24} />
             </button>
 
@@ -153,8 +146,8 @@ export function LandingPage() {
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    index === currentSlide ? 'bg-primary w-8' : 'bg-gray-500 hover:bg-gray-400'
+                  className={`h-3 rounded-full transition-all ${
+                    index === currentSlide ? 'bg-primary w-8' : 'bg-gray-500 hover:bg-gray-400 w-3'
                   }`}
                 />
               ))}
@@ -201,7 +194,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
+      <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
         © 2026 Trans ByGagoos - Ensemble pour la famille Gagoos ❤️
       </footer>
     </div>
