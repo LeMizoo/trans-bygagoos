@@ -15,7 +15,7 @@ const adminMenu = [
   { title: 'Ma Flotte', items: [
     { label: 'Motos', icon: Bike, path: '/app/motos' },
     { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    { label: 'Gérants', icon: UserCog, path: '/app/proprietaires' },
+    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
   ]},
   { title: 'Activité', items: [
     { label: 'Courses', icon: MapPin, path: '/app/courses' },
@@ -43,7 +43,7 @@ const superAdminMenu = [
   { title: 'Flottes', items: [
     { label: 'Motos', icon: Bike, path: '/app/motos' },
     { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    { label: 'Gérants', icon: UserCog, path: '/app/proprietaires' },
+    { label: 'Propriétaires', icon: UserCog, path: '/app/proprietaires' },
   ]},
   { title: 'Activité', items: [
     { label: 'Courses', icon: MapPin, path: '/app/courses' },
@@ -110,7 +110,7 @@ export function Layout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login'); // ← Retour à l'accueil public
+    navigate('/login');
   };
 
   return (
