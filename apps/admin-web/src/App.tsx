@@ -20,6 +20,8 @@ import { UtilisateursPage } from './pages/UtilisateursPage';
 import { JournauxPage } from './pages/JournauxPage';
 import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
+import { LandingPage } from './pages/public/LandingPage';
+import { RegisterPage } from './pages/public/RegisterPage';
 
 const queryClient = new QueryClient();
 
@@ -34,25 +36,30 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Pages publiques */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+          
+          {/* Pages protégées (dashboard) */}
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/chauffeurs" element={<ChauffeursPage />} />
-            <Route path="/codes" element={<CodesChauffeursPage />} />
-            <Route path="/motos" element={<MotosPage />} />
-            <Route path="/proprietaires" element={<ProprietairesPage />} />
-            <Route path="/courses" element={<CoursesPage />} />
-            <Route path="/versements" element={<VersementsPage />} />
-            <Route path="/pointages" element={<PointagesAdminPage />} />
-            <Route path="/assistance" element={<AssistancePage />} />
-            <Route path="/contrats" element={<ContratsPage />} />
-            <Route path="/depenses" element={<DepensesPage />} />
-            <Route path="/rapports" element={<RapportsPage />} />
-            <Route path="/messages" element={<MessagesPage />} />
-            <Route path="/notifications" element={<NotificationsAdminPage />} />
-            <Route path="/parametres" element={<ParametresPage />} />
-            <Route path="/utilisateurs" element={<UtilisateursPage />} />
-            <Route path="/journaux" element={<JournauxPage />} />
+            <Route path="/app" element={<DashboardPage />} />
+            <Route path="/app/chauffeurs" element={<ChauffeursPage />} />
+            <Route path="/app/codes" element={<CodesChauffeursPage />} />
+            <Route path="/app/motos" element={<MotosPage />} />
+            <Route path="/app/proprietaires" element={<ProprietairesPage />} />
+            <Route path="/app/courses" element={<CoursesPage />} />
+            <Route path="/app/versements" element={<VersementsPage />} />
+            <Route path="/app/pointages" element={<PointagesAdminPage />} />
+            <Route path="/app/assistance" element={<AssistancePage />} />
+            <Route path="/app/contrats" element={<ContratsPage />} />
+            <Route path="/app/depenses" element={<DepensesPage />} />
+            <Route path="/app/rapports" element={<RapportsPage />} />
+            <Route path="/app/messages" element={<MessagesPage />} />
+            <Route path="/app/notifications" element={<NotificationsAdminPage />} />
+            <Route path="/app/parametres" element={<ParametresPage />} />
+            <Route path="/app/utilisateurs" element={<UtilisateursPage />} />
+            <Route path="/app/journaux" element={<JournauxPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

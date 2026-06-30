@@ -8,6 +8,7 @@ import {
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 const ROLES = [
+  { value: "SUPER_ADMIN", label: "👑 Super Admin", desc: "Tous les droits + gestion des admins" },
   { value: 'ADMIN', label: '🔑 Admin', desc: 'Tous les droits' },
   { value: 'FINANCE', label: '💰 Finance', desc: 'Dépenses, versements, rapports' },
   { value: 'LOGISTIQUE', label: '🏍️ Logistique', desc: 'Motos, chauffeurs, contrats' },
