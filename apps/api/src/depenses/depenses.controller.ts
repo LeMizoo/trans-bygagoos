@@ -5,9 +5,7 @@ import { DepensesService } from './depenses.service';
 export class DepensesController {
   constructor(private readonly service: DepensesService) {}
 
-  @Get() findAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('categorie') categorie?: string) {
-    return this.service.findAll(Number(page) || 1, Number(limit) || 20, categorie);
-  }
+  @Get() findAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('categorie') categorie?: string, @Query('flotteId') flotteId?: string) { return this.service.findAll(Number(page) || 1, Number(limit) || 20, categorie, flotteId); }
   @Post() create(@Body() data: any) { return this.service.create(data); }
   @Put(':id') update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
   @Delete(':id') delete(@Param('id') id: string) { return this.service.delete(id); }

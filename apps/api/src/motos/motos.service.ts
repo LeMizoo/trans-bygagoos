@@ -5,16 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class MotosService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(flotteId?: string) {
+    const where: any = {};
+    if (flotteId) where.flotteId = flotteId;
     return this.prisma.moto.findMany({
-      include: { proprietaire: true, chauffeur: true },
-      orderBy: { immatriculation: 'asc' },
-    });
-  }
-
-  async findByProprietaire(proprietaireId: string) {
-    return this.prisma.moto.findMany({
-      where: { proprietaireId },
+      where,
       include: { proprietaire: true, chauffeur: true },
       orderBy: { immatriculation: 'asc' },
     });

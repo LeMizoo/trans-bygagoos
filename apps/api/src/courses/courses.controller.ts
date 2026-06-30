@@ -1,12 +1,12 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(private readonly service: CoursesService) {}
 
-  @Get() findAll() { return this.coursesService.findAll(); }
-  @Post() create(@Body() data: { chauffeurId: string; motoId: string; type: string; distance?: number; prix?: number }) { return this.coursesService.create(data); }
-  @Post('sync') syncOffline(@Body() data: { chauffeurId: string; courses: any[] }) { return this.coursesService.syncOffline(data); }
-  @Get('stats') getStats() { return this.coursesService.getStats(); }
+  @Get() findAll(@Query('page') page?: string, @Query('limit') limit?: string, @Query('flotteId') flotteId?: string) { return this.service.findAll(Number(page), Number(limit), flotteId); }
+  @Get('stats') getStats() { return this.service.getStats(); }
+  @Post() create(@Body() data: any) { return this.service.create(data); }
+  @Post('sync') syncOffline(@Body() data: any) { return this.service.syncOffline(data); }
 }

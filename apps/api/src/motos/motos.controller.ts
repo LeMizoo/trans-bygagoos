@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { MotosService } from './motos.service';
 
 @Controller('motos')
 export class MotosController {
   constructor(private readonly service: MotosService) {}
 
-  @Get() findAll() { return this.service.findAll(); }
+  @Get() findAll(@Query('flotteId') flotteId?: string) { return this.service.findAll(flotteId); }
   @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(id); }
   @Get(':id/stats') getStats(@Param('id') id: string) { return this.service.getStatsMoto(id); }
   @Post() create(@Body() data: any) { return this.service.create(data); }
