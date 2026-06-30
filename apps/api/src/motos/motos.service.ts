@@ -5,49 +5,60 @@ import { PrismaService } from '../prisma/prisma.service';
 export class MotosService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(user?: any) {
+    const where: any = {};
+    // Si proprio, filtrer par ses motos
+    if (user?.role === 'PROPRIETAIRE') {
+      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
+      if (proprio) where.proprietaireId = proprio.id;
+    }
     return this.prisma.moto.findMany({
+      where,
       include: { proprietaire: true, chauffeur: true },
       orderBy: { immatriculation: 'asc' },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user?: any) {
+    const moto = await this.prisma.moto.findUnique({ where: { id }, include: { proprietaire: true } });
+    // Vérifier que le proprio a le droit
+    if (user?.role === 'PROPRIETAIRE' && moto) {
+      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
+      if (!proprio || moto.proprietaireId !== proprio.id) return null;
+    }
     return this.prisma.moto.findUnique({
       where: { id },
       include: {
-        proprietaire: true,
-        chauffeur: true,
+        proprietaire: true, chauffeur: true,
         depenses: { orderBy: { date: 'desc' } },
         courses: { orderBy: { createdAt: 'desc' }, take: 50 },
       },
     });
   }
 
-  async getStatsMoto(id: string) {
+  async getStatsMoto(id: string, user?: any) {
     const moto = await this.prisma.moto.findUnique({
       where: { id },
       include: {
-        proprietaire: true,
-        chauffeur: true,
+        proprietaire: true, chauffeur: true,
         depenses: { orderBy: { date: 'desc' } },
         courses: { orderBy: { createdAt: 'desc' }, take: 100 },
       },
     });
-
     if (!moto) return null;
+    if (user?.role === 'PROPRIETAIRE') {
+      const proprio = await this.prisma.proprietaire.findFirst({ where: { email: user.email } });
+      if (!proprio || moto.proprietaireId !== proprio.id) return null;
+    }
 
     const courses = moto.courses || [];
     const depenses = moto.depenses || [];
-
     const totalCA = courses.reduce((sum: number, c: any) => sum + (c.prix || 0), 0);
     const totalCommission = courses.reduce((sum: number, c: any) => sum + (c.commission || 0), 0);
     const totalDepenses = depenses.reduce((sum: number, d: any) => sum + (d.montant || 0), 0);
 
     const depensesByCategorie: Record<string, number> = {};
-    depenses.forEach((d: any) => {
-      depensesByCategorie[d.categorie] = (depensesByCategorie[d.categorie] || 0) + d.montant;
-    });
+    depenses.forEach((d: any) => { depensesByCategorie[d.categorie] = (depensesByCategorie[d.categorie] || 0) + d.montant; });
 
     const coursesByType: Record<string, { count: number; total: number }> = {};
     courses.forEach((c: any) => {
@@ -57,19 +68,11 @@ export class MotosService {
     });
 
     return {
-      moto: {
-        id: moto.id, immatriculation: moto.immatriculation, marque: moto.marque,
-        modele: moto.modele, cylindree: moto.cylindree, couleur: moto.couleur,
-        kmActuel: moto.kmActuel, prixAchat: moto.prixAchat, dateAchat: moto.dateAchat,
-        statut: moto.statut, numMoteur: moto.numMoteur, numChassis: moto.numChassis,
-        kmProchaineVidange: moto.kmProchaineVidange, dateDerniereVidange: moto.dateDerniereVidange,
-        finAssurance: moto.finAssurance, finVignette: moto.finVignette,
-      },
+      moto: { id: moto.id, immatriculation: moto.immatriculation, marque: moto.marque, modele: moto.modele, kmActuel: moto.kmActuel, statut: moto.statut, finAssurance: moto.finAssurance, finVignette: moto.finVignette },
       proprietaire: moto.proprietaire,
       chauffeur: moto.chauffeur,
       stats: { totalCourses: courses.length, totalCA, totalCommission, totalDepenses, gainNet: totalCA - totalCommission - totalDepenses },
-      depensesByCategorie,
-      coursesByType,
+      depensesByCategorie, coursesByType,
       depenses: depenses.slice(0, 20),
       courses: courses.slice(0, 20),
     };
