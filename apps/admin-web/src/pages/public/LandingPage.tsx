@@ -162,6 +162,36 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Section Tarifs */}
+      <section id="pricing" className="bg-gray-50 py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">Nos tarifs</h2>
+            <p className="mt-4 text-gray-500">Choisissez le plan qui correspond à votre flotte</p>
+          </div>
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              { nom: "Gratuit", motos: "1 moto", prix: "0 Ar/mois", prixAnnuel: "Gratuit", couleur: "border-gray-300", bg: "bg-white", icon: "🆓", desc: "Pour démarrer" },
+              { nom: "Standard", motos: "2-5 motos", prix: "50 000 Ar/mois", prixAnnuel: "558 000 Ar/an", couleur: "border-blue-300", bg: "bg-white", icon: "🥈", desc: "Petite flotte", reduction: "-7%" },
+              { nom: "Premium", motos: "6-10 motos", prix: "90 000 Ar/mois", prixAnnuel: "1 004 400 Ar/an", couleur: "border-purple-300", bg: "bg-white", icon: "🥇", desc: "Flotte moyenne", reduction: "-7%" },
+              { nom: "Business", motos: "11+ motos", prix: "150 000 Ar/mois", prixAnnuel: "1 674 000 Ar/an", couleur: "border-amber-300", bg: "bg-primary/5", icon: "💎", desc: "Grande flotte", reduction: "-7%" },
+            ].map((plan, i) => (
+              <div key={i} className={`rounded-2xl border-2 ${plan.couleur} ${plan.bg} p-6 text-center hover:shadow-lg transition-all`}>
+                <span className="text-3xl">{plan.icon}</span>
+                <h3 className="text-xl font-bold mt-3">{plan.nom}</h3>
+                <p className="text-sm text-gray-500">{plan.motos}</p>
+                <p className="text-3xl font-extrabold text-primary mt-4">{plan.prix}</p>
+                <p className="text-sm text-green-600">{plan.prixAnnuel} {plan.reduction && <span className="text-xs">({plan.reduction})</span>}</p>
+                <p className="text-xs text-gray-400 mt-2">{plan.desc}</p>
+                <button onClick={() => navigate('/register')} className="mt-4 w-full bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all">
+                  {plan.nom === "Gratuit" ? "Démarrer" : "Choisir"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 text-center">
