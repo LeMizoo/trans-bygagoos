@@ -27,8 +27,23 @@ export class ChauffeursService {
     return { solde: chauffeur.solde, statut: chauffeur.statut, moto: chauffeur.moto, aujourdhui: sum(courses) };
   }
 
-  async create(data: any) { return this.prisma.chauffeur.create({ data: { ...data, statut: 'HORS_SERVICE', solde: 0 } }); }
-  async update(id: string, data: any) { return this.prisma.chauffeur.update({ where: { id }, data }); }
+  async create(data: any) {
+    // Convertir les dates
+    const dateFields = ['cinDateDelivrance', 'permisDateDelivrance', 'permisDateExpiration', 'certificatResidenceDate', 'dateEmbauche'];
+    dateFields.forEach(f => {
+      if (data[f] && typeof data[f] === 'string') data[f] = new Date(data[f]);
+    });
+    return this.prisma.chauffeur.create({ data: { ...data, statut: 'HORS_SERVICE', solde: 0 } });
+  }
+
+  async update(id: string, data: any) {
+    const dateFields = ['cinDateDelivrance', 'permisDateDelivrance', 'permisDateExpiration', 'certificatResidenceDate', 'dateEmbauche'];
+    dateFields.forEach(f => {
+      if (data[f] && typeof data[f] === 'string') data[f] = new Date(data[f]);
+    });
+    return this.prisma.chauffeur.update({ where: { id }, data });
+  }
+
   async delete(id: string) { return this.prisma.chauffeur.update({ where: { id }, data: { actif: false } }); }
   async toggleActif(id: string) { const c = await this.prisma.chauffeur.findUnique({ where: { id } }); return this.prisma.chauffeur.update({ where: { id }, data: { actif: !c?.actif } }); }
   async renouvelerTousCodes() { const chauffeurs = await this.prisma.chauffeur.findMany({ where: { actif: true } }); for (const c of chauffeurs) { await this.prisma.chauffeur.update({ where: { id: c.id }, data: { codeAcces: String(Math.floor(1000 + Math.random() * 9000)) } }); } return { renouveles: chauffeurs.length }; }
