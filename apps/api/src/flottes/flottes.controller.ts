@@ -26,16 +26,24 @@ export class FlottesController {
 
   @Post('force-seed')
   async forceSeed() {
-    const users = await this.prisma.user.findMany({
-      where: { role: 'GERANT' },
-      include: { flotte: true },
+    const existing = await this.prisma.user.findUnique({
+      where: { email: 'tovoniaina.rahendrison@gmail.com' },
     });
-    return { message: `✅ ${users.length} gérants trouvés`, users };
+    if (existing) return { message: '✅ SUPER_ADMIN existe déjà', user: existing.email };
+
+    const admin = await this.prisma.user.create({
+      data: {
+        email: 'tovoniaina.rahendrison@gmail.com',
+        nom: 'Tovoniaina RAHENDRISON',
+        password: await bcrypt.hash('ByGagoos@2024!', 10),
+        role: 'SUPER_ADMIN',
+      },
+    });
+    return { message: '✅ SUPER_ADMIN créé', user: admin.email };
   }
 
   @Post('fix-gerants')
   async fixGerants() {
-    // Récupérer tous les gérants et leurs flottes
     const gerants = await this.prisma.user.findMany({
       where: { role: { in: ['GERANT', 'PROPRIETAIRE'] } },
       include: { flotte: true },
@@ -43,7 +51,6 @@ export class FlottesController {
 
     const results = [];
     for (const g of gerants) {
-      // Remettre le mot de passe par défaut
       await this.prisma.user.update({
         where: { id: g.id },
         data: {
