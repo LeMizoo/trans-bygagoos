@@ -4,10 +4,10 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seed intelligent - mise à jour sans suppression...\n');
+  console.log('🌱 Seed intelligent...\n');
 
-  // SUPER_ADMIN - upsert (ne supprime pas)
-  const superAdmin = await prisma.user.upsert({
+  // SUPER_ADMIN
+  await prisma.user.upsert({
     where: { email: 'tovoniaina.rahendrison@gmail.com' },
     update: { role: 'SUPER_ADMIN' },
     create: {
@@ -17,7 +17,7 @@ async function main() {
       role: 'SUPER_ADMIN',
     },
   });
-  console.log('👑 SUPER_ADMIN :', superAdmin.email);
+  console.log('👑 SUPER_ADMIN');
 
   // Admin backup
   await prisma.user.upsert({
@@ -30,58 +30,22 @@ async function main() {
       role: 'ADMIN',
     },
   });
-  console.log('🔑 ADMIN : admin@bygagoos.com');
 
-  // Ajouter des chauffeurs aux flottes existantes (si pas déjà)
-  const flottes = await prisma.flotte.findMany({ include: { chauffeurs: true } });
-  
-  for (const flotte of flottes) {
-    const nbChauffeurs = flotte.chauffeurs.length;
-    if (nbChauffeurs === 0) {
-      // Créer 2 chauffeurs par flotte
-      await prisma.chauffeur.createMany({
-        data: [
-          {
-            codeAcces: 'CH001',
-            nom: `Chauffeur 1 - ${flotte.nom}`,
-            telephone: `032${flotte.id.substring(0, 7)}1`.replace(/[^0-9]/g, '').substring(0, 10),
-            pin: '1234',
-            flotteId: flotte.id,
-            solde: 50000,
-          },
-          {
-            codeAcces: 'CH002',
-            nom: `Chauffeur 2 - ${flotte.nom}`,
-            telephone: `032${flotte.id.substring(0, 7)}2`.replace(/[^0-9]/g, '').substring(0, 10),
-            pin: '1234',
-            flotteId: flotte.id,
-            solde: 50000,
-          },
-        ],
-      });
-      console.log(`👨‍🔧 2 chauffeurs ajoutés à ${flotte.nom} (CH001, CH002)`);
-    } else {
-      console.log(`⏭️ ${flotte.nom} a déjà ${nbChauffeurs} chauffeur(s)`);
-    }
-  }
-
-  // Paramètres par défaut (upsert)
-  const parametres = [
-    { nom: 'prix_base', valeur: '2000', type: 'number' },
-    { nom: 'prix_km', valeur: '500', type: 'number' },
-    { nom: 'tarif_location_journalier', valeur: '15000', type: 'number' },
-    { nom: 'commission', valeur: '20', type: 'number' },
+  // Paramètres d'abonnement
+  const abonnementParams = [
+    { nom: 'abonnement_gratuit_max_motos', valeur: '1', type: 'number', description: 'Nombre max de motos (gratuit)' },
+    { nom: 'abonnement_2_5_prix_mensuel', valeur: '50000', type: 'number', description: 'Prix mensuel 2-5 motos (Ar)' },
+    { nom: 'abonnement_6_10_prix_mensuel', valeur: '90000', type: 'number', description: 'Prix mensuel 6-10 motos (Ar)' },
+    { nom: 'abonnement_11_plus_prix_mensuel', valeur: '150000', type: 'number', description: 'Prix mensuel 11+ motos (Ar)' },
+    { nom: 'reduction_annuelle_pourcent', valeur: '7', type: 'number', description: 'Réduction abonnement annuel (%)' },
   ];
-  for (const p of parametres) {
-    await prisma.parametre.upsert({
-      where: { nom: p.nom },
-      update: { valeur: p.valeur },
-      create: p,
-    });
+  
+  for (const p of abonnementParams) {
+    await prisma.parametre.upsert({ where: { nom: p.nom }, update: { valeur: p.valeur }, create: p });
   }
-  console.log('⚙️ Paramètres à jour');
+  console.log('⚙️ Paramètres abonnement');
 
-  console.log('\n🎉 Seed terminé - Aucune flotte supprimée !');
+  console.log('\n🎉 Seed terminé !');
 }
 
 main()

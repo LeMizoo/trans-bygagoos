@@ -16,6 +16,10 @@ model Flotte {
   email       String?
   adresse     String?
   siteWeb     String?
+  statut      String      @default("EN_ATTENTE")
+  abonnement  String      @default("GRATUIT")
+  dateValidation DateTime?
+  dateFinAbonnement DateTime?
   motos       Moto[]
   chauffeurs  Chauffeur[]
   users       User[]
