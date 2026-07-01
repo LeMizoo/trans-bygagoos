@@ -4,10 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('flottes')
 export class FlottesController {
-  constructor(
-    private readonly service: FlottesService,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly service: FlottesService, private readonly prisma: PrismaService) {}
 
   @Get()
   async findAll() {
@@ -55,20 +52,36 @@ export class FlottesController {
   @Post('register')
   async register(@Body() data: any) { return this.service.register(data); }
 
+  @Post('restore-all')
+  async restoreAll() {
+    const bcrypt = require('bcrypt');
+    const results: string[] = [];
+    const flottes = [
+      { nom: 'Rakoto Trans', email: 'rakoto@email.com', tel: '0341234567' },
+      { nom: 'Rabe Moto', email: 'rabe@email.com', tel: '0339876543' },
+    ];
+    for (const d of flottes) {
+      let f = await this.prisma.flotte.findFirst({ where: { nom: d.nom } });
+      if (!f) f = await this.prisma.flotte.create({ data: { nom: d.nom, email: d.email, telephone: d.tel, statut: 'ACTIF' } });
+      await this.prisma.user.upsert({
+        where: { email: d.email },
+        update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
+        create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
+      });
+      results.push('OK ' + d.nom);
+    }
+    return { message: results.length + ' restaurés', results };
+  }
+
   @Post('seed-reset')
   async seedReset() {
     const bcrypt = require('bcrypt');
     const results: string[] = [];
     const flottesTest = ['Abela Trans', 'Tana Moto', 'Tamatave Express', 'Majunga Ride', 'Diégo Speed'];
-    
     for (const nom of flottesTest) {
       const f = await this.prisma.flotte.findFirst({ where: { nom } });
-      if (f) {
-        await this.prisma.moto.deleteMany({ where: { flotteId: f.id } });
-        await this.prisma.chauffeur.deleteMany({ where: { flotteId: f.id } });
-      }
+      if (f) { await this.prisma.moto.deleteMany({ where: { flotteId: f.id } }); await this.prisma.chauffeur.deleteMany({ where: { flotteId: f.id } }); }
     }
-
     const data = [
       { nom: 'Abela Trans', email: 'abela@me.eu', tel: '+261384512345', statut: 'ACTIF', abo: 'GRATUIT', motos: [{ imm: '4321TCE', marque: 'Yamaha', modele: 'Cygnus', km: 74520, couleur: 'Blanc' }], chauffeurs: [{ code: 'AB001', nom: 'Kiks Kely', tel: '+26138000001' }] },
       { nom: 'Tana Moto', email: 'tana@moto.mg', tel: '+261320000001', statut: 'ACTIF', abo: '2_5', motos: [{ imm: '1111TAB', marque: 'Honda', modele: 'CG125', km: 12000 }, { imm: '2222TAC', marque: 'Suzuki', modele: 'GN125', km: 8000 }, { imm: '3333TAD', marque: 'Yamaha', modele: 'YBR125', km: 25000 }], chauffeurs: [{ code: 'TM001', nom: 'Rija', tel: '+26133000001' }, { code: 'TM002', nom: 'Mamy', tel: '+26133000002' }] },
@@ -76,42 +89,15 @@ export class FlottesController {
       { nom: 'Majunga Ride', email: 'majunga@ride.mg', tel: '+261360000001', statut: 'ACTIF', abo: '11_PLUS', motos: [{ imm: '1212TAL', marque: 'Yamaha', modele: 'MT15', km: 1000 }, { imm: '1313TAM', marque: 'Yamaha', modele: 'MT15', km: 2000 }, { imm: '1414TAN', marque: 'Kawasaki', modele: 'KLX', km: 500 }, { imm: '1515TAO', marque: 'Kawasaki', modele: 'KLX', km: 800 }], chauffeurs: [{ code: 'MR001', nom: 'Haja', tel: '+26137000001' }, { code: 'MR002', nom: 'Bema', tel: '+26137000002' }] },
       { nom: 'Diégo Speed', email: 'diego@speed.mg', tel: '+261380000001', statut: 'ACTIF', abo: '2_5', motos: [{ imm: '2424TAX', marque: 'Yamaha', modele: 'XSR155', km: 5000 }, { imm: '2525TAY', marque: 'Yamaha', modele: 'XSR155', km: 4000 }, { imm: '2626TAZ', marque: 'Honda', modele: 'CB125R', km: 6000 }], chauffeurs: [{ code: 'DS001', nom: 'Njaka', tel: '+26139000001' }, { code: 'DS002', nom: 'Nantenaina', tel: '+26139000002' }] },
     ];
-
     for (const d of data) {
       const f = await this.prisma.flotte.findFirst({ where: { nom: d.nom } });
       if (f) {
-        await this.prisma.user.upsert({
-          where: { email: d.email },
-          update: { password: await bcrypt.hash('Proprio123!', 10), flotteId: f.id },
-          create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
-        });
+        await this.prisma.user.upsert({ where: { email: d.email }, update: { password: await bcrypt.hash('Proprio123!', 10), flotteId: f.id }, create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id } });
         for (const m of d.motos) { await this.prisma.moto.create({ data: { ...m, immatriculation: m.imm, flotteId: f.id } }); }
         for (const c of d.chauffeurs) { await this.prisma.chauffeur.create({ data: { ...c, codeAcces: c.code, telephone: c.tel, pin: '1234', flotteId: f.id, solde: 50000 } }); }
-        results.push('✅ ' + d.nom + ' (' + d.motos.length + ' motos, ' + d.chauffeurs.length + ' chauffeurs)');
-      }
+        results.push(d.nom + ' (' + d.motos.length + 'M, ' + d.chauffeurs.length + 'C)');
+      } else { results.push('? ' + d.nom + ' non trouvée'); }
     }
     return { message: 'Reset terminé', results };
-
-  @Post('restore-all')
-  async restoreAll() {
-    const bcrypt = require('bcrypt');
-    const results: string[] = [];
-
-    const flottes = [
-      { nom: 'Rakoto Trans', email: 'rakoto@email.com', tel: '0341234567' },
-      { nom: 'Rabe Moto', email: 'rabe@email.com', tel: '0339876543' },
-    ];
-
-    for (const d of flottes) {
-      let f = await this.prisma.flotte.findFirst({ where: { nom: d.nom } });
-      if (!f) f = await this.prisma.flotte.create({ data: { ...d, telephone: d.tel, statut: 'ACTIF' } });
-      await this.prisma.user.upsert({
-        where: { email: d.email },
-        update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
-        create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
-      });
-      results.push('✅ ' + d.nom);
-    }
-    return { message: results.length + ' restaurés', results };
   }
 }
