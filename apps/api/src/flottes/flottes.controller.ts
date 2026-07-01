@@ -91,5 +91,27 @@ export class FlottesController {
       }
     }
     return { message: 'Reset terminé', results };
+
+  @Post('restore-all')
+  async restoreAll() {
+    const bcrypt = require('bcrypt');
+    const results: string[] = [];
+
+    const flottes = [
+      { nom: 'Rakoto Trans', email: 'rakoto@email.com', tel: '0341234567' },
+      { nom: 'Rabe Moto', email: 'rabe@email.com', tel: '0339876543' },
+    ];
+
+    for (const d of flottes) {
+      let f = await this.prisma.flotte.findFirst({ where: { nom: d.nom } });
+      if (!f) f = await this.prisma.flotte.create({ data: { ...d, telephone: d.tel, statut: 'ACTIF' } });
+      await this.prisma.user.upsert({
+        where: { email: d.email },
+        update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
+        create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id },
+      });
+      results.push('✅ ' + d.nom);
+    }
+    return { message: results.length + ' restaurés', results };
   }
 }
