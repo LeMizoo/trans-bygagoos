@@ -126,7 +126,7 @@ export function MotosPage() {
               <select onChange={e => e.target.value && assignMutation.mutate({ motoId: m.id, chauffeurId: e.target.value })}
                 className="mt-2 w-full px-2 py-1 border rounded text-xs dark:bg-gray-700">
                 <option value="">+ Assigner chauffeur</option>
-                {chauffeurs?.map((c: any) => <option key={c.id} value={c.id}>{c.nom} ({c.codeAcces})</option>)}
+                {chauffeurs?.filter((c: any) => !c.motoId).map((c: any) => <option key={c.id} value={c.id}>{c.nom} ({c.codeAcces})</option>)}
               </select>
             )}
           </div>
