@@ -15,7 +15,7 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
-      include: { flotte: { select: { id: true, nom: true } } },
+      include: { flotte: { select: { id: true, nom: true, logo: true } } },
     });
     if (!user) throw new UnauthorizedException('Email ou mot de passe incorrect');
     const valid = await bcrypt.compare(loginDto.password, user.password);
@@ -25,24 +25,29 @@ export class AuthService {
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
-        id: user.id,
-        nom: user.nom,
-        email: user.email,
-        role: user.role,
-        flotteId: user.flotteId,
-        flotte: user.flotte,
+        id: user.id, nom: user.nom, email: user.email, role: user.role,
+        flotteId: user.flotteId, flotte: user.flotte,
       },
     };
   }
 
   async loginChauffeur(dto: LoginChauffeurDto) {
-    const chauffeur = await this.prisma.chauffeur.findUnique({
-      where: { codeAcces: dto.codeAcces },
+    // Chercher par codeAcces et flotteId si fourni
+    const where: any = { codeAcces: dto.codeAcces };
+    if (dto.flotteId) where.flotteId = dto.flotteId;
+    
+    const chauffeurs = await this.prisma.chauffeur.findMany({
+      where,
       include: { moto: true, flotte: { select: { id: true, nom: true } } },
+      take: 1,
     });
+    
+    const chauffeur = chauffeurs[0];
     if (!chauffeur) throw new UnauthorizedException('Code ou PIN incorrect');
+    
     const valid = await bcrypt.compare(dto.pin, chauffeur.pin);
     if (!valid) throw new UnauthorizedException('Code ou PIN incorrect');
+    
     const payload = { sub: chauffeur.id, role: 'CHAUFFEUR', flotteId: chauffeur.flotteId };
     return {
       accessToken: this.jwtService.sign(payload),
@@ -54,12 +59,19 @@ export class AuthService {
     };
   }
 
-  async loginByCode(code: string) {
-    const chauffeur = await this.prisma.chauffeur.findFirst({
-      where: { codeAcces: code },
+  async loginByCode(code: string, flotteId?: string) {
+    const where: any = { codeAcces: code };
+    if (flotteId) where.flotteId = flotteId;
+    
+    const chauffeurs = await this.prisma.chauffeur.findMany({
+      where,
       include: { moto: true },
+      take: 1,
     });
+    
+    const chauffeur = chauffeurs[0];
     if (!chauffeur) throw new UnauthorizedException('Code invalide');
+    
     const payload = { sub: chauffeur.id, role: 'CHAUFFEUR', flotteId: chauffeur.flotteId };
     return {
       accessToken: this.jwtService.sign(payload),

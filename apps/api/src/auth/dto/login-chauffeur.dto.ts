@@ -1,4 +1,4 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsString, MinLength, IsOptional } from 'class-validator';
 
 export class LoginChauffeurDto {
   @IsString()
@@ -7,4 +7,8 @@ export class LoginChauffeurDto {
   @IsString()
   @MinLength(4)
   pin: string;
+
+  @IsOptional()
+  @IsString()
+  flotteId?: string;
 }
