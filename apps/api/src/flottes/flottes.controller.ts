@@ -41,7 +41,7 @@ export class FlottesController {
       let f = await this.prisma.flotte.findFirst({ where: { nom: d.nom } });
       if (!f) f = await this.prisma.flotte.create({ data: { nom: d.nom, email: d.email, telephone: d.tel, statut: 'ACTIF', abonnement: d.abo } });
       await this.prisma.user.upsert({ where: { email: d.email }, update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id }, create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id } });
-      for (const m of d.motos) { await this.prisma.moto.upsert({ where: { immatriculation: m.imm }, update: { flotteId: f.id }, create: { ...m, immatriculation: m.imm, flotteId: f.id } }); }
+      for (const m of d.motos) { await this.prisma.moto.upsert({ where: { immatriculation: m.imm }, update: { flotteId: f.id }, create: { marque: m.marque, modele: m.modele, kmActuel: m.km, couleur: m.couleur, immatriculation: m.imm, flotteId: f.id } }); }
       for (const c of d.chauffeurs) { await this.prisma.chauffeur.upsert({ where: { codeAcces_flotteId: { codeAcces: c.code, flotteId: f.id } }, update: { telephone: c.tel }, create: { ...c, codeAcces: c.code, telephone: c.tel, pin: '1234', flotteId: f.id, solde: 50000 } }); }
       results.push('✅ ' + d.nom + ' (' + d.motos.length + 'M, ' + d.chauffeurs.length + 'C)');
     }
