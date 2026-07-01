@@ -75,7 +75,7 @@ export function AbonnementsPage() {
               <p className="font-bold text-lg">{plan.label}</p>
               <p className="text-sm text-gray-500">{plan.motos}</p>
               <p className="text-xl font-bold text-primary mt-2">{plan.prixMensuel}</p>
-              <p className="text-xs text-green-600 mt-1">{plan.prixAnnuel} (-7%)</p>
+              <p className="text-xs text-gray-400 mt-1">{plan.label === 'Gratuit' ? 'Sans engagement' : plan.prixAnnuel + ' (-7%)'}</p>
             </div>
           ))}
         </div>
