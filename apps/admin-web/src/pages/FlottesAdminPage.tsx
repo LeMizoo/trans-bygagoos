@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Building2, CheckCircle, XCircle, Clock, Phone, Mail, Calendar, Edit, Save, Trash2, X, Eye, RefreshCw } from 'lucide-react';
@@ -7,6 +8,7 @@ const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function FlottesAdminPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
 
@@ -84,7 +86,7 @@ export function FlottesAdminPage() {
           <h2 className="text-lg font-semibold text-yellow-600 mb-4">⏳ En attente de validation</h2>
           <div className="grid gap-4">
             {enAttente.map((f: any) => (
-              <FlotteCard key={f.id} f={f} editing={editing} editForm={editForm} setEditForm={setEditForm}
+              <FlotteCard key={f.id} f={f} navigate={navigate} editing={editing} editForm={editForm} setEditForm={setEditForm}
                 startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte}
                 deleteFlotte={deleteFlotte} reevaluer={reevaluer} statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
             ))}
@@ -96,7 +98,7 @@ export function FlottesAdminPage() {
         <h2 className="text-lg font-semibold text-green-600 mb-4">✅ Flottes actives ({actives.length})</h2>
         <div className="grid gap-4">
           {actives.map((f: any) => (
-            <FlotteCard key={f.id} f={f} editing={editing} editForm={editForm} setEditForm={setEditForm}
+            <FlotteCard key={f.id} f={f} navigate={navigate} editing={editing} editForm={editForm} setEditForm={setEditForm}
               startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte}
               deleteFlotte={deleteFlotte} reevaluer={reevaluer} statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
           ))}
@@ -152,7 +154,7 @@ function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, va
             </div>
           </div>
           <div className="flex gap-1 flex-shrink-0 ml-2">
-            <button onClick={() => window.open(`/app/proprietaires?id=${f.id}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600" title="Voir profil"><Eye size={14} /></button>
+            <button onClick={() => navigate(`/app/proprietaires/${f.id}`)} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600" title="Voir profil"><Eye size={14} /></button>
             <button onClick={() => reevaluer.mutate(f.id)} className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200" title="Réévaluer abonnement"><RefreshCw size={14} /></button>
             <button onClick={() => startEdit(f)} className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Modifier"><Edit size={14} /></button>
             {f.statut === 'EN_ATTENTE' && (

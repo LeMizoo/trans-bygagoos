@@ -44,6 +44,7 @@ export default function App() {
             <Route path="/app/chauffeurs" element={<ChauffeursPage />} />
             <Route path="/app/motos" element={<MotosPage />} />
             <Route path="/app/proprietaires" element={<ProprietairesPage />} />
+            <Route path="/app/proprietaires/:id" element={<ProprietairesPage />} />
             <Route path="/app/courses" element={<CoursesPage />} />
             <Route path="/app/versements" element={<VersementsPage />} />
             <Route path="/app/assistance" element={<AssistancePage />} />

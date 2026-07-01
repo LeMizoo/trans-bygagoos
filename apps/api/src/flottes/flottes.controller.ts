@@ -10,6 +10,11 @@ export class FlottesController {
   ) {}
 
   @Get()
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.prisma.flotte.findUnique({ where: { id }, include: { _count: { select: { motos: true, chauffeurs: true, users: true } } } });
+  }
   async findAll() {
     return this.prisma.flotte.findMany({
       select: { id: true, nom: true, logo: true, email: true, telephone: true, statut: true, abonnement: true, description: true, dateFinAbonnement: true, createdAt: true, _count: { select: { motos: true, chauffeurs: true } } },
