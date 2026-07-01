@@ -15,3 +15,4 @@ export class ChauffeursController {
   @Put(':id') update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
   @Delete(':id') delete(@Param('id') id: string) { return this.service.delete(id); }
 }
+
