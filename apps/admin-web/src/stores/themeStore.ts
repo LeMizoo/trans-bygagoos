@@ -8,35 +8,34 @@ interface ThemeStore {
   toggle: () => void;
 }
 
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  root.classList.remove('dark');
-  if (theme === 'dark') {
-    root.classList.add('dark');
-  } else if (theme === 'system') {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      root.classList.add('dark');
-    }
-  }
-}
-
-const saved = (localStorage.getItem('theme') as Theme) || 'system';
-applyTheme(saved);
+const getStoredTheme = (): Theme => {
+  const stored = localStorage.getItem('theme') as Theme;
+  return stored || 'system';
+};
 
 export const useThemeStore = create<ThemeStore>((set, get) => ({
-  theme: saved,
-  
+  theme: getStoredTheme(),
   setTheme: (theme: Theme) => {
     localStorage.setItem('theme', theme);
-    applyTheme(theme);
     set({ theme });
+    applyTheme(theme);
   },
-  
   toggle: () => {
     const current = get().theme;
     const next = current === 'dark' ? 'light' : 'dark';
-    localStorage.setItem('theme', next);
-    applyTheme(next);
-    set({ theme: next });
+    get().setTheme(next);
   },
 }));
+
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.classList.toggle('dark', prefersDark);
+  } else {
+    root.classList.toggle('dark', theme === 'dark');
+  }
+}
+
+// Appliquer au chargement
+applyTheme(getStoredTheme());
