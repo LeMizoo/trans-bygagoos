@@ -136,6 +136,7 @@ function AppContent() {
 }
 
 function Header({onLogout,online}:{onLogout:()=>void,online:boolean}){
+function DashboardPage({online}:{online:boolean}){
 function LoginPage({onLogin}:{onLogin:()=>void}){
   const [code,setCode]=useState(''); 
   const [error,setError]=useState(''); 
@@ -268,14 +269,6 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
     </div>
   );
 }
-  const c=chauffeur(); const m=moto();
-  const {data:dash}=useQuery({queryKey:['dashboard',c?.id],queryFn:()=>axios.get(`${API}/chauffeurs/${c?.id}/dashboard`,{headers:{Authorization:`Bearer ${tk()}`}}).then(r=>r.data),enabled:!!c?.id,refetchInterval:10000});
-  const s:any={EN_SERVICE:{class:'presence-present',icon:'🟢',label:'En service'},EN_PAUSE:{class:'presence-pause',icon:'🟠',label:'En pause'},HORS_SERVICE:{class:'presence-absent',icon:'🔴',label:'Hors service'}};
-  const st=s[c?.statut]||s.HORS_SERVICE;
-  return <div className="app-header"><div className="header-content"><div className="header-left"><div className="header-logo"><img src="/assets/logo/b-trans.png" alt="Logo"/></div><div className="header-info"><h1>{c?.nom||'Chauffeur'}</h1><p><span className={`presence-badge ${st.class}`}>{st.icon} {st.label}</span><span className={`moto-badge ${!m?'sans-moto':''}`}>🏍️ {m?.immatriculation||'Pas de moto'}</span><span>🔑 {c?.codeAcces}</span></p></div></div><div className="header-right"><button className="icon-btn sync" onClick={()=>window.location.reload()}>🔄</button><button className="icon-btn">🔔</button><button className="icon-btn logout" onClick={onLogout}>🚪</button><button className={`icon-btn ${online?'online':'offline'}`}>{online?'📶':'📡'}</button></div></div></div>;
-}
-
-function DashboardPage({online}:{online:boolean}){
   const qc=useQueryClient(); const c=chauffeur(); const m=moto();
   const [msg,setMsg]=useState(''); const [showConfirm,setShowConfirm]=useState(false);
   const [typeCourse,setTypeCourse]=useState('NORMALE');
