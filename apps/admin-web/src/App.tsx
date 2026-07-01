@@ -22,6 +22,8 @@ import { ParametresPage } from './pages/ParametresPage';
 import { Layout } from './components/Layout';
 import { LandingPage } from './pages/public/LandingPage';
 import { RegisterPage } from './pages/public/RegisterPage';
+import { FlottesAdminPage } from './pages/FlottesAdminPage';
+import { AbonnementsPage } from './pages/AbonnementsPage';
 
 const queryClient = new QueryClient();
 
@@ -36,14 +38,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          {/* Pages publiques */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
-          
-          {/* Pages protégées (dashboard) */}
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/app" element={<DashboardPage />} />
+            <Route path="/app/flottes" element={<FlottesAdminPage />} />
+            <Route path="/app/abonnements" element={<AbonnementsPage />} />
             <Route path="/app/chauffeurs" element={<ChauffeursPage />} />
             <Route path="/app/codes" element={<CodesChauffeursPage />} />
             <Route path="/app/motos" element={<MotosPage />} />

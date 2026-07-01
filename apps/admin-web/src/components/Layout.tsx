@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, Bike, UserCog, MapPin, Clock,
   DollarSign, AlertCircle, Settings, Bell,
   MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
-  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield, Building2, CreditCard, CheckCircle
+  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield, Building2, CreditCard
 } from 'lucide-react';
 import { Header } from './Header';
 
@@ -15,13 +15,6 @@ const superAdminMenu = [
     { label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' },
     { label: 'Flottes', icon: Building2, path: '/app/flottes' },
     { label: 'Abonnements', icon: CreditCard, path: '/app/abonnements' },
-  ]},
-  { title: 'Supervision', items: [
-    { label: 'Motos', icon: Bike, path: '/app/motos' },
-    { label: 'Chauffeurs', icon: Users, path: '/app/chauffeurs' },
-    { label: 'Courses', icon: MapPin, path: '/app/courses' },
-    { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
-    { label: 'Versements', icon: DollarSign, path: '/app/versements' },
   ]},
   { title: 'Support Global', items: [
     { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
