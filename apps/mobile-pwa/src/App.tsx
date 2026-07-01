@@ -112,7 +112,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
     }).catch(()=>{});
   },[]);
 
-  const submit=async(e:React.FormEvent)=>{
+  const submit=async(e:React.FormEvent)=>{e.preventDefault();setError("");if(!code||code.length<3){setError("Code requis");return;}
     setLoading(true);
     try{
       const payload:any={code:code.toUpperCase()};if(flotteId)payload.flotteId=flotteId;
