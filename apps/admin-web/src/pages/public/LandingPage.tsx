@@ -5,19 +5,22 @@ import { photos } from './photos';
 
 const slides = [
   {
-    image: photos.flotteMotos || photos['flotte-motos'],
+    image: photos['flotte-motos'],
     title: 'Gérez votre flotte de motos',
     subtitle: 'Suivi complet : kilométrage, vidange, assurance, vignette',
+    cta: 'Créer ma flotte',
   },
   {
-    image: photos.yamahaCygnus || photos['yamaha-cygnus'],
+    image: photos['yamaha-cygnus'],
     title: 'Yamaha Cygnus C1 ByGagoos',
     subtitle: 'La moto idéale pour vos chauffeurs',
+    cta: 'Découvrir',
   },
   {
-    image: photos.taxiMotos || photos['taxi-motos'],
+    image: photos['taxi-motos'],
     title: 'Taxi Moto ByGagoos',
     subtitle: 'Vos chauffeurs prêts à servir vos clients',
+    cta: 'Rejoindre',
   },
 ];
 
@@ -38,109 +41,102 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="bg-white/90 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+      {/* Navigation */}
+      <nav className="absolute top-0 left-0 right-0 z-50 bg-transparent">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <a href="/" className="flex items-center gap-3">
               <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-10 h-10 object-contain" />
-              <span className="text-xl font-bold text-gray-900">Trans ByGagoos</span>
+              <span className="text-xl font-bold text-white drop-shadow-lg">Trans ByGagoos</span>
             </a>
             <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-gray-600 hover:text-primary">Fonctionnalités</a>
-              <a href="#galerie" className="text-gray-600 hover:text-primary">Galerie</a>
-              <button onClick={() => navigate('/login')} className="text-gray-600 hover:text-primary font-medium">Connexion</button>
-              <button onClick={() => navigate('/register')} className="bg-primary text-white px-5 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/25">
+              <a href="#features" className="text-white/80 hover:text-white drop-shadow">Fonctionnalités</a>
+              <button onClick={() => navigate('/login')} className="text-white/80 hover:text-white font-medium drop-shadow">Connexion</button>
+              <button onClick={() => navigate('/register')} className="bg-white text-primary px-5 py-2.5 rounded-xl font-medium hover:bg-white/90 transition-all shadow-lg">
                 Créer ma flotte
               </button>
             </div>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-white">
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
         {mobileMenuOpen && (
-          <div className="md:hidden border-t bg-white px-4 py-4 space-y-3">
-            <a href="#features" className="block text-gray-600 py-2">Fonctionnalités</a>
-            <a href="#galerie" className="block text-gray-600 py-2">Galerie</a>
-            <button onClick={() => navigate('/login')} className="block w-full text-left text-gray-600 py-2">Connexion</button>
+          <div className="md:hidden bg-black/80 backdrop-blur-sm px-4 py-4 space-y-3">
+            <a href="#features" className="block text-white py-2">Fonctionnalités</a>
+            <button onClick={() => navigate('/login')} className="block w-full text-left text-white py-2">Connexion</button>
             <button onClick={() => navigate('/register')} className="block w-full bg-primary text-white text-center py-3 rounded-xl font-medium">Créer ma flotte</button>
           </div>
         )}
       </nav>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-            🚀 Plateforme SaaS de gestion de flotte
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-            Gérez votre flotte de transport
-            <span className="block text-primary">comme jamais auparavant</span>
-          </h1>
-          <p className="mt-6 text-lg text-gray-500 leading-relaxed">
-            Trans ByGagoos vous offre une solution complète pour gérer vos motos, 
-            chauffeurs, courses et finances. Tout depuis un seul tableau de bord.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={() => navigate('/register')} className="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2">
-              Créer ma flotte gratuitement <ArrowRight size={20} />
-            </button>
-            <button onClick={() => navigate('/login')} className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-xl text-lg font-semibold hover:border-primary hover:text-primary transition-all">
-              Se connecter
-            </button>
-          </div>
-          <p className="mt-4 text-sm text-gray-400">✓ Gratuit • ✓ Sans engagement • ✓ Démarrage immédiat</p>
-        </div>
-      </section>
-
-      {/* Galerie Slider avec images intégrées */}
-      <section id="galerie" className="bg-gray-900 py-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-white">Notre flotte en images</h2>
-            <p className="text-gray-400 mt-2">Découvrez les motos qui font tourner Trans ByGagoos</p>
-          </div>
-
-          <div className="relative">
-            <div className="relative overflow-hidden rounded-2xl aspect-[16/9] max-h-[500px] bg-gray-800">
-              {slides.map((slide, index) => (
-                <div
-                  key={index}
-                  className={`absolute inset-0 transition-opacity duration-700 ${
-                    index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                  }`}
-                >
-                  <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
-                    <h3 className="text-2xl sm:text-3xl font-bold text-white mb-1">{slide.title}</h3>
-                    <p className="text-white/70">{slide.subtitle}</p>
-                  </div>
-                </div>
-              ))}
+      {/* Hero Slider - Plein écran */}
+      <section className="relative h-screen">
+        <div className="absolute inset-0">
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
             </div>
+          ))}
+        </div>
 
-            <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
-              <ChevronLeft size={24} />
-            </button>
-            <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full backdrop-blur-sm transition-all">
-              <ChevronRight size={24} />
-            </button>
-
-            <div className="flex justify-center gap-3 mt-6">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`h-3 rounded-full transition-all ${
-                    index === currentSlide ? 'bg-primary w-8' : 'bg-gray-500 hover:bg-gray-400 w-3'
-                  }`}
-                />
-              ))}
+        {/* Hero Content */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                🚀 Plateforme SaaS de gestion de flotte
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6">
+                Gérez votre flotte de transport
+                <span className="block text-primary-300">comme jamais auparavant</span>
+              </h1>
+              <p className="text-lg text-white/80 leading-relaxed mb-10 max-w-xl">
+                Trans ByGagoos vous offre une solution complète pour gérer vos motos, 
+                chauffeurs, courses et finances. Tout depuis un seul tableau de bord.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button onClick={() => navigate('/register')} className="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2">
+                  Créer ma flotte gratuitement <ArrowRight size={20} />
+                </button>
+                <button onClick={() => navigate('/login')} className="border-2 border-white/30 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white/50 transition-all backdrop-blur-sm">
+                  Se connecter
+                </button>
+              </div>
+              <p className="mt-4 text-sm text-white/60">✓ Gratuit • ✓ Sans engagement • ✓ Démarrage immédiat</p>
             </div>
           </div>
         </div>
+
+        {/* Flèches */}
+        <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all z-10">
+          <ChevronLeft size={24} />
+        </button>
+        <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/30 text-white p-3 rounded-full backdrop-blur-sm transition-all z-10">
+          <ChevronRight size={24} />
+        </button>
+
+        {/* Indicateurs */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`h-2.5 rounded-full transition-all ${
+                index === currentSlide ? 'bg-primary w-10' : 'bg-white/30 hover:bg-white/50 w-2.5'
+              }`}
+            />
+          ))}
+        </div>
       </section>
 
+      {/* Features Section */}
       <section id="features" className="bg-gray-50 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -166,6 +162,7 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Prêt à lancer votre flotte ?</h2>
@@ -176,6 +173,7 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
         © 2026 Trans ByGagoos - Ensemble pour la famille Gagoos ❤️
       </footer>

@@ -41,7 +41,7 @@ model Chauffeur {
   nom                     String
   telephone               String       @unique
   email                   String?
-  codeAcces               String       @unique
+  codeAcces               String
   pin                     String
   statut                  String       @default("HORS_SERVICE")
   solde                   Float        @default(0)
@@ -74,6 +74,8 @@ model Chauffeur {
   messages                Message[]
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
+
+  @@unique([codeAcces, flotteId])
 }
 
 model Proprietaire {
