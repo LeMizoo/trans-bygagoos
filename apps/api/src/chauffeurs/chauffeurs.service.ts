@@ -28,6 +28,8 @@ export class ChauffeursService {
   }
 
   async create(data: any) {
+    // Pin par défaut si non fourni
+    if (!data.pin) data.pin = '1234';
     // Convertir les dates
     const dateFields = ['cinDateDelivrance', 'permisDateDelivrance', 'permisDateExpiration', 'certificatResidenceDate', 'dateEmbauche'];
     dateFields.forEach(f => {
