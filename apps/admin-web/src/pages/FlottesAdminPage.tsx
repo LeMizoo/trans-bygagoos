@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Building2, CheckCircle, XCircle, Clock, Phone, Mail, Calendar, Edit, Save, Trash2, X } from 'lucide-react';
+import { Building2, CheckCircle, XCircle, Clock, Phone, Mail, Calendar, Edit, Save, Trash2, X, Eye, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
@@ -36,6 +36,11 @@ export function FlottesAdminPage() {
     onSuccess: () => { setEditing(null); qc.invalidateQueries({ queryKey: ['flottes-admin'] }); },
   });
 
+  const reevaluer = useMutation({
+    mutationFn: (id: string) => axios.post(`${API}/flottes/${id}/reevaluer`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['flottes-admin'] }),
+  });
+
   const flottes = Array.isArray(data) ? data : [];
   const enAttente = flottes.filter((f: any) => f.statut === 'EN_ATTENTE');
   const actives = flottes.filter((f: any) => f.statut === 'ACTIF');
@@ -56,7 +61,7 @@ export function FlottesAdminPage() {
 
   const abonnementLabel = (abo: string) => {
     switch (abo) {
-      case 'GRATUIT': return '🆓 Gratuit';
+      case 'GRATUIT': return '🆓 Gratuit (1 moto)';
       case '2_5': return '🥈 2-5 motos';
       case '6_10': return '🥇 6-10 motos';
       case '11_PLUS': return '💎 11+ motos';
@@ -80,20 +85,20 @@ export function FlottesAdminPage() {
           <div className="grid gap-4">
             {enAttente.map((f: any) => (
               <FlotteCard key={f.id} f={f} editing={editing} editForm={editForm} setEditForm={setEditForm}
-                startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte} deleteFlotte={deleteFlotte}
-                statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
+                startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte}
+                deleteFlotte={deleteFlotte} reevaluer={reevaluer} statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
             ))}
           </div>
         </div>
       )}
 
       <div>
-        <h2 className="text-lg font-semibold text-green-600 mb-4">✅ Flottes actives</h2>
+        <h2 className="text-lg font-semibold text-green-600 mb-4">✅ Flottes actives ({actives.length})</h2>
         <div className="grid gap-4">
           {actives.map((f: any) => (
             <FlotteCard key={f.id} f={f} editing={editing} editForm={editForm} setEditForm={setEditForm}
-              startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte} deleteFlotte={deleteFlotte}
-              statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
+              startEdit={startEdit} saveEdit={saveEdit} validerFlotte={validerFlotte} rejeterFlotte={rejeterFlotte}
+              deleteFlotte={deleteFlotte} reevaluer={reevaluer} statutBadge={statutBadge} abonnementLabel={abonnementLabel} />
           ))}
           {actives.length === 0 && !isLoading && <p className="text-gray-500 text-center py-8">Aucune flotte active.</p>}
         </div>
@@ -102,7 +107,7 @@ export function FlottesAdminPage() {
   );
 }
 
-function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, validerFlotte, rejeterFlotte, deleteFlotte, statutBadge, abonnementLabel }: any) {
+function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, validerFlotte, rejeterFlotte, deleteFlotte, reevaluer, statutBadge, abonnementLabel }: any) {
   const isEditing = editing === f.id;
 
   return (
@@ -114,7 +119,7 @@ function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, va
             <input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm" placeholder="Email" />
             <input value={editForm.telephone} onChange={e => setEditForm({...editForm, telephone: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm" placeholder="Téléphone" />
             <select value={editForm.abonnement} onChange={e => setEditForm({...editForm, abonnement: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm">
-              <option value="GRATUIT">🆓 Gratuit</option>
+              <option value="GRATUIT">🆓 Gratuit (1 moto)</option>
               <option value="2_5">🥈 2-5 motos</option>
               <option value="6_10">🥇 6-10 motos</option>
               <option value="11_PLUS">💎 11+ motos</option>
@@ -127,17 +132,17 @@ function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, va
         </div>
       ) : (
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
               {f.logo ? <img src={f.logo} alt="" className="w-8 h-8 object-contain" /> : <Building2 size={24} className="text-primary" />}
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">{f.nom}</h3>
-              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-500">
                 <span><Mail size={12} className="inline" /> {f.email || '-'}</span>
                 <span><Phone size={12} className="inline" /> {f.telephone || '-'}</span>
-                <span>🏍️ {f._count?.motos || 0} motos</span>
-                <span>👨‍🔧 {f._count?.chauffeurs || 0} chauffeurs</span>
+                <span>🏍️ {f._count?.motos || 0} moto(s)</span>
+                <span>👨‍🔧 {f._count?.chauffeurs || 0} chauffeur(s)</span>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 {statutBadge(f.statut)}
@@ -146,7 +151,9 @@ function FlotteCard({ f, editing, editForm, setEditForm, startEdit, saveEdit, va
               </div>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-shrink-0 ml-2">
+            <button onClick={() => window.open(`/app/proprietaires?id=${f.id}`, '_blank')} className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600" title="Voir profil"><Eye size={14} /></button>
+            <button onClick={() => reevaluer.mutate(f.id)} className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200" title="Réévaluer abonnement"><RefreshCw size={14} /></button>
             <button onClick={() => startEdit(f)} className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Modifier"><Edit size={14} /></button>
             {f.statut === 'EN_ATTENTE' && (
               <>
