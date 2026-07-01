@@ -52,7 +52,7 @@ export function LandingPage() {
             <div className="hidden md:flex items-center gap-6">
               <a href="#features" className="text-white/80 hover:text-white drop-shadow">Fonctionnalités</a>
               <button onClick={() => navigate('/login')} className="text-white/80 hover:text-white font-medium drop-shadow">Connexion</button>
-              <button onClick={() => navigate('/register')} className="bg-white text-primary px-5 py-2.5 rounded-xl font-medium hover:bg-white/90 transition-all shadow-lg">
+              <button onClick={() => navigate('/register?plan=' + plan.nom)} className="bg-white text-primary px-5 py-2.5 rounded-xl font-medium hover:bg-white/90 transition-all shadow-lg">
                 Créer ma flotte
               </button>
             </div>
@@ -65,7 +65,7 @@ export function LandingPage() {
           <div className="md:hidden bg-black/80 backdrop-blur-sm px-4 py-4 space-y-3">
             <a href="#features" className="block text-white py-2">Fonctionnalités</a>
             <button onClick={() => navigate('/login')} className="block w-full text-left text-white py-2">Connexion</button>
-            <button onClick={() => navigate('/register')} className="block w-full bg-primary text-white text-center py-3 rounded-xl font-medium">Créer ma flotte</button>
+            <button onClick={() => navigate('/register?plan=' + plan.nom)} className="block w-full bg-primary text-white text-center py-3 rounded-xl font-medium">Créer ma flotte</button>
           </div>
         )}
       </nav>
@@ -102,7 +102,7 @@ export function LandingPage() {
                 chauffeurs, courses et finances. Tout depuis un seul tableau de bord.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button onClick={() => navigate('/register')} className="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2">
+                <button onClick={() => navigate('/register?plan=' + plan.nom)} className="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2">
                   Créer ma flotte gratuitement <ArrowRight size={20} />
                 </button>
                 <button onClick={() => navigate('/login')} className="border-2 border-white/30 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white/50 transition-all backdrop-blur-sm">
@@ -183,7 +183,7 @@ export function LandingPage() {
                 <p className="text-3xl font-extrabold text-primary mt-4">{plan.prix}</p>
                 <p className="text-sm text-green-600">{plan.prixAnnuel} {plan.reduction && <span className="text-xs">({plan.reduction})</span>}</p>
                 <p className="text-xs text-gray-400 mt-2">{plan.desc}</p>
-                <button onClick={() => navigate('/register')} className="mt-4 w-full bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all">
+                <button onClick={() => navigate('/register?plan=' + plan.nom)} className="mt-4 w-full bg-primary text-white py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-all">
                   {plan.nom === "Gratuit" ? "Démarrer" : "Choisir"}
                 </button>
               </div>
@@ -197,7 +197,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Prêt à lancer votre flotte ?</h2>
           <p className="text-gray-500 mb-8">Rejoignez Trans ByGagoos et commencez à gérer votre flotte dès aujourd'hui.</p>
-          <button onClick={() => navigate('/register')} className="bg-primary text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 inline-flex items-center gap-2">
+          <button onClick={() => navigate('/register?plan=' + plan.nom)} className="bg-primary text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 inline-flex items-center gap-2">
             Créer ma flotte <ArrowRight size={20} />
           </button>
         </div>
