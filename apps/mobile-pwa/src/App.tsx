@@ -11,6 +11,24 @@ const tk = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || chauffeur()?.moto;
 
+// Récupérer les infos du chauffeur depuis le token JWT
+const getChauffeurInfo = () => {
+  const token = localStorage.getItem('chauffeur-token');
+  if (!token) return null;
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return {
+      id: payload.sub,
+      role: payload.role,
+      flotteId: payload.flotteId,
+    };
+  } catch (error) {
+    console.error('Token invalide', error);
+    return null;
+  }
+};
+
 let db: any = null;
 function openDB(): Promise<any> {
   return new Promise((resolve, reject) => {
