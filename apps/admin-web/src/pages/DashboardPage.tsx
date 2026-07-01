@@ -1,245 +1,150 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Users, Bike, MapPin, DollarSign, AlertCircle, TrendingUp, Wrench, Star, Bell, Shield, Gauge } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement,
-  PointElement, ArcElement, Title, Tooltip, Legend, Filler
-} from 'chart.js';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler);
+import { Building2, Users, Bike, TrendingUp, Clock, CheckCircle, ArrowRight, CreditCard, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function DashboardPage() {
-  const [countdown, setCountdown] = useState(60);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-      setCountdown(prev => prev <= 1 ? 60 : prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const { data: stats } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: () => axios.get(`${API}/dashboard`).then(r => r.data),
+  const { data: flottes } = useQuery({
+    queryKey: ['flottes-dash'],
+    queryFn: () => axios.get(`${API}/flottes`).then(r => r.data),
     refetchInterval: 30000,
   });
 
-  const { data: topChauffeurs } = useQuery({
-    queryKey: ['top-chauffeurs'],
-    queryFn: () => axios.get(`${API}/dashboard/top-chauffeurs`).then(r => r.data),
-    refetchInterval: 30000,
+  const { data: params } = useQuery({
+    queryKey: ['params-abonnement'],
+    queryFn: () => axios.get(`${API}/parametres`).then(r => r.data),
   });
 
-  const { data: caJournalier } = useQuery({
-    queryKey: ['ca-journalier'],
-    queryFn: () => axios.get(`${API}/dashboard/ca-journalier?days=7`).then(r => r.data),
-    refetchInterval: 30000,
-  });
+  const flottesList = Array.isArray(flottes) ? flottes : [];
+  const enAttente = flottesList.filter((f: any) => f.statut === 'EN_ATTENTE').length;
+  const actives = flottesList.filter((f: any) => f.statut === 'ACTIF').length;
 
-  const { data: statsDepenses } = useQuery({
-    queryKey: ['depenses-stats'],
-    queryFn: () => axios.get(`${API}/depenses/stats`).then(r => r.data).catch(() => ({ totalDepenses: 0, parCategorie: [] })),
-  });
+  // Paramètres d'abonnement
+  const paramsMap: Record<string, string> = {};
+  if (Array.isArray(params)) params.forEach((p: any) => { paramsMap[p.nom] = p.valeur; });
 
-  const { data: alertesFlotte } = useQuery({
-    queryKey: ['alertes-flotte'],
-    queryFn: () => axios.get(`${API}/dashboard/alertes-flotte`).then(r => r.data).catch(() => ({ assuranceExpiree: 0, vignetteExpiree: 0, vidangeProche: 0 })),
-    refetchInterval: 60000,
-  });
-
-  const { data: alertes } = useQuery({
-    queryKey: ['alertes-dashboard'],
-    queryFn: async () => {
-      try {
-        const [v, a, c] = await Promise.all([
-          axios.get(`${API}/versements`).then(r => Array.isArray(r.data) ? r.data : (r.data?.items || [])),
-          axios.get(`${API}/assistance`).then(r => Array.isArray(r.data) ? r.data : (r.data?.items || [])),
-          axios.get(`${API}/chauffeurs`).then(r => Array.isArray(r.data) ? r.data : []),
-        ]);
-        return {
-          versementsEnAttente: v.filter((x: any) => x.statut === 'EN_ATTENTE').length,
-          assistanceOuverte: a.filter((x: any) => x.statut === 'OUVERT').length,
-          sansMoto: c.filter((x: any) => !x.motoId).length,
-        };
-      } catch { return { versementsEnAttente: 0, assistanceOuverte: 0, sansMoto: 0 }; }
-    },
-    refetchInterval: 30000,
-  });
-
-  const dateStr = currentTime.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const timeStr = currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-  // Données graphiques
-  const caChartData = {
-    labels: caJournalier?.map((d: any) => new Date(d.date).toLocaleDateString('fr', { weekday: 'short', day: 'numeric' })) || [],
-    datasets: [
-      {
-        label: 'CA (Ar)',
-        data: caJournalier?.map((d: any) => d.ca) || [],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16,185,129,0.1)',
-        fill: true,
-        tension: 0.3,
-        pointBackgroundColor: '#10b981',
-      },
-      {
-        label: 'Dépenses (Ar)',
-        data: caJournalier?.map((d: any) => d.depenses) || [],
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239,68,68,0.05)',
-        fill: true,
-        tension: 0.3,
-        pointBackgroundColor: '#ef4444',
-        borderDash: [4, 4],
-      },
-    ],
-  };
-
-  const topChauffeursData = {
-    labels: topChauffeurs?.map((c: any) => c.chauffeur?.nom) || [],
-    datasets: [{
-      label: 'CA du mois (Ar)',
-      data: topChauffeurs?.map((c: any) => c.ca) || [],
-      backgroundColor: ['#e94560', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'],
-      borderRadius: 8,
-    }],
-  };
-
-  const depensesData = {
-    labels: statsDepenses?.parCategorie?.map((c: any) => c.label || c.categorie) || [],
-    datasets: [{
-      data: statsDepenses?.parCategorie?.map((c: any) => c.montant || 0) || [],
-      backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899', '#6b7280'],
-      borderWidth: 0,
-    }],
-  };
-
-  const flotteData = {
-    labels: ['En service', 'Hors service'],
-    datasets: [{
-      label: 'Chauffeurs',
-      data: [stats?.chauffeursActifs || 0, (stats?.totalChauffeurs || 0) - (stats?.chauffeursActifs || 0)],
-      backgroundColor: ['#10b981', '#6b7280'],
-      borderRadius: 6,
-    }],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#9ca3af', font: { size: 11 } } } },
-    scales: {
-      y: { ticks: { color: '#9ca3af', callback: (v: any) => (v / 1000).toFixed(0) + 'k Ar' } },
-      x: { ticks: { color: '#9ca3af', font: { size: 10 } } },
-    },
-  };
+  if (!isSuperAdmin) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">👋 Bienvenue {user?.nom}</h1>
+        <p className="text-gray-500">Gérez votre flotte depuis le menu.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
-      {/* En-tête */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <TrendingUp size={28} className="text-primary" /> Tableau de bord
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">📅 {dateStr} | 🕐 {timeStr}</p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">👑 Tableau de bord Plateforme</h1>
+        <span className="text-sm text-gray-400">{new Date().toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {[
-          { label: 'CA jour', value: `${(stats?.caJour || 0).toLocaleString()} Ar`, icon: DollarSign, color: 'text-green-600' },
-          { label: 'CA mois', value: `${(stats?.caMois || 0).toLocaleString()} Ar`, icon: TrendingUp, color: 'text-blue-600' },
-          { label: 'Dépenses mois', value: `${(stats?.depensesMois || 0).toLocaleString()} Ar`, icon: Wrench, color: 'text-red-600' },
-          { label: 'Courses jour', value: stats?.coursesJour || 0, icon: MapPin, color: 'text-purple-600' },
-          { label: 'Chauffeurs', value: `${stats?.chauffeursActifs || 0}/${stats?.totalChauffeurs || 0}`, icon: Users, color: 'text-orange-600'},
-          { label: 'Motos', value: stats?.totalMotos || 0, icon: Bike, color: 'text-cyan-600' },
-        ].map((card) => (
-          <div key={card.label} className="bg-white dark:bg-gray-800 rounded-xl border p-3 shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-              <card.icon size={14} className={card.color} /> {card.label}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div onClick={() => navigate('/app/flottes')} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-lg transition-all">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center"><Building2 size={20} className="text-blue-600" /></div>
+            <div><p className="text-2xl font-bold">{flottesList.length}</p><p className="text-xs text-gray-500">Flottes totales</p></div>
+          </div>
+          <div className="flex gap-2 text-xs">
+            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">{enAttente} en attente</span>
+            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">{actives} actives</span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-3"><CheckCircle size={20} className="text-green-600" /></div>
+          <p className="text-2xl font-bold">{actives}</p>
+          <p className="text-xs text-gray-500">Flottes actives</p>
+        </div>
+
+        <div onClick={() => navigate('/app/abonnements')} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-lg transition-all">
+          <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-3"><CreditCard size={20} className="text-purple-600" /></div>
+          <p className="text-2xl font-bold">💰</p>
+          <p className="text-xs text-gray-500">Abonnements</p>
+        </div>
+
+        <div onClick={() => navigate('/app/assistance')} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:shadow-lg transition-all">
+          <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mb-3"><Activity size={20} className="text-red-600" /></div>
+          <p className="text-2xl font-bold">🔔</p>
+          <p className="text-xs text-gray-500">Support</p>
+        </div>
+      </div>
+
+      {/* Flottes en attente - urgent */}
+      {enAttente > 0 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-yellow-700 flex items-center gap-2"><Clock size={18} /> {enAttente} flotte(s) en attente de validation</h2>
+            <button onClick={() => navigate('/app/flottes')} className="text-sm text-yellow-600 hover:text-yellow-800 flex items-center gap-1">Voir tout <ArrowRight size={14} /></button>
+          </div>
+          <div className="space-y-2">
+            {flottesList.filter((f: any) => f.statut === 'EN_ATTENTE').slice(0, 3).map((f: any) => (
+              <div key={f.id} className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <Building2 size={18} className="text-yellow-500" />
+                  <div>
+                    <p className="font-medium text-sm">{f.nom}</p>
+                    <p className="text-xs text-gray-400">{f.email}</p>
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleDateString('fr')}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Grille des tarifs */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><CreditCard size={18} /> Tarifs des abonnements</h2>
+        <div className="grid md:grid-cols-4 gap-4">
+          {[
+            { label: 'Gratuit', motos: '1 moto', prix: '0 Ar', color: 'gray' },
+            { label: 'Standard', motos: '2-5 motos', prix: (paramsMap['abonnement_2_5_prix_mensuel'] || '50000') + ' Ar/mois', color: 'blue' },
+            { label: 'Premium', motos: '6-10 motos', prix: (paramsMap['abonnement_6_10_prix_mensuel'] || '90000') + ' Ar/mois', color: 'purple' },
+            { label: 'Business', motos: '11+ motos', prix: (paramsMap['abonnement_11_plus_prix_mensuel'] || '150000') + ' Ar/mois', color: 'amber' },
+          ].map((plan, i) => (
+            <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center">
+              <p className="font-bold text-lg text-gray-900 dark:text-white">{plan.label}</p>
+              <p className="text-sm text-gray-500">{plan.motos}</p>
+              <p className="text-xl font-bold text-primary mt-2">{plan.prix}</p>
+              <p className="text-xs text-gray-400 mt-1">-{paramsMap['reduction_annuelle_pourcent'] || '7'}% en annuel</p>
             </div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{card.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Alertes */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {[
-          { label: 'Versements', value: alertes?.versementsEnAttente || 0, icon: DollarSign, color: 'border-red-500 bg-red-50 dark:bg-red-500/5', href: '/versements' },
-          { label: 'Assistance', value: alertes?.assistanceOuverte || 0, icon: AlertCircle, color: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/5', href: '/assistance' },
-          { label: 'Sans moto', value: alertes?.sansMoto || 0, icon: Bike, color: 'border-purple-500 bg-purple-50 dark:bg-purple-500/5', href: '/chauffeurs' },
-          { label: 'Assurance exp.', value: alertesFlotte?.assuranceExpiree || 0, icon: Shield, color: 'border-red-400 bg-red-50 dark:bg-red-500/5', href: '/motos' },
-          { label: 'Vignette exp.', value: alertesFlotte?.vignetteExpiree || 0, icon: AlertCircle, color: 'border-orange-400 bg-orange-50 dark:bg-orange-500/5', href: '/motos' },
-          { label: 'Vidange proche', value: alertesFlotte?.vidangeProche || 0, icon: Gauge, color: 'border-blue-400 bg-blue-50 dark:bg-blue-500/5', href: '/motos' },
-        ].map((card) => (
-          <a key={card.label} href={card.href}
-            className={`rounded-xl border-t-4 ${card.color} p-3 text-center hover:shadow-md transition-shadow ${card.value > 0 ? 'animate-pulse' : ''}`}>
-            <card.icon size={16} className="mx-auto mb-1 text-gray-400" />
-            <div className={`text-xl font-bold ${card.value > 0 ? 'text-red-500' : 'text-gray-400'}`}>{card.value}</div>
-            <div className="text-xs text-gray-500">{card.label}</div>
-          </a>
-        ))}
-      </div>
-
-      {/* GRAPHIQUES */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CA 7 jours + Dépenses */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-primary" /> CA vs Dépenses (7 jours)
-          </h2>
-          <div style={{ height: 250 }}>
-            <Line data={caChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* Top chauffeurs */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Users size={18} className="text-primary" /> Top 5 chauffeurs (mois)
-          </h2>
-          <div style={{ height: 250 }}>
-            <Bar data={topChauffeursData} options={{ ...chartOptions, indexAxis: 'y' as const }} />
-          </div>
-        </div>
-
-        {/* Dépenses par catégorie */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Wrench size={18} className="text-red-500" /> Dépenses par catégorie
-          </h2>
-          <div style={{ height: 250 }}>
-            {statsDepenses?.parCategorie?.length > 0 ? (
-              <Doughnut data={depensesData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } } }} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">Aucune dépense</div>
-            )}
-          </div>
-        </div>
-
-        {/* État de la flotte */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Bike size={18} className="text-cyan-500" /> État de la flotte
-          </h2>
-          <div style={{ height: 250 }}>
-            <Bar data={flotteData} options={{ ...chartOptions, indexAxis: 'x' as const }} />
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Timer */}
-      <div className="text-center text-xs text-gray-400">
-        🔄 Rafraîchissement dans {countdown}s
+      {/* Dernières flottes actives */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2"><Building2 size={18} /> Flottes actives récentes</h2>
+          <button onClick={() => navigate('/app/flottes')} className="text-sm text-primary hover:underline flex items-center gap-1">Gérer <ArrowRight size={14} /></button>
+        </div>
+        <div className="space-y-2">
+          {flottesList.filter((f: any) => f.statut === 'ACTIF').slice(0, 5).map((f: any) => (
+            <div key={f.id} className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center"><Building2 size={14} className="text-primary" /></div>
+                <div>
+                  <p className="font-medium text-sm">{f.nom}</p>
+                  <p className="text-xs text-gray-400">{f._count?.motos || 0} moto(s) • {f.abonnement || 'GRATUIT'}</p>
+                </div>
+              </div>
+              <span className="text-xs text-green-600 font-medium">Actif</span>
+            </div>
+          ))}
+          {flottesList.filter((f: any) => f.statut === 'ACTIF').length === 0 && (
+            <p className="text-gray-400 text-sm text-center py-4">Aucune flotte active</p>
+          )}
+        </div>
       </div>
     </div>
   );

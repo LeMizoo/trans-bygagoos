@@ -3,20 +3,20 @@ import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Bike, UserCog, MapPin, Clock,
-  DollarSign, AlertCircle, Settings, Bell,
-  MessageSquare, LogOut, X, Menu, Sun, Moon, Receipt,
-  BarChart3, ClipboardList, ChevronDown, ChevronRight, Shield, Building2, CreditCard
+  LayoutDashboard, Users, Bike, Building2, CreditCard,
+  AlertCircle, Settings, Bell, MessageSquare,
+  LogOut, X, Menu, Sun, Moon, ChevronDown, ChevronRight,
+  Shield, BarChart3, TrendingUp, Activity
 } from 'lucide-react';
 import { Header } from './Header';
 
 const superAdminMenu = [
-  { title: 'Plateforme', items: [
+  { title: 'Principal', items: [
     { label: 'Tableau de bord', icon: LayoutDashboard, path: '/app' },
     { label: 'Flottes', icon: Building2, path: '/app/flottes' },
     { label: 'Abonnements', icon: CreditCard, path: '/app/abonnements' },
   ]},
-  { title: 'Support Global', items: [
+  { title: 'Support', items: [
     { label: 'Assistance', icon: AlertCircle, path: '/app/assistance' },
     { label: 'Messages', icon: MessageSquare, path: '/app/messages' },
     { label: 'Notifications', icon: Bell, path: '/app/notifications' },
@@ -24,7 +24,6 @@ const superAdminMenu = [
   { title: 'Administration', items: [
     { label: 'Utilisateurs', icon: Shield, path: '/app/utilisateurs' },
     { label: 'Paramètres', icon: Settings, path: '/app/parametres' },
-    { label: 'Journaux', icon: ClipboardList, path: '/app/journaux' },
   ]},
 ];
 
@@ -36,13 +35,11 @@ const gerantMenu = [
     { label: 'Profil Flotte', icon: Building2, path: '/app/proprietaires' },
   ]},
   { title: 'Activité', items: [
-    { label: 'Courses', icon: MapPin, path: '/app/courses' },
-    { label: 'Pointages', icon: Clock, path: '/app/pointages' },
-    { label: 'Versements', icon: DollarSign, path: '/app/versements' },
-    { label: 'Contrats', icon: ClipboardList, path: '/app/contrats' },
+    { label: 'Courses', icon: TrendingUp, path: '/app/courses' },
+    { label: 'Versements', icon: BarChart3, path: '/app/versements' },
   ]},
   { title: 'Finances', items: [
-    { label: 'Dépenses', icon: Receipt, path: '/app/depenses' },
+    { label: 'Dépenses', icon: Activity, path: '/app/depenses' },
     { label: 'Rapports', icon: BarChart3, path: '/app/rapports' },
   ]},
   { title: 'Support', items: [
@@ -71,10 +68,6 @@ export function Layout() {
 
   const menuSections = menusByRole[user?.role || 'GERANT'] || gerantMenu;
 
-  const toggleCollapse = (title: string) => {
-    setCollapsed(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
-  };
-
   const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
@@ -92,63 +85,40 @@ export function Layout() {
           </a>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-          {menuSections.map((section: any) => {
-            const isCollapsed = collapsed.includes(section.title);
-            return (
-              <div key={section.title}>
-                <button onClick={() => toggleCollapse(section.title)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600">
-                  {section.title}
-                  {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                </button>
-                {!isCollapsed && (
-                  <div className="space-y-0.5 mb-1">
-                    {section.items.map((item: any) => {
-                      const isActive = location.pathname === item.path;
-                      const Icon = item.icon;
-                      return (
-                        <button key={item.path} onClick={() => { navigate(item.path); setSidebarOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
-                            isActive ? 'bg-primary text-white font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                          }`}>
-                          <Icon size={18} />
-                          <span className="flex-1 text-left">{item.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+          {menuSections.map((section: any) => (
+            <div key={section.title}>
+              <div className="px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{section.title}</div>
+              <div className="space-y-0.5 mb-1">
+                {section.items.map((item: any) => {
+                  const isActive = location.pathname === item.path;
+                  const Icon = item.icon;
+                  return (
+                    <button key={item.path} onClick={() => { navigate(item.path); setSidebarOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${
+                        isActive ? 'bg-primary text-white font-medium' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}>
+                      <Icon size={18} />
+                      <span className="flex-1 text-left">{item.label}</span>
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </nav>
         <div className="p-3 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <Users size={14} className="text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium truncate">{user?.nom || 'Admin'}</p>
-              <p className="text-[10px] text-gray-400">{user?.role || 'admin'}</p>
-            </div>
-            <button onClick={toggle} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg ml-auto">
-              {theme === 'dark' ? <Sun size={14} className="text-yellow-400" /> : <Moon size={14} />}
-            </button>
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center"><Users size={14} className="text-white" /></div>
+            <div className="min-w-0"><p className="text-xs font-medium truncate">{user?.nom || 'Admin'}</p><p className="text-[10px] text-gray-400">{user?.role || 'admin'}</p></div>
+            <button onClick={toggle} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg ml-auto">{theme === 'dark' ? <Sun size={14} className="text-yellow-400" /> : <Moon size={14} />}</button>
           </div>
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50">
-            <LogOut size={14} /> Déconnexion
-          </button>
+          <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50"><LogOut size={14} /> Déconnexion</button>
         </div>
       </aside>
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-auto">
-          <Outlet />
-        </main>
-        <footer className="text-center py-3 text-[11px] text-gray-400 border-t">
-          © 2026 Trans ByGagoos ❤️
-        </footer>
+        <main className="flex-1 overflow-auto"><Outlet /></main>
+        <footer className="text-center py-3 text-[11px] text-gray-400 border-t">© 2026 Trans ByGagoos ❤️</footer>
       </div>
     </div>
   );
