@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body } from '@nestjs/common';
 import { FlottesService } from './flottes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -24,22 +24,36 @@ export class FlottesController {
     return this.service.register(data);
   }
 
-  // Endpoint temporaire pour forcer le seed sur Render
   @Post('force-seed')
   async forceSeed() {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: 'tovoniaina.rahendrison@gmail.com' },
+    const users = await this.prisma.user.findMany({
+      where: { role: 'GERANT' },
+      include: { flotte: true },
     });
-    if (existing) return { message: '✅ SUPER_ADMIN existe déjà', user: existing.email };
+    return { message: `✅ ${users.length} gérants trouvés`, users };
+  }
 
-    const admin = await this.prisma.user.create({
-      data: {
-        email: 'tovoniaina.rahendrison@gmail.com',
-        nom: 'Tovoniaina RAHENDRISON',
-        password: await bcrypt.hash('ByGagoos@2024!', 10),
-        role: 'SUPER_ADMIN',
-      },
+  @Post('fix-gerants')
+  async fixGerants() {
+    // Récupérer tous les gérants et leurs flottes
+    const gerants = await this.prisma.user.findMany({
+      where: { role: { in: ['GERANT', 'PROPRIETAIRE'] } },
+      include: { flotte: true },
     });
-    return { message: '✅ SUPER_ADMIN créé', user: admin.email };
+
+    const results = [];
+    for (const g of gerants) {
+      // Remettre le mot de passe par défaut
+      await this.prisma.user.update({
+        where: { id: g.id },
+        data: {
+          password: await bcrypt.hash('Proprio123!', 10),
+          role: 'GERANT',
+        },
+      });
+      results.push({ email: g.email, flotte: g.flotte?.nom, statut: '✅ Réinitialisé' });
+    }
+
+    return { message: `✅ ${results.length} gérants corrigés`, results };
   }
 }
