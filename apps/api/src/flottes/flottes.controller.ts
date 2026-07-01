@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body } from '@nestjs/common';
 import { FlottesService } from './flottes.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -8,6 +8,14 @@ export class FlottesController {
     private readonly service: FlottesService,
     private readonly prisma: PrismaService,
   ) {}
+
+  @Get()
+  async findAll() {
+    return this.prisma.flotte.findMany({
+      select: { id: true, nom: true, logo: true },
+      orderBy: { nom: 'asc' },
+    });
+  }
 
   @Post('register')
   async register(@Body() data: {
@@ -26,14 +34,13 @@ export class FlottesController {
   @Post('restore-all')
   async restoreAll() {
     const results = [];
+    const bcrypt = require('bcrypt');
 
-    // Flotte 1
     let f1 = await this.prisma.flotte.findFirst({ where: { nom: 'Rakoto Trans' } });
     if (!f1) f1 = await this.prisma.flotte.create({ data: { nom: 'Rakoto Trans', email: 'rakoto@email.com', telephone: '0341234567' } });
 
     let g1 = await this.prisma.user.findUnique({ where: { email: 'rakoto@email.com' } });
     if (!g1) {
-      const bcrypt = require('bcrypt');
       await this.prisma.user.create({
         data: { email: 'rakoto@email.com', nom: 'Rakoto Jean', password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f1.id },
       });
@@ -48,13 +55,11 @@ export class FlottesController {
       }
     }
 
-    // Flotte 2
     let f2 = await this.prisma.flotte.findFirst({ where: { nom: 'Rabe Moto' } });
     if (!f2) f2 = await this.prisma.flotte.create({ data: { nom: 'Rabe Moto', email: 'rabe@email.com', telephone: '0339876543' } });
 
     let g2 = await this.prisma.user.findUnique({ where: { email: 'rabe@email.com' } });
     if (!g2) {
-      const bcrypt = require('bcrypt');
       await this.prisma.user.create({
         data: { email: 'rabe@email.com', nom: 'Rabe Marie', password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f2.id },
       });
