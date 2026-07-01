@@ -19,8 +19,27 @@ export class MotosService {
     });
   }
 
-  async create(data: any) { return this.prisma.moto.create({ data }); }
-  async update(id: string, data: any) { return this.prisma.moto.update({ where: { id }, data }); }
+  async create(data: any) {
+    // Convertir dateAchat si présent
+    if (data.dateAchat && typeof data.dateAchat === 'string') {
+      data.dateAchat = new Date(data.dateAchat);
+    }
+    if (data.finAssurance && typeof data.finAssurance === 'string') {
+      data.finAssurance = new Date(data.finAssurance);
+    }
+    if (data.finVignette && typeof data.finVignette === 'string') {
+      data.finVignette = new Date(data.finVignette);
+    }
+    return this.prisma.moto.create({ data });
+  }
+
+  async update(id: string, data: any) {
+    if (data.dateAchat && typeof data.dateAchat === 'string') {
+      data.dateAchat = new Date(data.dateAchat);
+    }
+    return this.prisma.moto.update({ where: { id }, data });
+  }
+
   async delete(id: string) { return this.prisma.moto.delete({ where: { id } }); }
   
   async assignerChauffeur(id: string, chauffeurId: string) {
