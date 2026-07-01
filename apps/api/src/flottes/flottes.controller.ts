@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { FlottesService } from './flottes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -24,43 +24,40 @@ export class FlottesController {
     return this.service.register(data);
   }
 
-  @Post('force-seed')
-  async forceSeed() {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: 'tovoniaina.rahendrison@gmail.com' },
-    });
-    if (existing) return { message: '✅ SUPER_ADMIN existe déjà', user: existing.email };
-
-    const admin = await this.prisma.user.create({
-      data: {
-        email: 'tovoniaina.rahendrison@gmail.com',
-        nom: 'Tovoniaina RAHENDRISON',
-        password: await bcrypt.hash('ByGagoos@2024!', 10),
-        role: 'SUPER_ADMIN',
-      },
-    });
-    return { message: '✅ SUPER_ADMIN créé', user: admin.email };
-  }
-
-  @Post('fix-gerants')
-  async fixGerants() {
-    const gerants = await this.prisma.user.findMany({
-      where: { role: { in: ['GERANT', 'PROPRIETAIRE'] } },
-      include: { flotte: true },
-    });
-
+  @Post('restore-flottes')
+  async restoreFlottes() {
     const results = [];
-    for (const g of gerants) {
-      await this.prisma.user.update({
-        where: { id: g.id },
+
+    // Rakoto Trans
+    let exists = await this.prisma.user.findUnique({ where: { email: 'rakoto@email.com' } });
+    if (!exists) {
+      const f = await this.prisma.flotte.create({
+        data: { nom: 'Rakoto Trans', email: 'rakoto@email.com', telephone: '0341234567' },
+      });
+      await this.prisma.user.create({
         data: {
-          password: await bcrypt.hash('Proprio123!', 10),
-          role: 'GERANT',
+          email: 'rakoto@email.com', nom: 'Rakoto Jean',
+          password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id,
         },
       });
-      results.push({ email: g.email, flotte: g.flotte?.nom, statut: '✅ Réinitialisé' });
+      results.push('✅ Rakoto Trans');
     }
 
-    return { message: `✅ ${results.length} gérants corrigés`, results };
+    // Rabe Moto
+    exists = await this.prisma.user.findUnique({ where: { email: 'rabe@email.com' } });
+    if (!exists) {
+      const f = await this.prisma.flotte.create({
+        data: { nom: 'Rabe Moto', email: 'rabe@email.com', telephone: '0339876543' },
+      });
+      await this.prisma.user.create({
+        data: {
+          email: 'rabe@email.com', nom: 'Rabe Marie',
+          password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id,
+        },
+      });
+      results.push('✅ Rabe Moto');
+    }
+
+    return { message: `✅ ${results.length} flottes restaurées`, results };
   }
 }
