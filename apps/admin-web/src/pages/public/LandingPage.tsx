@@ -19,7 +19,7 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Prix depuis l'API avec fallback sur les valeurs admin
-  const { data: pricing = {} } = useQuery({
+  const { data: pricing } = useQuery({
     queryKey: ['pricing-landing'],
     queryFn: () => axios.get(`${API}/parametres`).then(r => {
       const map: any = {};
