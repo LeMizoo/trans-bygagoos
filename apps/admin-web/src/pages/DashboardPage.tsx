@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { Building2, Bike, Users, TrendingUp, Activity, ArrowRight, CreditCard, Phone, MapPin } from 'lucide-react';
+import { Building2, Bike, Users, TrendingUp, Activity, ArrowRight, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
@@ -24,17 +24,17 @@ export function DashboardPage() {
     enabled: !!user?.flotteId && !isSuperAdmin,
   });
 
-  const { data: params } = useQuery({
-    queryKey: ['params-abonnement'],
+  // L'API retourne un OBJET, pas un tableau
+  const { data: p } = useQuery({
+    queryKey: ['params-dash'],
     queryFn: () => axios.get(`${API}/parametres`).then(r => r.data),
   });
+
+  const prix = (p && typeof p === 'object') ? p as Record<string, string> : {};
 
   const flottesList = Array.isArray(flottes) ? flottes : [];
   const enAttente = flottesList.filter((f: any) => f.statut === 'EN_ATTENTE').length;
   const actives = flottesList.filter((f: any) => f.statut === 'ACTIF').length;
-
-  const paramsMap: Record<string, string> = {};
-  if (Array.isArray(params)) params.forEach((p: any) => { paramsMap[p.nom] = p.valeur; });
 
   // DASHBOARD GÉRANT
   if (!isSuperAdmin) {
@@ -84,24 +84,16 @@ export function DashboardPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <button onClick={() => navigate('/app/motos')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-lg text-left">
-            <Bike size={24} className="text-blue-500 mb-2" />
-            <p className="font-semibold">Gérer les Motos</p>
-            <p className="text-xs text-gray-500 mt-1">Ajouter, modifier, assigner</p>
+            <Bike size={24} className="text-blue-500 mb-2" /><p className="font-semibold">Gérer les Motos</p><p className="text-xs text-gray-500 mt-1">Ajouter, modifier, assigner</p>
           </button>
           <button onClick={() => navigate('/app/chauffeurs')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-lg text-left">
-            <Users size={24} className="text-green-500 mb-2" />
-            <p className="font-semibold">Gérer les Chauffeurs</p>
-            <p className="text-xs text-gray-500 mt-1">Ajouter, modifier, codes</p>
+            <Users size={24} className="text-green-500 mb-2" /><p className="font-semibold">Gérer les Chauffeurs</p><p className="text-xs text-gray-500 mt-1">Ajouter, modifier, codes</p>
           </button>
           <button onClick={() => navigate('/app/courses')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-lg text-left">
-            <TrendingUp size={24} className="text-purple-500 mb-2" />
-            <p className="font-semibold">Voir les Courses</p>
-            <p className="text-xs text-gray-500 mt-1">Suivi des courses</p>
+            <TrendingUp size={24} className="text-purple-500 mb-2" /><p className="font-semibold">Voir les Courses</p><p className="text-xs text-gray-500 mt-1">Suivi des courses</p>
           </button>
           <button onClick={() => navigate('/app/proprietaires')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-lg text-left">
-            <Building2 size={24} className="text-primary mb-2" />
-            <p className="font-semibold">Profil Flotte</p>
-            <p className="text-xs text-gray-500 mt-1">Modifier les infos</p>
+            <Building2 size={24} className="text-primary mb-2" /><p className="font-semibold">Profil Flotte</p><p className="text-xs text-gray-500 mt-1">Modifier les infos</p>
           </button>
         </div>
       </div>
@@ -126,9 +118,21 @@ export function DashboardPage() {
             <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{actives} actives</span>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5"><CheckCircle2 size={20} className="text-green-600 mb-2" /><p className="text-2xl font-bold">{actives}</p><p className="text-xs text-gray-500">Actives</p></div>
-        <div onClick={() => navigate('/app/abonnements')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 cursor-pointer hover:shadow-lg"><CreditCard size={20} className="text-purple-600 mb-2" /><p className="text-2xl font-bold">💰</p><p className="text-xs text-gray-500">Abonnements</p></div>
-        <div onClick={() => navigate('/app/assistance')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 cursor-pointer hover:shadow-lg"><Activity size={20} className="text-red-600 mb-2" /><p className="text-2xl font-bold">🔔</p><p className="text-xs text-gray-500">Support</p></div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-5">
+          <CheckCircle2 size={20} className="text-green-600 mb-2" />
+          <p className="text-2xl font-bold">{actives}</p>
+          <p className="text-xs text-gray-500">Actives</p>
+        </div>
+        <div onClick={() => navigate('/app/abonnements')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 cursor-pointer hover:shadow-lg">
+          <CreditCard size={20} className="text-purple-600 mb-2" />
+          <p className="text-2xl font-bold">💰</p>
+          <p className="text-xs text-gray-500">Abonnements</p>
+        </div>
+        <div onClick={() => navigate('/app/assistance')} className="bg-white dark:bg-gray-800 rounded-xl border p-5 cursor-pointer hover:shadow-lg">
+          <Activity size={20} className="text-red-600 mb-2" />
+          <p className="text-2xl font-bold">🔔</p>
+          <p className="text-xs text-gray-500">Support</p>
+        </div>
       </div>
 
       {enAttente > 0 && (
@@ -151,15 +155,15 @@ export function DashboardPage() {
         <div className="grid md:grid-cols-4 gap-4">
           {[
             { label: 'Gratuit', motos: '1 moto', prix: '0 Ar', color: 'gray' },
-            { label: 'Standard', motos: '2-5 motos', prix: (paramsMap['abonnement_2_5_prix_mensuel'] || '50000') + ' Ar/mois', color: 'blue' },
-            { label: 'Premium', motos: '6-10 motos', prix: (paramsMap['abonnement_6_10_prix_mensuel'] || '90000') + ' Ar/mois', color: 'purple' },
-            { label: 'Business', motos: '11+ motos', prix: (paramsMap['abonnement_11_plus_prix_mensuel'] || '150000') + ' Ar/mois', color: 'amber' },
+            { label: 'Standard', motos: '2-5 motos', prix: parseInt(prix.abonnement_2_5_prix_mensuel || '50000').toLocaleString() + ' Ar/mois', color: 'blue' },
+            { label: 'Premium', motos: '6-10 motos', prix: parseInt(prix.abonnement_6_10_prix_mensuel || '90000').toLocaleString() + ' Ar/mois', color: 'purple' },
+            { label: 'Business', motos: '11+ motos', prix: parseInt(prix.abonnement_11_plus_prix_mensuel || '150000').toLocaleString() + ' Ar/mois', color: 'amber' },
           ].map((plan, i) => (
             <div key={i} className="border rounded-xl p-4 text-center">
               <p className="font-bold text-lg">{plan.label}</p>
               <p className="text-sm text-gray-500">{plan.motos}</p>
               <p className="text-xl font-bold text-primary mt-2">{plan.prix}</p>
-              <p className="text-xs text-gray-400 mt-1">-{paramsMap['reduction_annuelle_pourcent'] || '7'}% en annuel</p>
+              <p className="text-xs text-gray-400 mt-1">-{prix.reduction_annuelle_pourcent || '7'}% en annuel</p>
             </div>
           ))}
         </div>
@@ -168,7 +172,6 @@ export function DashboardPage() {
   );
 }
 
-// Petit composant pour éviter l'erreur
 function CheckCircle2({ size, className }: any) {
   return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
 }
