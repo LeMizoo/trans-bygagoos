@@ -1,16 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { CreditCard, Save } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { CreditCard } from 'lucide-react';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function AbonnementsPage() {
-  const qc = useQueryClient();
-  const [saved, setSaved] = useState(false);
-  const [form, setForm] = useState<Record<string, string>>({});
-
-  // L'API retourne un OBJET, pas un tableau
   const { data: pricing } = useQuery({
     queryKey: ['parametres'],
     queryFn: () => axios.get(`${API}/parametres`).then(r => r.data),
@@ -21,25 +15,19 @@ export function AbonnementsPage() {
     queryFn: () => axios.get(`${API}/flottes`).then(r => r.data),
   });
 
-  // pricing est un objet, pas un tableau
-  useEffect(() => {
-    if (pricing && typeof pricing === 'object') {
-      setForm(pricing as Record<string, string>);
-    }
-  }, [pricing]);
-
-  const saveMutation = useMutation({
-    mutationFn: (data: any) => axios.post(`${API}/parametres/general`, data),
-    onSuccess: () => { setSaved(true); qc.invalidateQueries({ queryKey: ['parametres'] }); setTimeout(() => setSaved(false), 3000); },
-  });
-
+  const p = (pricing && typeof pricing === 'object') ? pricing as Record<string, string> : {};
   const flottesList = Array.isArray(flottes) ? flottes : [];
+  
   const parAbonnement = {
     GRATUIT: flottesList.filter((f: any) => f.abonnement === 'GRATUIT').length,
     '2_5': flottesList.filter((f: any) => f.abonnement === '2_5').length,
     '6_10': flottesList.filter((f: any) => f.abonnement === '6_10').length,
     '11_PLUS': flottesList.filter((f: any) => f.abonnement === '11_PLUS').length,
   };
+
+  const prix2_5 = p.abonnement_2_5_prix_mensuel ?? '50000';
+  const prix6_10 = p.abonnement_6_10_prix_mensuel ?? '90000';
+  const prix11 = p.abonnement_11_plus_prix_mensuel ?? '150000';
 
   return (
     <div className="p-6 space-y-6">
@@ -65,9 +53,9 @@ export function AbonnementsPage() {
         <div className="grid md:grid-cols-4 gap-4">
           {[
             { label: 'Gratuit', motos: '1 moto', prixMensuel: '0 Ar', prixAnnuel: '0 Ar', color: 'border-gray-300' },
-            { label: 'Standard', motos: '2-5 motos', prixMensuel: (form.abonnement_2_5_prix_mensuel || '50000') + ' Ar/mois', prixAnnuel: Math.round(parseInt(form.abonnement_2_5_prix_mensuel || '50000') * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-blue-300' },
-            { label: 'Premium', motos: '6-10 motos', prixMensuel: (form.abonnement_6_10_prix_mensuel || '90000') + ' Ar/mois', prixAnnuel: Math.round(parseInt(form.abonnement_6_10_prix_mensuel || '90000') * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-purple-300' },
-            { label: 'Business', motos: '11+ motos', prixMensuel: (form.abonnement_11_plus_prix_mensuel || '150000') + ' Ar/mois', prixAnnuel: Math.round(parseInt(form.abonnement_11_plus_prix_mensuel || '150000') * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-amber-300' },
+            { label: 'Standard', motos: '2-5 motos', prixMensuel: parseInt(prix2_5).toLocaleString() + ' Ar/mois', prixAnnuel: Math.round(parseInt(prix2_5) * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-blue-300' },
+            { label: 'Premium', motos: '6-10 motos', prixMensuel: parseInt(prix6_10).toLocaleString() + ' Ar/mois', prixAnnuel: Math.round(parseInt(prix6_10) * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-purple-300' },
+            { label: 'Business', motos: '11+ motos', prixMensuel: parseInt(prix11).toLocaleString() + ' Ar/mois', prixAnnuel: Math.round(parseInt(prix11) * 12 * 0.93).toLocaleString() + ' Ar/an', color: 'border-amber-300' },
           ].map((plan, i) => (
             <div key={i} className={`border-2 ${plan.color} rounded-xl p-4 text-center`}>
               <p className="font-bold text-lg">{plan.label}</p>
@@ -99,9 +87,7 @@ export function AbonnementsPage() {
                   <td className="py-2">{f.abonnement === 'GRATUIT' ? '🆓 Gratuit' : f.abonnement}</td>
                   <td className="py-2">{f._count?.motos || 0}</td>
                   <td className="py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${f.statut === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {f.statut}
-                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${f.statut === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{f.statut}</span>
                   </td>
                   <td className="py-2 text-gray-400">{f.dateFinAbonnement ? new Date(f.dateFinAbonnement).toLocaleDateString('fr') : '-'}</td>
                 </tr>
