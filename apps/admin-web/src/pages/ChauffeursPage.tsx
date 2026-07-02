@@ -18,7 +18,7 @@ export function ChauffeursPage() {
 
   const { data: chauffeurs } = useQuery({
     queryKey: ['chauffeurs'],
-    queryFn: () => axios.get(`${API}/chauffeurs`).then(r => r.data),
+    queryFn: () => axios.get(`${API}/chauffeurs?flotteId=${JSON.parse(localStorage.getItem("user")||"{}")?.flotteId||""}`).then(r => r.data),
     refetchInterval: 15000,
   });
 

@@ -19,7 +19,7 @@ export function CoursesPage() {
 
   const { data: allCourses } = useQuery({
     queryKey: ['courses'],
-    queryFn: () => axios.get(`${API}/courses`).then(r => r.data),
+    queryFn: () => axios.get(`${API}/courses?flotteId=${JSON.parse(localStorage.getItem("user")||"{}")?.flotteId||""}`).then(r => r.data),
     refetchInterval: 10000,
   });
 

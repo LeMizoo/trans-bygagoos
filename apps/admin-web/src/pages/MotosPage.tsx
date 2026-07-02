@@ -19,7 +19,7 @@ export function MotosPage() {
 
   const { data: motos } = useQuery({
     queryKey: ['motos'],
-    queryFn: () => axios.get(`${API}/motos`).then(r => r.data),
+    queryFn: () => axios.get(`${API}/motos?flotteId=${JSON.parse(localStorage.getItem("user")||"{}")?.flotteId||""}`).then(r => r.data),
     refetchInterval: 15000,
   });
 
