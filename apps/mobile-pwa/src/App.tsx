@@ -116,7 +116,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
     setLoading(true);
     try{
       const payload:any={codeAcces:code.toUpperCase(),pin};if(flotteId)payload.flotteId=flotteId;
-      const{data}=await axios.post(API+'/auth/chauffeur/code',payload);
+      const{data}=await axios.post(API+'/auth/chauffeur/login',payload);
       localStorage.setItem('chauffeur-token',data.accessToken);localStorage.setItem('chauffeur',JSON.stringify(data.chauffeur));
       if(data.chauffeur?.moto)localStorage.setItem('moto',JSON.stringify(data.chauffeur.moto));
       if(flotteId)localStorage.setItem('flotteId',flotteId);onLogin();
