@@ -2,8 +2,21 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { execSync } from 'child_process';
 
 async function bootstrap() {
+  // Push DB schema AVANT de démarrer
+  try {
+    console.log('🗄️ Push DB schema...');
+    execSync('npx prisma db push --accept-data-loss', { 
+      cwd: __dirname + '/..',
+      stdio: 'pipe' 
+    });
+    console.log('✅ DB schema OK');
+  } catch (e: any) {
+    console.log('⚠️ DB push error:', e.message);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   
   app.enableCors({
@@ -19,11 +32,10 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   
-// Push DB schema  try {    const { execSync } = require('child_process');    execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });    console.log('✅ DB schema poussé');  } catch (e) {    console.log('⚠️ DB push ignoré:', e.message);  }
   await app.listen(process.env.PORT || 3000);
   console.log('🚀 API démarrée');
 
-  // Seed automatique des flottes de test
+  // Seed automatique
   try {
     const http = require('http');
     const port = process.env.PORT || 3000;
@@ -38,7 +50,7 @@ async function bootstrap() {
       res.on('data', (chunk: string) => data += chunk);
       res.on('end', () => console.log('🌱 Seed auto:', data));
     });
-    req.on('error', (e: any) => console.log('⚠️ Seed auto ignoré:', e.message));
+    req.on('error', () => console.log('⚠️ Seed auto ignoré'));
     req.end();
   } catch (e) {
     console.log('⚠️ Seed auto non exécuté');
