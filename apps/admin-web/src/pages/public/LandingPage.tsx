@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bike, Users, BarChart3, Shield, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { photos } from './photos';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 const API = 'https://trans-bygagoos.onrender.com/api/v1';
@@ -16,19 +17,21 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [pricing, setPricing] = useState<any>({});
+
+  // Prix depuis l'API avec fallback sur les valeurs admin
+  const { data: pricing = {} } = useQuery({
+    queryKey: ['pricing-landing'],
+    queryFn: () => axios.get(`${API}/parametres`).then(r => {
+      const map: any = {};
+      (Array.isArray(r.data) ? r.data : []).forEach((p: any) => { map[p.nom] = p.valeur; });
+      return map;
+    }),
+    staleTime: 300000, // 5 min de cache
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 5000);
     return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    axios.get(`${API}/parametres`).then(r => {
-      const map: any = {};
-      (r.data || []).forEach((p: any) => { map[p.nom] = p.valeur; });
-      setPricing(map);
-    }).catch(() => {});
   }, []);
 
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
@@ -42,11 +45,17 @@ export function LandingPage() {
     return annuel.toLocaleString() + ' Ar/an';
   };
 
+  // Valeurs synchronisées avec l'admin (fallback = valeurs configurées)
+  const prix2_5 = pricing['abonnement_2_5_prix_mensuel'] || '7000';
+  const prix6_10 = pricing['abonnement_6_10_prix_mensuel'] || '15000';
+  const prix11 = pricing['abonnement_11_plus_prix_mensuel'] || '50000';
+  const reduc = pricing['reduction_annuelle_pourcent'] || '7';
+
   const plans = [
     { nom: 'Gratuit', motos: '1 moto', prix: '0 Ar/mois', prixAnnuel: 'Gratuit', icon: '🆓', desc: 'Pour démarrer', abo: 'GRATUIT' },
-    { nom: 'Standard', motos: '2-5 motos', prix: formatPrix(pricing['abonnement_2_5_prix_mensuel'] || '50000'), prixAnnuel: formatAnnuel(pricing['abonnement_2_5_prix_mensuel'] || '50000', pricing['reduction_annuelle_pourcent'] || '7'), icon: '🥈', desc: 'Petite flotte', reduction: '-' + (pricing['reduction_annuelle_pourcent'] || '7') + '%', abo: '2_5' },
-    { nom: 'Premium', motos: '6-10 motos', prix: formatPrix(pricing['abonnement_6_10_prix_mensuel'] || '90000'), prixAnnuel: formatAnnuel(pricing['abonnement_6_10_prix_mensuel'] || '90000', pricing['reduction_annuelle_pourcent'] || '7'), icon: '🥇', desc: 'Flotte moyenne', reduction: '-' + (pricing['reduction_annuelle_pourcent'] || '7') + '%', abo: '6_10' },
-    { nom: 'Business', motos: '11+ motos', prix: formatPrix(pricing['abonnement_11_plus_prix_mensuel'] || '150000'), prixAnnuel: formatAnnuel(pricing['abonnement_11_plus_prix_mensuel'] || '150000', pricing['reduction_annuelle_pourcent'] || '7'), icon: '💎', desc: 'Grande flotte', reduction: '-' + (pricing['reduction_annuelle_pourcent'] || '7') + '%', abo: '11_PLUS' },
+    { nom: 'Standard', motos: '2-5 motos', prix: formatPrix(prix2_5), prixAnnuel: formatAnnuel(prix2_5, reduc), icon: '🥈', desc: 'Petite flotte', reduction: '-' + reduc + '%', abo: '2_5' },
+    { nom: 'Premium', motos: '6-10 motos', prix: formatPrix(prix6_10), prixAnnuel: formatAnnuel(prix6_10, reduc), icon: '🥇', desc: 'Flotte moyenne', reduction: '-' + reduc + '%', abo: '6_10' },
+    { nom: 'Business', motos: '11+ motos', prix: formatPrix(prix11), prixAnnuel: formatAnnuel(prix11, reduc), icon: '💎', desc: 'Grande flotte', reduction: '-' + reduc + '%', abo: '11_PLUS' },
   ];
 
   return (
@@ -111,12 +120,13 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Section Tarifs */}
+      {/* Section Tarifs - PRIX SYNCHRONISÉS AVEC L'ADMIN */}
       <section id="pricing" className="bg-gray-50 py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900">Nos tarifs</h2>
             <p className="mt-4 text-gray-500">Choisissez le plan qui correspond à votre flotte</p>
+            <p className="mt-1 text-xs text-gray-400">Prix synchronisés avec l'administration</p>
           </div>
           <div className="grid md:grid-cols-4 gap-6">
             {plans.map((plan, i) => (
