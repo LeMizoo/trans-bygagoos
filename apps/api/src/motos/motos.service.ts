@@ -5,8 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class MotosService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll() {
+  async findAll(flotteId?: string) {
+    const where: any = {};
+    if (flotteId) where.flotteId = flotteId;
     return this.prisma.moto.findMany({
+      where,
       include: { proprietaire: true, chauffeur: true, flotte: true },
       orderBy: { immatriculation: 'asc' },
     });
@@ -24,23 +27,15 @@ export class MotosService {
     return this.prisma.moto.create({ data });
   }
 
-  async update(id: string, data: any) {
-    return this.prisma.moto.update({ where: { id }, data });
-  }
-
+  async update(id: string, data: any) { return this.prisma.moto.update({ where: { id }, data }); }
   async delete(id: string) { return this.prisma.moto.delete({ where: { id } }); }
   
   async assignerChauffeur(motoId: string, chauffeurId: string) {
-    // Désassigner l'ancien chauffeur
     const moto = await this.prisma.moto.findUnique({ where: { id: motoId }, include: { chauffeur: true } });
     if (moto?.chauffeur) {
       await this.prisma.chauffeur.update({ where: { id: moto.chauffeur.id }, data: { motoId: null } });
     }
-    // Assigner via relation
-    return this.prisma.moto.update({
-      where: { id: motoId },
-      data: { chauffeur: { connect: { id: chauffeurId } } },
-    });
+    return this.prisma.moto.update({ where: { id: motoId }, data: { chauffeur: { connect: { id: chauffeurId } } } });
   }
 
   async desassigner(motoId: string) {
@@ -48,10 +43,7 @@ export class MotosService {
     if (moto?.chauffeur) {
       await this.prisma.chauffeur.update({ where: { id: moto.chauffeur.id }, data: { motoId: null } });
     }
-    return this.prisma.moto.update({
-      where: { id: motoId },
-      data: { chauffeur: { disconnect: true } },
-    });
+    return this.prisma.moto.update({ where: { id: motoId }, data: { chauffeur: { disconnect: true } } });
   }
 
   async validerVidange(id: string, data: any) {
