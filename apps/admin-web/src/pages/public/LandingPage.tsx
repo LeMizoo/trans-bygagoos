@@ -46,10 +46,10 @@ export function LandingPage() {
   };
 
   // Valeurs synchronisées avec l'admin (fallback = valeurs configurées)
-  const prix2_5 = pricing['abonnement_2_5_prix_mensuel'] || '7000';
-  const prix6_10 = pricing['abonnement_6_10_prix_mensuel'] || '15000';
-  const prix11 = pricing['abonnement_11_plus_prix_mensuel'] || '50000';
-  const reduc = pricing['reduction_annuelle_pourcent'] || '7';
+  const prix2_5 = pricing.abonnement_2_5_prix_mensuel || '7000';
+  const prix6_10 = pricing.abonnement_6_10_prix_mensuel || '15000';
+  const prix11 = pricing.abonnement_11_plus_prix_mensuel || '50000';
+  const reduc = pricing.reduction_annuelle_pourcent || '7';
 
   const plans = [
     { nom: 'Gratuit', motos: '1 moto', prix: '0 Ar/mois', prixAnnuel: 'Gratuit', icon: '🆓', desc: 'Pour démarrer', abo: 'GRATUIT' },

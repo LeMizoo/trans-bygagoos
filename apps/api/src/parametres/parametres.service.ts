@@ -15,13 +15,30 @@ export class ParametresService {
       tarif_location_journalier: parseInt(result.tarif_location_journalier) || 15000,
       theme: result.theme || 'clair',
       couleur_principale: result.couleur_principale || '#DAA520',
+      // Ajouter les abonnements
+      abonnement_2_5_prix_mensuel: result.abonnement_2_5_prix_mensuel || '50000',
+      abonnement_6_10_prix_mensuel: result.abonnement_6_10_prix_mensuel || '90000',
+      abonnement_11_plus_prix_mensuel: result.abonnement_11_plus_prix_mensuel || '150000',
+      reduction_annuelle_pourcent: result.reduction_annuelle_pourcent || '7',
+      max_motos_gratuit: result.max_motos_gratuit || '1',
     };
   }
 
-  async saveGeneral(data: { prix_base: number; prix_km: number; tarif_location_journalier: number }) {
-    await this.upsert('prix_base', String(data.prix_base));
-    await this.upsert('prix_km', String(data.prix_km));
-    await this.upsert('tarif_location_journalier', String(data.tarif_location_journalier));
+  // Nouvel endpoint pour la Landing Page (retourne tout)
+  async getAllRaw() {
+    return this.prisma.parametre.findMany();
+  }
+
+  async saveGeneral(data: any) {
+    if (data.prix_base) await this.upsert('prix_base', String(data.prix_base));
+    if (data.prix_km) await this.upsert('prix_km', String(data.prix_km));
+    if (data.tarif_location_journalier) await this.upsert('tarif_location_journalier', String(data.tarif_location_journalier));
+    // Sauvegarder aussi les abonnements s'ils sont fournis
+    if (data.abonnement_2_5_prix_mensuel) await this.upsert('abonnement_2_5_prix_mensuel', String(data.abonnement_2_5_prix_mensuel));
+    if (data.abonnement_6_10_prix_mensuel) await this.upsert('abonnement_6_10_prix_mensuel', String(data.abonnement_6_10_prix_mensuel));
+    if (data.abonnement_11_plus_prix_mensuel) await this.upsert('abonnement_11_plus_prix_mensuel', String(data.abonnement_11_plus_prix_mensuel));
+    if (data.reduction_annuelle_pourcent) await this.upsert('reduction_annuelle_pourcent', String(data.reduction_annuelle_pourcent));
+    if (data.max_motos_gratuit) await this.upsert('max_motos_gratuit', String(data.max_motos_gratuit));
     return { success: true, message: 'Paramètres mis à jour' };
   }
 
@@ -49,25 +66,13 @@ export class ParametresService {
     await this.upsert('types_courses_autorises', JSON.stringify(types));
     await this.upsert('coup_envoi_heure', heure);
     await this.upsert('coup_envoi_actif', '1');
-    return { success: true, message: `Coup d'envoi à ${heure} - ${types.length} type(s) autorisé(s)`, types };
+    return { success: true, message: `Coup d'envoi à ${heure}`, types };
   }
 
   async getCoupEnvoi() {
     const actif = await this.prisma.parametre.findFirst({ where: { nom: 'coup_envoi_actif' } });
     const heure = await this.prisma.parametre.findFirst({ where: { nom: 'coup_envoi_heure' } });
     return { actif: actif?.valeur === '1', heure: heure?.valeur || '07:00' };
-  }
-
-  async getStatsPointages(date?: string) {
-    const d = date ? new Date(date) : new Date();
-    d.setHours(0, 0, 0, 0);
-    const next = new Date(d); next.setDate(next.getDate() + 1);
-    const [arrivees, departs, total] = await Promise.all([
-      this.prisma.pointage.count({ where: { type: 'ARRIVEE', datePointage: { gte: d, lt: next } } }),
-      this.prisma.pointage.count({ where: { type: 'FIN_SERVICE', datePointage: { gte: d, lt: next } } }),
-      this.prisma.chauffeur.count(),
-    ]);
-    return { arrivees, departs, totalChauffeurs: total };
   }
 
   private async upsert(nom: string, valeur: string) {
