@@ -3,28 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model Flotte {
-  id          String      @id @default(cuid())
-  nom         String
-  description String?
-  logo        String?
-  telephone   String?
-  email       String?
-  adresse     String?
-  siteWeb     String?
-  statut      String      @default("EN_ATTENTE")
-  abonnement  String      @default("GRATUIT")
-  dateValidation DateTime?
-  dateFinAbonnement DateTime?
-  motos       Moto[]
-  chauffeurs  Chauffeur[]
-  users       User[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
 }
 
 model User {
@@ -40,61 +20,46 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model Chauffeur {
-  id                      String       @id @default(cuid())
-  nom                     String
-  telephone               String       @unique
-  email                   String?
-  codeAcces               String
-  pin                     String
-  statut                  String       @default("HORS_SERVICE")
-  solde                   Float        @default(0)
-  actif                   Boolean      @default(true)
-  cin                     String?
-  cinDateDelivrance       DateTime?
-  cinLieuDelivrance       String?
-  permisNumero            String?
-  permisCategorie         String?
-  permisDateDelivrance    DateTime?
-  permisDateExpiration    DateTime?
-  permisLieuDelivrance    String?
-  permisStatut            String?
-  adresse                 String?
-  certificatResidenceNum  String?
-  certificatResidenceDate DateTime?
-  dateEmbauche            DateTime?
-  photo                   String?
-  heurePrisePoste         String       @default("07:00")
-  heureFinService         String       @default("19:00")
-  motoId                  String?      @unique
-  moto                    Moto?        @relation(fields: [motoId], references: [id])
-  flotteId                String?
-  flotte                  Flotte?      @relation(fields: [flotteId], references: [id])
-  courses                 Course[]
-  pointages               Pointage[]
-  versements              Versement[]
-  assistance              Assistance[]
-  contrats                Contrat[]
-  messages                Message[]
-  createdAt               DateTime     @default(now())
-  updatedAt               DateTime     @updatedAt
-
-  @@unique([codeAcces, flotteId])
+model Flotte {
+  id             String         @id @default(cuid())
+  nom            String
+  slug           String         @unique
+  description    String?
+  logo           String?
+  adresse        String?
+  telephone      String?
+  email          String?
+  statut         String         @default("ACTIF")
+  abonnement     String         @default("GRATUIT")
+  dateFinAbonnement DateTime?
+  users          User[]
+  motos          Moto[]
+  chauffeurs     Chauffeur[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
-model Proprietaire {
-  id        String   @id @default(cuid())
-  nom       String
-  telephone String   @unique
-  email     String?
-  cin       String?
-  adresse   String?
-  nif       String?
-  numStat   String?
-  actif     Boolean  @default(true)
-  motos     Moto[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Chauffeur {
+  id          String       @id @default(cuid())
+  nom         String
+  telephone   String       @unique
+  codeAcces   String       @unique
+  pin         String
+  statut      String       @default("HORS_SERVICE")
+  solde       Float        @default(0)
+  actif       Boolean      @default(true)
+  motoId      String?      @unique
+  moto        Moto?        @relation(fields: [motoId], references: [id])
+  flotteId    String?
+  flotte      Flotte?      @relation(fields: [flotteId], references: [id])
+  courses     Course[]
+  pointages   Pointage[]
+  versements  Versement[]
+  assistance  Assistance[]
+  contrats    Contrat[]
+  messages    Message[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Moto {
@@ -103,8 +68,6 @@ model Moto {
   marque                String
   modele                String
   cylindree             String?
-  numMoteur             String?
-  numChassis            String?
   couleur               String?
   kmActuel              Float        @default(0)
   prixAchat             Float?
@@ -112,27 +75,27 @@ model Moto {
   statut                String       @default("disponible")
   proprietaireId        String?
   proprietaire          Proprietaire? @relation(fields: [proprietaireId], references: [id])
-  proprietaireNom       String?
-  proprietaireCin       String?
-  proprietaireTelephone String?
-  proprietaireAdresse   String?
-  proprietaireNif       String?
-  proprietaireNumStat   String?
-  kmProchaineVidange    Float?
-  dateDerniereVidange   DateTime?
-  derniereVidangeKm     Float?
-  coutDerniereVidange   Float?
-  fournisseurVidange    String?
-  finAssurance          DateTime?
-  finVignette           DateTime?
   flotteId              String?
   flotte                Flotte?      @relation(fields: [flotteId], references: [id])
+  kmProchaineVidange    Float?
+  finAssurance          DateTime?
+  finVignette           DateTime?
   chauffeur             Chauffeur?
   courses               Course[]
   depenses              Depense[]
-  contrats              Contrat[]
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
+}
+
+model Proprietaire {
+  id        String   @id @default(cuid())
+  nom       String
+  telephone String   @unique
+  email     String?
+  cin       String?
+  motos     Moto[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Course {
@@ -146,6 +109,8 @@ model Course {
   prix        Float
   commission  Float
   gainNet     Float
+  flotteId    String?
+  flotte      Flotte?   @relation(fields: [flotteId], references: [id])
   createdAt   DateTime  @default(now())
 }
 
@@ -177,17 +142,6 @@ model Assistance {
   description String
   statut      String    @default("OUVERT")
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  titre     String
-  message   String
-  type      String
-  lu        Boolean  @default(false)
-  userId    String?
-  createdAt DateTime @default(now())
 }
 
 model Depense {
@@ -199,24 +153,25 @@ model Depense {
   moto        Moto?    @relation(fields: [motoId], references: [id])
   litres      Float?
   station     String?
+  flotteId    String?
+  flotte      Flotte?  @relation(fields: [flotteId], references: [id])
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
 
 model Contrat {
-  id              String    @id @default(cuid())
-  chauffeurId     String
-  chauffeur       Chauffeur @relation(fields: [chauffeurId], references: [id])
-  motoId          String
-  moto            Moto      @relation(fields: [motoId], references: [id])
-  type            String
-  montantLocation Float
-  dateDebut       DateTime
-  dateFin         DateTime?
-  statut          String    @default("ACTIF")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  chauffeurId String
+  chauffeur   Chauffeur @relation(fields: [chauffeurId], references: [id])
+  motoId      String
+  moto        Moto      @relation(fields: [motoId], references: [id])
+  type        String
+  dateDebut   DateTime
+  dateFin     DateTime?
+  statut      String    @default("ACTIF")
+  flotteId    String?
+  flotte      Flotte?   @relation(fields: [flotteId], references: [id])
+  createdAt   DateTime  @default(now())
 }
 
 model Message {
@@ -236,5 +191,14 @@ model Parametre {
   type        String   @default("text")
   description String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  titre     String
+  message   String
+  type      String
+  lu        Boolean  @default(false)
+  userId    String?
+  createdAt DateTime @default(now())
 }
