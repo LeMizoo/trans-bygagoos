@@ -40,7 +40,7 @@ export class FlottesService {
     const result = await this.prisma.$transaction(async (prisma) => {
       const flotte = await prisma.flotte.create({
         data: {
-          nom: data.nomFlotte,
+          nom: data.nomFlotte, slug: data.nomFlotte.toLowerCase().replace(/ /g,'-'),
           description: data.description || null,
           telephone: data.telephone || null,
           email: data.email,
