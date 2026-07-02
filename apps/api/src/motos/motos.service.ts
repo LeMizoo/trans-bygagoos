@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -23,6 +23,19 @@ export class MotosService {
   }
 
   async create(data: any) {
+    // Vérifier la limite de motos selon le plan
+    if (data.flotteId) {
+      const flotte = await this.prisma.flotte.findUnique({ where: { id: data.flotteId } });
+      if (flotte) {
+        const motosCount = await this.prisma.moto.count({ where: { flotteId: data.flotteId } });
+        const limite = this.getLimiteMotos(flotte.abonnement || 'GRATUIT');
+        if (motosCount >= limite) {
+          throw new ForbiddenException(
+            `Limite de ${limite} moto(s) atteinte pour le plan ${flotte.abonnement || 'GRATUIT'}. Passez au plan supérieur.`
+          );
+        }
+      }
+    }
     if (data.dateAchat && typeof data.dateAchat === 'string') data.dateAchat = new Date(data.dateAchat);
     return this.prisma.moto.create({ data });
   }
@@ -51,5 +64,15 @@ export class MotosService {
       where: { id },
       data: { derniereVidangeKm: data.km, dateDerniereVidange: new Date(), kmProchaineVidange: data.km + 3000 },
     });
+  }
+
+  private getLimiteMotos(abonnement: string): number {
+    switch (abonnement) {
+      case 'GRATUIT': return 1;
+      case '2_5': return 5;
+      case '6_10': return 10;
+      case '11_PLUS': return 999;
+      default: return 1;
+    }
   }
 }
