@@ -19,6 +19,7 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   
+// Push DB schema  try {    const { execSync } = require('child_process');    execSync('npx prisma db push --accept-data-loss', { stdio: 'ignore' });    console.log('✅ DB schema poussé');  } catch (e) {    console.log('⚠️ DB push ignoré:', e.message);  }
   await app.listen(process.env.PORT || 3000);
   console.log('🚀 API démarrée');
 
