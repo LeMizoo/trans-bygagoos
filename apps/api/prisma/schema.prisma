@@ -38,7 +38,6 @@ model Flotte {
   courses     Course[]
   depenses    Depense[]
   contrats    Contrat[]
-  contrats    Contrat[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
