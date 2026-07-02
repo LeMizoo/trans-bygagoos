@@ -35,6 +35,10 @@ model Flotte {
   users          User[]
   motos          Moto[]
   chauffeurs     Chauffeur[]
+  courses     Course[]
+  depenses    Depense[]
+  contrats    Contrat[]
+  contrats    Contrat[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 }
@@ -83,6 +87,7 @@ model Moto {
   chauffeur             Chauffeur?
   courses               Course[]
   depenses              Depense[]
+  contrats    Contrat[]
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 }
