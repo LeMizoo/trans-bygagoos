@@ -22,7 +22,7 @@ export function LandingPage() {
   const { data: pricing } = useQuery({
     queryKey: ["pricing-landing"],
     queryFn: () => axios.get(`${API}/parametres`).then(r => r.data),
-    staleTime: 30000,
+    staleTime: 0, refetchOnMount: true,
   });
   const p = pricing || {};
     staleTime: 300000, // 5 min de cache
