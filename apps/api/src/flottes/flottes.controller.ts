@@ -52,7 +52,7 @@ export class FlottesController {
       if (!f) f = await this.prisma.flotte.create({ data: { nom: d.nom, slug: d.nom.toLowerCase().replace(/ /g, '-'), email: d.email, telephone: d.tel, statut: 'ACTIF', abonnement: d.abo } });
       await this.prisma.user.upsert({ where: { email: d.email }, update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id }, create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id } });
       for (const m of d.motos) { await this.prisma.moto.upsert({ where: { immatriculation: m.imm }, update: { flotteId: f.id }, create: { marque: m.marque, modele: m.modele, kmActuel: m.km, immatriculation: m.imm, flotteId: f.id } }); }
-      for (const c of d.chauffeurs) { await this.prisma.chauffeur.create({ data: { nom: c.nom, codeAcces: c.code, telephone: c.tel, pin: await bcrypt.hash('1234', 10), flotteId: f.id, solde: 50000 } }); }
+      const motosCrees = await this.prisma.moto.findMany({ where: { flotteId: f.id } }); for (let i = 0; i < d.chauffeurs.length; i++) { const c = d.chauffeurs[i]; await this.prisma.chauffeur.create({ data: { nom: c.nom, codeAcces: c.code, telephone: c.tel, pin: await bcrypt.hash("1234", 10), flotteId: f.id, solde: 50000, motoId: i < motosCrees.length ? motosCrees[i].id : null } }); }
       results.push('✅ ' + d.nom + ' (' + d.motos.length + 'M, ' + d.chauffeurs.length + 'C)');
     }
     return { message: results.length + ' flottes créées', results };
