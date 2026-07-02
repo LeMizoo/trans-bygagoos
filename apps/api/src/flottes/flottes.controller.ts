@@ -16,6 +16,12 @@ export class FlottesController {
 
   @Post('restore-all')
   async restoreAll() {
+    const bcrypt = require("bcrypt"); const results: string[] = [];
+    
+    // SUPER_ADMIN et ADMIN
+    await this.prisma.user.upsert({ where: { email: "tovoniaina.rahendrison@gmail.com" }, update: { password: await bcrypt.hash("ByGagoos@2024!", 10), role: "SUPER_ADMIN" }, create: { email: "tovoniaina.rahendrison@gmail.com", nom: "Tovoniaina RAHENDRISON", password: await bcrypt.hash("ByGagoos@2024!", 10), role: "SUPER_ADMIN" } });
+    await this.prisma.user.upsert({ where: { email: "admin@bygagoos.com" }, update: { password: await bcrypt.hash("Admin123!", 10), role: "ADMIN" }, create: { email: "admin@bygagoos.com", nom: "Admin ByGagoos", password: await bcrypt.hash("Admin123!", 10), role: "ADMIN" } });
+    results.push("OK SUPER_ADMIN", "OK ADMIN");
     const bcrypt = require('bcrypt'); const results: string[] = [];
     const flottes = [{ nom: 'Rakoto Trans', email: 'rakoto@email.com', tel: '0341234567' }, { nom: 'Rabe Moto', email: 'rabe@email.com', tel: '0339876543' }];
     for (const d of flottes) {
@@ -23,6 +29,7 @@ export class FlottesController {
       if (!f) f = await this.prisma.flotte.create({ data: { nom: d.nom, email: d.email, telephone: d.tel, statut: 'ACTIF' } });
       await this.prisma.user.upsert({ where: { email: d.email }, update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id }, create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id } });
       results.push('OK ' + d.nom);
+      const motos=await this.prisma.moto.findMany({where:{flotteId:f.id}}); for(let i=0;i<Math.min(d.chauffeurs.length,motos.length);i++){await this.prisma.chauffeur.update({where:{id:d.chauffeurs[i].id||chauffeur.id},data:{motoId:motos[i].id}});}
     }
     return { message: results.length + ' restaurés', results };
   }
@@ -42,8 +49,9 @@ export class FlottesController {
       if (!f) f = await this.prisma.flotte.create({ data: { nom: d.nom, email: d.email, telephone: d.tel, statut: 'ACTIF', abonnement: d.abo } });
       await this.prisma.user.upsert({ where: { email: d.email }, update: { password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id }, create: { email: d.email, nom: d.nom, password: await bcrypt.hash('Proprio123!', 10), role: 'GERANT', flotteId: f.id } });
       for (const m of d.motos) { await this.prisma.moto.upsert({ where: { immatriculation: m.imm }, update: { flotteId: f.id }, create: { marque: m.marque, modele: m.modele, kmActuel: m.km, immatriculation: m.imm, flotteId: f.id } }); }
-      for (const c of d.chauffeurs) { await this.prisma.chauffeur.upsert({ where: { codeAcces_flotteId: { codeAcces: c.code, flotteId: f.id } }, update: { telephone: c.tel }, create: { nom: c.nom, codeAcces: c.code, telephone: c.tel, pin: '1234', flotteId: f.id, solde: 50000 } }); }
+      let mi=0; for (const c of d.chauffeurs) { const chauffeur=await this.prisma.chauffeur.upsert({ where: { codeAcces_flotteId: { codeAcces: c.code, flotteId: f.id } }, update: { telephone: c.tel }, create: { nom: c.nom, codeAcces: c.code, telephone: c.tel, pin: '1234', flotteId: f.id, solde: 50000 } }); }
       results.push('✅ ' + d.nom + ' (' + d.motos.length + 'M, ' + d.chauffeurs.length + 'C)');
+      const motos=await this.prisma.moto.findMany({where:{flotteId:f.id}}); for(let i=0;i<Math.min(d.chauffeurs.length,motos.length);i++){await this.prisma.chauffeur.update({where:{id:d.chauffeurs[i].id||chauffeur.id},data:{motoId:motos[i].id}});}
     }
     return { message: results.length + ' flottes créées', results };
   }

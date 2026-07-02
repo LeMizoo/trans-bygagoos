@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Shield, UserPlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 export function UtilisateursPage() {
   const qc = useQueryClient();

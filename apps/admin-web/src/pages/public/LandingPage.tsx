@@ -5,7 +5,7 @@ import { photos } from './photos';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 const slides = [
   { image: photos['flotte-motos'], title: 'Gérez votre flotte de motos', subtitle: 'Suivi complet : kilométrage, vidange, assurance, vignette', cta: 'Créer ma flotte' },

@@ -4,7 +4,7 @@ import { Building2, Bike, Users, TrendingUp, Activity, ArrowRight, CreditCard } 
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 export function DashboardPage() {
   const navigate = useNavigate();

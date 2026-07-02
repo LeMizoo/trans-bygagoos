@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Bike, Search, Plus, Edit, Trash2, X, Save, User, Wrench } from 'lucide-react';
 import { useState } from 'react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 export function MotosPage() {
   const queryClient = useQueryClient();

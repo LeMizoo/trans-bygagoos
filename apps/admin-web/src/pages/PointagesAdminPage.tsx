@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Clock, Play, Pause, RotateCcw, StopCircle, User } from 'lucide-react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 const typeStyle: Record<string, { icon: any; color: string; bg: string }> = {
   ARRIVEE: { icon: Play, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-500/10' },

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Building2, CheckCircle, XCircle, Clock, Phone, Mail, Calendar, Edit, Save, Trash2, X, Eye, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://bygagoos-backend.onrender.com/api/v1';
 
 export function FlottesAdminPage() {
   const qc = useQueryClient();
