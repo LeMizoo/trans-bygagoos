@@ -62,7 +62,7 @@ export class MotosService {
   async validerVidange(id: string, data: any) {
     return this.prisma.moto.update({
       where: { id },
-      data: { dateDerniereVidange: new Date(), kmProchaineVidange: data.km + 3000 },
+      data: { kmProchaineVidange: data.km + 3000 },
     });
   }
 
