@@ -101,7 +101,7 @@ function AppContent() {
 }
 
 function LoginPage({onLogin}:{onLogin:()=>void}){
-  const [code,setCode]=useState(''); const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
+  const [code,setCode]=useState(''); const [pin,setPin]=useState(''); const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
   const [flotteId,setFlotteId]=useState(localStorage.getItem('flotteId')||'');
   const [flottes,setFlottes]=useState<any[]>([]);
   
@@ -115,7 +115,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
   const submit=async(e:React.FormEvent)=>{e.preventDefault();setError("");if(!code||code.length<3){setError("Code requis");return;}
     setLoading(true);
     try{
-      const payload:any={code:code.toUpperCase()};if(flotteId)payload.flotteId=flotteId;
+      const payload:any={codeAcces:code.toUpperCase(),pin};if(flotteId)payload.flotteId=flotteId;
       const{data}=await axios.post(API+'/auth/chauffeur/code',payload);
       localStorage.setItem('chauffeur-token',data.accessToken);localStorage.setItem('chauffeur',JSON.stringify(data.chauffeur));
       if(data.chauffeur?.moto)localStorage.setItem('moto',JSON.stringify(data.chauffeur.moto));
@@ -131,6 +131,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
     <form onSubmit={submit}>
     <div className='form-group'><select value={flotteId} onChange={e=>setFlotteId(e.target.value)} style={{width:'100%',padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13,marginBottom:10}}><option value=''>🏢 Choisir une flotte</option>{flottes.map((f:any)=><option key={f.id} value={f.id}>🏢 {f.nom}</option>)}</select></div>
     <div className='form-group'><input type='text' value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder='CODE' maxLength={6} autoFocus style={{textAlign:'center',fontSize:26,fontWeight:'bold',letterSpacing:6,color:'#DAA520',border:'2px solid #DAA520'}}/></div>
+    <div className='form-group'><input type='password' value={pin} onChange={e=>setPin(e.target.value)} placeholder='PIN' maxLength={4} style={{textAlign:'center',fontSize:20,fontWeight:'bold',letterSpacing:4,color:'#DAA520',border:'2px solid #DAA520',width:'100%',padding:10,background:'#252525',borderRadius:10}}/></div>
     <button type='submit' disabled={loading} className='btn-primary'>{loading?'Connexion...':'Se connecter'}</button>
     </form></div></div></div>;
 }
