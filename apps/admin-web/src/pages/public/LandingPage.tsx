@@ -20,12 +20,11 @@ export function LandingPage() {
 
   // Prix depuis l'API avec fallback sur les valeurs admin
   const { data: pricing } = useQuery({
-    queryKey: ['pricing-landing'],
-    queryFn: () => axios.get(`${API}/parametres`).then(r => {
-      const map: any = {};
-      (Array.isArray(r.data) ? r.data : []).forEach((p: any) => { map[p.nom] = p.valeur; });
-      return map;
-    }),
+    queryKey: ["pricing-landing"],
+    queryFn: () => axios.get(`${API}/parametres`).then(r => r.data),
+    staleTime: 30000,
+  });
+  const p = pricing || {};
     staleTime: 300000, // 5 min de cache
   });
 
@@ -47,10 +46,10 @@ export function LandingPage() {
 
   // Valeurs synchronisées avec l'admin (fallback = valeurs configurées)
   const p = pricing || {};
-  const prix2_5 = p.abonnement_2_5_prix_mensuel || '6000';
-  const prix6_10 = p.abonnement_6_10_prix_mensuel || '15000';
-  const prix11 = p.abonnement_11_plus_prix_mensuel || '50000';
-  const reduc = p.reduction_annuelle_pourcent || '7';
+  const prix2_5 = p.abonnement_2_5_prix_mensuel ;
+  const prix6_10 = p.abonnement_6_10_prix_mensuel ;
+  const prix11 = p.abonnement_11_plus_prix_mensuel ;
+  const reduc = p.reduction_annuelle_pourcent ;
   const plans = [
     { nom: 'Gratuit', motos: '1 moto', prix: '0 Ar/mois', prixAnnuel: 'Gratuit', icon: '🆓', desc: 'Pour démarrer', abo: 'GRATUIT' },
     { nom: 'Standard', motos: '2-5 motos', prix: formatPrix(prix2_5), prixAnnuel: formatAnnuel(prix2_5, reduc), icon: '🥈', desc: 'Petite flotte', reduction: '-' + reduc + '%', abo: '2_5' },
