@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API = 'https://bygagoos-backend.onrender.com/api/v1';
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || JSON.parse(localStorage.getItem('chauffeur') || '{}')?.moto;
 
 export default function AlertesMotoPage() {

@@ -4,7 +4,7 @@ import { Building2, Mail, Phone, MapPin, ArrowLeft } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
-const API = 'https://bygagoos-backend.onrender.com/api/v1';
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function ProprietairesPage() {
   const { id } = useParams();

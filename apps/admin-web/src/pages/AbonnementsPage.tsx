@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { CreditCard } from 'lucide-react';
 
-const API = 'https://bygagoos-backend.onrender.com/api/v1';
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function AbonnementsPage() {
   const { data: pricing } = useQuery({

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Bell, Check, Trash2 } from 'lucide-react';
 
-const API = 'https://bygagoos-backend.onrender.com/api/v1';
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function NotificationsAdminPage() {
   const qc = useQueryClient();

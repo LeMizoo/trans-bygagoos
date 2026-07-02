@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API = "https://bygagoos-backend.onrender.com/api/v1";
+const API = "https://trans-bygagoos.onrender.com/api/v1";
 
 interface User {
   id: string;

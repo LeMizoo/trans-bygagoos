@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building2, User, Eye, EyeOff, CheckCircle, Upload, X } from 'lucide-react';
 import axios from 'axios';
 
-const API = 'https://bygagoos-backend.onrender.com/api/v1';
+const API = 'https://trans-bygagoos.onrender.com/api/v1';
 
 export function RegisterPage() {
   const navigate = useNavigate();
