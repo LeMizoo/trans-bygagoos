@@ -49,6 +49,7 @@ export function LandingPage() {
   const reduc = p.reduction_annuelle_pourcent ;
   const plans = [
     { nom: 'Gratuit', motos: '1 moto', prix: '0 Ar/mois', prixAnnuel: 'Gratuit', icon: '🆓', desc: 'Pour démarrer', abo: 'GRATUIT' },
+    { nom: 'Standard', motos: '2-5 motos', prix: formatPrix(prix2_5), prixAnnuel: formatAnnuel(prix2_5, reduc), icon: '🥈', desc: 'Petite flotte', reduction: '-' + reduc + '%', abo: '2_5' },
     { nom: 'Premium', motos: '6-10 motos', prix: formatPrix(prix6_10), prixAnnuel: formatAnnuel(prix6_10, reduc), icon: '🥇', desc: 'Flotte moyenne', reduction: '-' + reduc + '%', abo: '6_10' },
     { nom: 'Business', motos: '11+ motos', prix: formatPrix(prix11), prixAnnuel: formatAnnuel(prix11, reduc), icon: '💎', desc: 'Grande flotte', reduction: '-' + reduc + '%', abo: '11_PLUS' },
   ];
