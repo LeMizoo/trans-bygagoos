@@ -1,11 +1,18 @@
 #!/bin/bash
+set -e
+
+echo "📦 Installation dépendances..."
 npm install
+
+echo "📁 Création dossier data..."
+mkdir -p /opt/render/project/data
+
+echo "🔨 Build API..."
 cd apps/api
 npx prisma generate
-# Compiler avec tsc au lieu de nest
-npx tsc -p tsconfig.build.json
+npm run build
 
-# Seed automatique des flottes
-echo "🌱 Seed flottes de test..."
-sleep 5
-curl -s -X POST https://trans-bygagoos.onrender.com/api/v1/flottes/seed-create || echo "⚠️ Seed non exécuté"
+echo "🗄️ Migration DB..."
+npx prisma db push --accept-data-loss 2>/dev/null || npx prisma migrate deploy
+
+echo "✅ Build terminé"
