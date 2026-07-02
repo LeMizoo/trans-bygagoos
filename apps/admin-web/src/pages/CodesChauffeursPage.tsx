@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { QrCode, RefreshCw, Copy, Check, X, Edit, ToggleLeft, ToggleRight, Search } from 'lucide-react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 
 export function CodesChauffeursPage() {
   const queryClient = useQueryClient();

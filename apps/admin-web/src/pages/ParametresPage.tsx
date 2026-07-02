@@ -4,7 +4,7 @@ import { Settings, Save, CreditCard, Sun, Moon, Monitor } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useThemeStore } from '../stores/themeStore';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 
 export function ParametresPage() {
   const qc = useQueryClient();

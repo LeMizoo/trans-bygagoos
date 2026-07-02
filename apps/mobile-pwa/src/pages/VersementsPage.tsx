@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 const token = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 

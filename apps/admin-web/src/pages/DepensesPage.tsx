@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Receipt, Plus, Edit, Trash2, X, Save, Search } from 'lucide-react';
 import { useState } from 'react';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 
 const categories = [
   { value: 'CARBURANT', label: '⛽ Carburant', icon: '⛽' },

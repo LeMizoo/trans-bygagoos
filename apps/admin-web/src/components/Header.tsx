@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useThemeStore } from '../stores/themeStore';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 
 async function getBadgeNotifs() {
   try { const { data } = await axios.get(`${API}/notifications/count`); return typeof data === 'number' ? data : (data?.count || 0); } catch { return 0; }

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API = 'https://trans-bygagoos.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
 const tk = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || chauffeur()?.moto;
