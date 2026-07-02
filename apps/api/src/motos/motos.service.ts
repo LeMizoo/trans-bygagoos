@@ -71,7 +71,7 @@ export class MotosService {
       case 'GRATUIT': return 1;
       case '2_5': return 5;
       case '6_10': return 10;
-      case '11_PLUS': return 999;
+      case '11_PLUS': return Number.MAX_SAFE_INTEGER;
       default: return 1;
     }
   }
