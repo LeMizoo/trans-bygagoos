@@ -16,10 +16,10 @@ const slides = [
 ];
 
 const apps = [
-  { icon: Globe, title: 'Admin Web', desc: 'Supervisez toutes les flottes et coopératives', url: 'https://trans-bygagoos.netlify.app', color: 'bg-indigo-500' },
-  { icon: Bike, title: 'Flotte Taxi-Moto', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app', color: 'bg-orange-500' },
-  { icon: Package, title: 'Coopérative', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app', color: 'bg-green-500' },
-  { icon: Smartphone, title: 'App Livreur', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app', color: 'bg-purple-500' },
+  { icon: Globe, title: 'Trans ByGagoos', desc: 'Supervisez toutes les flottes et coopératives', url: 'https://trans-bygagoos.netlify.app', color: 'bg-indigo-500' },
+  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app', color: 'bg-orange-500' },
+  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app', color: 'bg-green-500' },
+  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app', color: 'bg-purple-500' },
 ];
 
 export const LandingPage = () => {
@@ -99,7 +99,7 @@ export const LandingPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-300">
                 <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2 hover-scale">
-                  Créer ma flotte gratuitement <ArrowRight size={20} />
+                  Commencer gratuitement <ArrowRight size={20} />
                 </button>
                 <a href="#apps" className="border-2 border-white/30 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 hover:border-white/50 transition-all backdrop-blur-sm text-center">
                   Nos applications
@@ -128,13 +128,15 @@ export const LandingPage = () => {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {apps.map((app, i) => (
-              <a key={i} href={app.url} target="_blank" rel="noopener noreferrer" className="card-hover bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-xl">
+              <a key={i} href={app.url} target="_blank" rel="noopener noreferrer" className="card-hover bg-white rounded-2xl border border-gray-200 p-6 text-center hover:shadow-xl group">
                 <div className={`w-14 h-14 ${app.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
                   <app.icon size={28} className="text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{app.title}</h3>
-                <p className="text-gray-500 text-sm">{app.desc}</p>
-                <span className="inline-block mt-4 text-indigo-600 text-sm font-medium">Accéder →</span>
+                <p className="text-gray-500 text-sm mb-4">{app.desc}</p>
+                <span className="inline-flex items-center gap-1 text-indigo-600 font-medium text-sm group-hover:gap-2 transition-all">
+                  Commencer gratuitement <ArrowRight size={14} />
+                </span>
               </a>
             ))}
           </div>
@@ -175,7 +177,7 @@ export const LandingPage = () => {
           <h2 className="text-3xl font-bold text-white">Prêt à lancer votre flotte ?</h2>
           <p className="mt-4 text-xl text-indigo-100">Rejoignez Trans ByGagoos et commencez gratuitement.</p>
           <button onClick={() => navigate('/register')} className="mt-8 inline-flex items-center px-8 py-4 text-lg font-medium text-indigo-600 bg-white rounded-xl hover:bg-gray-100 transition-all shadow-xl hover:shadow-2xl">
-            Créer ma flotte gratuitement <ArrowRight className="ml-2 h-5 w-5" />
+            Commencer gratuitement <ArrowRight className="ml-2 h-5 w-5" />
           </button>
         </div>
       </section>
