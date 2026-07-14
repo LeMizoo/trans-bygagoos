@@ -1,20 +1,51 @@
 {
   "name": "trans-bygagoos",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Application de gestion de flotte de taxi-moto",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "dev:api": "turbo run dev --filter=api",
+    "dev:admin": "turbo run dev --filter=admin-web",
+    "dev:mobile": "turbo run dev --filter=mobile-pwa",
+    "build:api": "turbo run build --filter=api",
+    "build:admin": "turbo run build --filter=admin-web",
+    "build:mobile": "turbo run build --filter=mobile-pwa",
+    "db:generate": "cd apps/api && npx prisma generate",
+    "db:migrate": "cd apps/api && npx prisma migrate dev",
+    "db:push": "cd apps/api && npx prisma db push",
+    "db:seed": "cd apps/api && npx prisma db seed",
+    "db:studio": "cd apps/api && npx prisma studio",
+    "db:reset": "cd apps/api && npx prisma migrate reset",
+    "clean": "rimraf apps/*/node_modules apps/*/dist packages/*/node_modules node_modules",
+    "setup": "npm install && npm run db:generate && npm run db:push && npm run db:seed"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "rimraf": "^5.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "npm@10.0.0",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
-  "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "lint": "turbo lint",
-    "clean": "turbo clean"
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.1",
+    "axios": "^1.18.1",
+    "react-router-dom": "^7.18.0",
+    "socket.io-client": "^4.8.3",
+    "vite-plugin-pwa": "^1.3.0",
+    "workbox-window": "^7.4.1",
+    "zustand": "^5.0.14"
   },
-  "devDependencies": {
-    "turbo": "^1.12.4",
-    "prettier": "^3.0.0",
-    "typescript": "^5.3.0"
+  "allowScripts": {
+    "@prisma/engines@7.8.0": true,
+    "bcrypt@6.0.0": true,
+    "prisma@7.8.0": true,
+    "unrs-resolver@1.12.2": true
   }
 }

@@ -1,42 +1,13 @@
-# Dependencies
 node_modules/
-.pnpm-store/
-
-# Build
 dist/
-build/
-.next/
-out/
-
-# Environment
-.env
-.env.local
-.env*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Cache
-.cache/
 .turbo/
-*.tsbuildinfo
-
-# Prisma
+.env
 *.db
 *.db-journal
+uploads/*
 
-# Misc
-*.pem
-*.key
-*.crt
+# Local Netlify folder
+.netlify
+apps/api/tsconfig.build.tsbuildinfo
+apps/api/prisma/schema.prisma.bak
+apps/api/prisma/schema_patch.txt
