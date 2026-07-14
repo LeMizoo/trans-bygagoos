@@ -1,130 +1,150 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Building2, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff, ArrowLeft, CheckCircle, Building2, Bike, Package } from 'lucide-react';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
-  const { register, loading, error } = useAuth();
-  const [formData, setFormData] = useState({
+  const [step, setStep] = useState(1);
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const [form, setForm] = useState({
+    appType: '',
+    prenom: '',
+    nom: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    nom: '',
-    telephone: '',
-    flotteNom: '',
   });
-  const [formError, setFormError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setFormError('Les mots de passe ne correspondent pas');
-      return;
-    }
-
+    setLoading(true);
+    setError('');
     try {
-      await register({
-        email: formData.email,
-        password: formData.password,
-        nom: formData.nom,
-        telephone: formData.telephone,
-        flotteNom: formData.flotteNom,
-      });
-      navigate('/dashboard');
+      // TODO: API call
+      console.log('Inscription:', form);
+      navigate('/login');
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Erreur lors de l\'inscription');
+      setError('Erreur lors de l\'inscription');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">🚐 Trans ByGagoos</h1>
-          <p className="text-gray-600 mt-2">Créer ma flotte</p>
-          <p className="text-xs text-gray-400 mt-1">🔓 Gratuit • Sans engagement</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Link to="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6">
+          <ArrowLeft size={18} /> Retour
+        </Link>
+
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="text-center mb-6">
+            <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-16 h-16 mx-auto mb-3 object-contain" />
+            <h1 className="text-2xl font-bold text-gray-900">Inscription</h1>
+            <p className="text-gray-500 mt-1">Créez votre compte gratuitement</p>
+          </div>
+
+          {/* Étapes */}
+          <div className="flex justify-center gap-2 mb-6">
+            {[1, 2].map((s) => (
+              <div key={s} className={`h-2 w-12 rounded-full ${s <= step ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {step === 1 && (
+              <div className="space-y-4 animate-fade-in-up">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Choisissez votre application</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: 'flotte', label: 'Flotte', icon: Bike, desc: 'Taxi-Moto' },
+                    { value: 'coop', label: 'Coopérative', icon: Package, desc: 'Livraison' },
+                    { value: 'admin', label: 'Admin', icon: Building2, desc: 'Supervision' },
+                  ].map((app) => (
+                    <button
+                      key={app.value}
+                      type="button"
+                      onClick={() => { setForm({ ...form, appType: app.value }); setStep(2); }}
+                      className={`p-4 rounded-xl border-2 text-center transition-all hover:shadow-md ${
+                        form.appType === app.value ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <app.icon size={28} className="mx-auto mb-2 text-indigo-600" />
+                      <span className="block text-sm font-semibold">{app.label}</span>
+                      <span className="block text-xs text-gray-400">{app.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4 animate-fade-in-up">
+                <div className="flex items-center gap-3 mb-2">
+                  <button type="button" onClick={() => setStep(1)} className="text-gray-400 hover:text-gray-600">
+                    <ArrowLeft size={18} />
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {form.appType === 'flotte' ? '🚀 Flotte Taxi-Moto' : form.appType === 'coop' ? '📦 Coopérative' : '🏢 Admin'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                    <input type="text" name="prenom" value={form.prenom} onChange={handleChange} required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      placeholder="Jean" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input type="text" name="nom" value={form.nom} onChange={handleChange} required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      placeholder="Rakoto" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input type="email" name="email" value={form.email} onChange={handleChange} required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="jean@exemple.mg" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                  <div className="relative">
+                    <input type={showPwd ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} required minLength={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none pr-10"
+                      placeholder="••••••••" />
+                    <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>
+                )}
+
+                <button type="submit" disabled={loading}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                  {loading ? 'Inscription...' : 'Créer mon compte'} <CheckCircle size={18} />
+                </button>
+              </div>
+            )}
+          </form>
+
+          <p className="mt-6 text-center text-sm text-gray-500">
+            Déjà un compte ? <Link to="/login" className="text-indigo-600 font-medium hover:underline">Connectez-vous</Link>
+          </p>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la flotte *</label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="text" value={formData.flotteNom} onChange={(e) => setFormData({ ...formData, flotteNom: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Ma Super Flotte" required />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="text" value={formData.nom} onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Jean Rakoto" required />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="jean@flotte.com" required />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="tel" value={formData.telephone} onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="+261 34 12 345 67" required />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="••••••••" required minLength={6} />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe *</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="••••••••" required />
-            </div>
-          </div>
-
-          {(formError || error) && (
-            <div className="flex items-center space-x-2 bg-red-50 border border-red-200 rounded-lg p-3">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-              <p className="text-sm text-red-600">{formError || error}</p>
-            </div>
-          )}
-
-          <button type="submit" disabled={loading}
-            className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50">
-            {loading ? 'Inscription...' : 'Créer ma flotte 🚀'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Déjà un compte ? <button onClick={() => navigate('/login')} className="text-indigo-600 hover:underline">Se connecter</button>
-        </p>
       </div>
     </div>
   );
