@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import { api, setAuthToken, removeAuthToken } from '../api/client';
 
 interface User {
@@ -13,12 +13,13 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +41,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const response = await api.post('/auth/login', { email, password });
-      setAuthToken(response.data.token);
-      setUser(response.data.user);
+      const { user, token } = response.data;
+      setAuthToken(token);
+      setUser(user);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erreur de connexion');
+      throw err;
+    }
+  };
+
+  const register = async (data: any) => {
+    try {
+      setError(null);
+      const response = await api.post('/auth/register', data);
+      const { user, token } = response.data;
+      setAuthToken(token);
+      setUser(user);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erreur d\'inscription');
       throw err;
     }
   };
@@ -54,14 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
-}
+};

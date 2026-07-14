@@ -8,10 +8,102 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  nom       String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
+  id            String     @id @default(cuid())
+  email         String     @unique
+  password      String
+  nom           String
+  telephone     String?
+  role          String     @default("LIVREUR") // ADMIN_COOP | LIVREUR
+  actif         Boolean    @default(true)
+  coopId        String?
+  coop          Coop?      @relation(fields: [coopId], references: [id])
+  coopAdmin     Coop?      @relation("CoopAdmin")
+  vehicule      Vehicule?
+  commandes     Commande[]
+  locations     Location[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Coop {
+  id          String     @id @default(cuid())
+  nom         String
+  description String?
+  adresse     String?
+  telephone   String
+  adminId     String     @unique
+  admin       User       @relation("CoopAdmin", fields: [adminId], references: [id])
+  livreurs    User[]
+  vehicules   Vehicule[]
+  commandes   Commande[]
+  locations   Location[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Vehicule {
+  id             String     @id @default(cuid())
+  coopId         String
+  coop           Coop       @relation(fields: [coopId], references: [id])
+  type           String     // MOTO | VOITURE | CAMIONNETTE
+  immatriculation String
+  modele         String?
+  capacite       Int?       // Capacité de charge en kg
+  statut         String     @default("DISPONIBLE") // DISPONIBLE | EN_COURSE | MAINTENANCE
+  livreurId      String?    @unique
+  livreur        User?      @relation(fields: [livreurId], references: [id])
+  kilometrage    Int        @default(0)
+  commandes      Commande[]
+  locations      Location[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Commande {
+  id              String    @id @default(cuid())
+  coopId          String
+  coop            Coop      @relation(fields: [coopId], references: [id])
+  clientNom       String
+  clientTel       String
+  clientAdresse   String?
+  depart          String
+  arrivee         String
+  description     String
+  type            String    // NOURRITURE | ELECTROMENAGER | COLIS | AUTRE
+  urgence         String    @default("NORMAL") // NORMAL | URGENT | EXPRESS
+  prix            Float
+  paiement        String    @default("A_PAYER") // A_PAYER | PAYE
+  livreurId       String?
+  livreur         User?     @relation(fields: [livreurId], references: [id])
+  vehiculeId      String?
+  vehicule        Vehicule? @relation(fields: [vehiculeId], references: [id])
+  statut          String    @default("EN_ATTENTE") // EN_ATTENTE | ASSIGNEE | EN_COURS | LIVREE | ANNULEE
+  dateCreation    DateTime  @default(now())
+  datePriseEnCharge DateTime?
+  dateLivraison   DateTime?
+  kmDebut         Int?
+  kmFin           Int?
+  distance        Int?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Location {
+  id          String    @id @default(cuid())
+  coopId      String
+  coop        Coop      @relation(fields: [coopId], references: [id])
+  vehiculeId  String
+  vehicule    Vehicule  @relation(fields: [vehiculeId], references: [id])
+  livreurId   String
+  livreur     User      @relation(fields: [livreurId], references: [id])
+  dateDebut   DateTime  @default(now())
+  dateFin     DateTime?
+  kmDebut     Int
+  kmFin       Int?
+  kmParcourus Int?
+  loyerPaye   Float
+  statut      String    @default("EN_COURS") // EN_COURS | TERMINE
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
