@@ -50,7 +50,7 @@ function AppContent() {
 // ==================== LOGIN ====================
 function LoginPage({onLogin}:{onLogin:()=>void}){
   const [code,setCode]=useState(''); const [pin,setPin]=useState(''); const [error,setError]=useState(''); const [loading,setLoading]=useState(false);
-  const [flotteId,setFlotteId]=useState(localStorage.getItem('flotteId')||'');
+  const [coopId,setFlotteId]=useState(localStorage.getItem('coopId')||'');
   const [flottes,setFlottes]=useState<any[]>([]);
   
   useEffect(()=>{
@@ -63,21 +63,21 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
   const submit=async(e:React.FormEvent)=>{e.preventDefault();setError("");if(!code||code.length<3){setError("Code requis");return;}
     setLoading(true);
     try{
-      const payload:any={codeAcces:code.toUpperCase(),pin};if(flotteId)payload.flotteId=flotteId;
+      const payload:any={codeAcces:code.toUpperCase(),pin};if(coopId)payload.coopId=coopId;
       const{data}=await axios.post(API+'/auth/chauffeur/login',payload);
       localStorage.setItem('chauffeur-token',data.accessToken);localStorage.setItem('chauffeur',JSON.stringify(data.chauffeur));
       if(data.chauffeur?.moto)localStorage.setItem('moto',JSON.stringify(data.chauffeur.moto));
-      if(flotteId)localStorage.setItem('flotteId',flotteId);onLogin();
+      if(coopId)localStorage.setItem('coopId',coopId);onLogin();
     }catch{setError('Code introuvable ou flotte incorrecte');}finally{setLoading(false);}
   };
 
-  const selectedFlotte=flottes.find((f:any)=>f.id===flotteId);
+  const selectedFlotte=flottes.find((f:any)=>f.id===coopId);
   return <div style={{minHeight:'100vh',background:'#0a0a0a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:20,fontFamily:'system-ui, sans-serif'}}>
     <div className='app-header' style={{position:'fixed',top:0}}><div className='header-content'><div className='header-left'><div className='header-logo'><img src='/assets/logo/b-trans.png' alt='Logo'/></div><div className='header-info'><h1>{selectedFlotte?.nom||'Trans ByGagoos'}</h1><p>Application Chauffeur</p></div></div></div></div>
     <div style={{width:'100%',maxWidth:380,marginTop:60}}><div className='card'><div className='card-title'>🔑 Connexion</div>
     {error&&<div style={{color:'#e74c3c',marginBottom:12,fontSize:12,textAlign:'center',background:'rgba(231,76,60,0.1)',padding:8,borderRadius:8}}>{error}</div>}
     <form onSubmit={submit}>
-    <div className='form-group'><select value={flotteId} onChange={e=>setFlotteId(e.target.value)} style={{width:'100%',padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13,marginBottom:10}}><option value=''>🏢 Choisir une flotte</option>{flottes.map((f:any)=><option key={f.id} value={f.id}>🏢 {f.nom}</option>)}</select></div>
+    <div className='form-group'><select value={coopId} onChange={e=>setFlotteId(e.target.value)} style={{width:'100%',padding:10,background:'#252525',border:'1px solid #333',borderRadius:10,color:'#fff',fontSize:13,marginBottom:10}}><option value=''>🏢 Choisir une flotte</option>{flottes.map((f:any)=><option key={f.id} value={f.id}>🏢 {f.nom}</option>)}</select></div>
     <div className='form-group'><input type='text' value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder='CODE' maxLength={6} autoFocus style={{textAlign:'center',fontSize:26,fontWeight:'bold',letterSpacing:6,color:'#DAA520',border:'2px solid #DAA520'}}/></div>
     <div className='form-group'><input type='password' value={pin} onChange={e=>setPin(e.target.value)} placeholder='PIN' maxLength={4} style={{textAlign:'center',fontSize:20,fontWeight:'bold',letterSpacing:4,color:'#DAA520',border:'2px solid #DAA520',width:'100%',padding:10,background:'#252525',borderRadius:10}}/></div>
     <button type='submit' disabled={loading} className='btn-primary'>{loading?'Connexion...':'Se connecter'}</button>
