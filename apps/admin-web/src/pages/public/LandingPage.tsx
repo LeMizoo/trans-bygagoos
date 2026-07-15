@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bike, Users, BarChart3, Shield, ArrowRight, Menu, X, ChevronLeft, ChevronRight, CheckCircle, Package, Globe, Smartphone } from 'lucide-react';
+import { Bike, Users, BarChart3, Shield, ArrowRight, Menu, X, ChevronLeft, ChevronRight, Package, Globe, Smartphone, ChevronDown } from 'lucide-react';
 
 const slides = [
   { image: '/assets/photos/flotte-01.png', title: '🏍️ Ny asa tsy mba vintana, fa fitsirihana', subtitle: 'Le succès dépend de votre persévérance.' },
@@ -12,16 +12,17 @@ const slides = [
 ];
 
 const apps = [
-  { icon: Globe, title: 'Trans ByGagoos', desc: 'Supervisez toutes les flottes et coopératives', url: 'https://trans-bygagoos.netlify.app', color: 'bg-indigo-500' },
-  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app', color: 'bg-orange-500' },
-  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app', color: 'bg-green-500' },
-  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app', color: 'bg-purple-500' },
+  { icon: Globe, title: 'Trans ByGagoos', desc: 'Supervisez toutes les flottes et coopératives', url: '/login', color: 'bg-indigo-500' },
+  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app/login', color: 'bg-orange-500' },
+  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app/login', color: 'bg-green-500' },
+  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app/login', color: 'bg-purple-500' },
 ];
 
 export const LandingPage = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 5000);
@@ -31,12 +32,13 @@ export const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <style>{`
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
         .hover-scale:hover { transform: translateY(-4px); }
         .card-hover:hover { transform: translateY(-5px); box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
       `}</style>
 
+      {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -45,18 +47,48 @@ export const LandingPage = () => {
               <span className="text-xl font-bold text-white">Trans ByGagoos</span>
             </a>
             <div className="hidden md:flex items-center gap-6">
-              <a href="#apps" className="text-white/80 hover:text-white">Applications</a>
-              <a href="#features" className="text-white/80 hover:text-white">Fonctionnalités</a>
-              <button onClick={() => navigate('/login')} className="text-white/80 hover:text-white">Connexion</button>
-              <button onClick={() => navigate('/register')} className="bg-white text-indigo-600 px-5 py-2 rounded-xl font-medium hover:bg-white/90 hover-scale">Inscription</button>
+              <a href="#apps" className="text-white/80 hover:text-white transition-colors">Applications</a>
+              <a href="#features" className="text-white/80 hover:text-white transition-colors">Fonctionnalités</a>
+              
+              {/* Menu Connexion déroulant */}
+              <div className="relative">
+                <button 
+                  onClick={() => setLoginMenuOpen(!loginMenuOpen)}
+                  className="text-white/80 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  Connexion <ChevronDown size={16} />
+                </button>
+                {loginMenuOpen && (
+                  <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl py-2 min-w-[200px] z-50">
+                    <a href="/login" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 text-sm">🔷 Admin / Super Admin</a>
+                    <a href="https://trans-bygagoos-flotte.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-orange-50 text-sm">🏍️ Gérant Flotte</a>
+                    <a href="https://trans-bygagoos-coop.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-green-50 text-sm">📦 Gérant Coop</a>
+                    <a href="https://trans-bygagoos-pwa.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-purple-50 text-sm">📱 Livreur</a>
+                  </div>
+                )}
+              </div>
+              
+              <button onClick={() => navigate('/register')} className="bg-white text-indigo-600 px-5 py-2 rounded-xl font-medium hover:bg-white/90 transition-all hover-scale">Inscription</button>
             </div>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 text-white">
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-black/80 backdrop-blur-sm px-4 py-4 space-y-3">
+            <a href="#apps" className="block text-white py-2">Applications</a>
+            <a href="#features" className="block text-white py-2">Fonctionnalités</a>
+            <a href="/login" className="block text-white py-2">🔷 Connexion Admin</a>
+            <a href="https://trans-bygagoos-flotte.netlify.app/login" className="block text-white py-2">🏍️ Connexion Flotte</a>
+            <a href="https://trans-bygagoos-coop.netlify.app/login" className="block text-white py-2">📦 Connexion Coop</a>
+            <a href="https://trans-bygagoos-pwa.netlify.app/login" className="block text-white py-2">📱 Connexion Livreur</a>
+            <button onClick={() => navigate('/register')} className="block w-full bg-indigo-600 text-white text-center py-3 rounded-xl font-medium">Inscription</button>
+          </div>
+        )}
       </nav>
 
+      {/* Hero Slider */}
       <section className="relative h-screen">
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
@@ -69,9 +101,9 @@ export const LandingPage = () => {
         <div className="relative z-10 h-full flex items-center">
           <div className="max-w-7xl mx-auto px-4 w-full">
             <div className="max-w-2xl">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6">{slides[currentSlide].title}</h1>
-              <p className="text-lg text-white/80 mb-10">{slides[currentSlide].subtitle}</p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 animate-fade-in-up">{slides[currentSlide].title}</h1>
+              <p className="text-lg text-white/80 mb-10 animate-fade-in-up">{slides[currentSlide].subtitle}</p>
+              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up">
                 <button onClick={() => navigate('/register')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-indigo-700 hover-scale flex items-center justify-center gap-2">
                   Commencer gratuitement <ArrowRight size={20} />
                 </button>
@@ -89,23 +121,25 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* Apps Section */}
       <section id="apps" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Nos Applications</h2>
-          <p className="text-xl text-gray-600 mb-16">Trans ByGagoos propose 4 applications adaptées à chaque besoin</p>
+          <p className="text-xl text-gray-600 mb-16">Choisissez votre espace</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {apps.map((app, i) => (
-              <a key={i} href={app.url} target="_blank" rel="noopener noreferrer" className="card-hover bg-white rounded-2xl border p-6 text-center hover:shadow-xl transition-all">
+              <a key={i} href={app.url} className="card-hover bg-white rounded-2xl border p-6 text-center hover:shadow-xl transition-all">
                 <div className={`w-14 h-14 ${app.color} rounded-xl flex items-center justify-center mx-auto mb-4`}><app.icon size={28} className="text-white" /></div>
                 <h3 className="text-lg font-bold mb-2">{app.title}</h3>
                 <p className="text-gray-500 text-sm mb-4">{app.desc}</p>
-                <span className="text-indigo-600 font-medium text-sm">Commencer gratuitement →</span>
+                <span className="text-indigo-600 font-medium text-sm">Se connecter →</span>
               </a>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Features */}
       <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Pourquoi Trans ByGagoos ?</h2>
@@ -129,6 +163,7 @@ export const LandingPage = () => {
         </div>
       </section>
 
+      {/* CTA */}
       <section className="py-20 bg-indigo-600 text-center">
         <h2 className="text-3xl font-bold text-white mb-4">Prêt à lancer votre flotte ?</h2>
         <p className="text-xl text-indigo-100 mb-8">Rejoignez Trans ByGagoos et commencez gratuitement.</p>
