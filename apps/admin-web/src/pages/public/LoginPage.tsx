@@ -31,7 +31,7 @@ export const LoginPage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           {/* Logo + Titre */}
           <div className="text-center mb-8">
-            <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-20 h-20 mx-auto mb-4 object-contain" />
+            <img src="/assets/logo/b-trans.png" alt="Trans ByGagoos" className="w-14 h-14 mx-auto mb-3 object-contain" />
             <h1 className="text-2xl font-bold text-gray-900">Trans ByGagoos</h1>
             <p className="text-gray-500 mt-1">Administration</p>
           </div>

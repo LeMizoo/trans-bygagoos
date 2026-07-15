@@ -1,6 +1,6 @@
 [build]
-  command = "cd apps/flotte-web && npm run build"
-  publish = "apps/flotte-web/dist"
+  command = "npm run build"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"

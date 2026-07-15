@@ -35,7 +35,7 @@ export function LoginPage() {
 
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <img src="/assets/logo/b-trans.png" alt="Logo" className="w-20 h-20 mx-auto mb-4 object-contain" />
+            <img src="/assets/logo/b-trans.png" alt="Logo" className="w-14 h-14 mx-auto mb-3 object-contain" />
             <h1 className="text-2xl font-bold text-gray-900">Ma Flotte ByGagoos</h1>
             <p className="text-gray-500 mt-1">🏍️ Gestion de flotte Taxi-Moto</p>
           </div>
