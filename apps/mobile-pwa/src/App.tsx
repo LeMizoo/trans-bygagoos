@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import FinancesPage from './pages/FinancesPage';
 
-const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
+const API = 'https://trans-bygagoos-api.onrender.com/api';
 const tk = () => localStorage.getItem('chauffeur-token') || '';
 const chauffeur = () => JSON.parse(localStorage.getItem('chauffeur') || '{}');
 const moto = () => JSON.parse(localStorage.getItem('moto') || 'null') || chauffeur()?.moto;
