@@ -54,7 +54,7 @@ function LoginPage({onLogin}:{onLogin:()=>void}){
   const [flottes,setFlottes]=useState<any[]>([]);
   
   useEffect(()=>{
-    axios.get(API + '/flottes').then(r=>{
+    axios.get(API + '/coops').then(r=>{
       if(Array.isArray(r.data)){setFlottes(r.data);if(r.data.length===1)setFlotteId(r.data[0].id);}
       else if(r.data?.items){setFlottes(r.data.items);if(r.data.items.length===1)setFlotteId(r.data.items[0].id);}
     }).catch(()=>{});
