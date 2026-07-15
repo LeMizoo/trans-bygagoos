@@ -13,9 +13,9 @@ const slides = [
 
 const apps = [
   { icon: Globe, title: 'Trans ByGagoos', desc: 'Supervisez toutes les flottes et coopératives', url: '/login', color: 'bg-indigo-500' },
-  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app/login', color: 'bg-orange-500' },
-  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app/login', color: 'bg-green-500' },
-  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app/login', color: 'bg-purple-500' },
+  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app', color: 'bg-orange-500' },
+  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app', color: 'bg-green-500' },
+  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app', color: 'bg-purple-500' },
 ];
 
 export const LandingPage = () => {
@@ -38,7 +38,6 @@ export const LandingPage = () => {
         .card-hover:hover { transform: translateY(-5px); box-shadow: 0 25px 50px rgba(0,0,0,0.15); }
       `}</style>
 
-      {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -50,20 +49,15 @@ export const LandingPage = () => {
               <a href="#apps" className="text-white/80 hover:text-white transition-colors">Applications</a>
               <a href="#features" className="text-white/80 hover:text-white transition-colors">Fonctionnalités</a>
               
-              {/* Menu Connexion déroulant */}
               <div className="relative">
-                <button 
-                  onClick={() => setLoginMenuOpen(!loginMenuOpen)}
-                  className="text-white/80 hover:text-white transition-colors flex items-center gap-1"
-                >
+                <button onClick={() => setLoginMenuOpen(!loginMenuOpen)} className="text-white/80 hover:text-white transition-colors flex items-center gap-1">
                   Connexion <ChevronDown size={16} />
                 </button>
                 {loginMenuOpen && (
                   <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl py-2 min-w-[200px] z-50">
-                    <a href="/login" className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 text-sm">🔷 Admin / Super Admin</a>
-                    <a href="https://trans-bygagoos-flotte.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-orange-50 text-sm">🏍️ Gérant Flotte</a>
-                    <a href="https://trans-bygagoos-coop.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-green-50 text-sm">📦 Gérant Coop</a>
-                    <a href="https://trans-bygagoos-pwa.netlify.app/login" className="block px-4 py-2 text-gray-700 hover:bg-purple-50 text-sm">📱 Livreur</a>
+                    <a href="https://trans-bygagoos-flotte.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-orange-50 text-sm">🏍️ Gérant Flotte</a>
+                    <a href="https://trans-bygagoos-coop.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-green-50 text-sm">📦 Gérant Coop</a>
+                    <a href="https://trans-bygagoos-pwa.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-purple-50 text-sm">📱 Livreur</a>
                   </div>
                 )}
               </div>
@@ -79,16 +73,14 @@ export const LandingPage = () => {
           <div className="md:hidden bg-black/80 backdrop-blur-sm px-4 py-4 space-y-3">
             <a href="#apps" className="block text-white py-2">Applications</a>
             <a href="#features" className="block text-white py-2">Fonctionnalités</a>
-            <a href="/login" className="block text-white py-2">🔷 Connexion Admin</a>
-            <a href="https://trans-bygagoos-flotte.netlify.app/login" className="block text-white py-2">🏍️ Connexion Flotte</a>
-            <a href="https://trans-bygagoos-coop.netlify.app/login" className="block text-white py-2">📦 Connexion Coop</a>
-            <a href="https://trans-bygagoos-pwa.netlify.app/login" className="block text-white py-2">📱 Connexion Livreur</a>
+            <a href="https://trans-bygagoos-flotte.netlify.app" className="block text-white py-2">🏍️ Connexion Flotte</a>
+            <a href="https://trans-bygagoos-coop.netlify.app" className="block text-white py-2">📦 Connexion Coop</a>
+            <a href="https://trans-bygagoos-pwa.netlify.app" className="block text-white py-2">📱 Connexion Livreur</a>
             <button onClick={() => navigate('/register')} className="block w-full bg-indigo-600 text-white text-center py-3 rounded-xl font-medium">Inscription</button>
           </div>
         )}
       </nav>
 
-      {/* Hero Slider */}
       <section className="relative h-screen">
         <div className="absolute inset-0">
           {slides.map((slide, index) => (
@@ -121,7 +113,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Apps Section */}
       <section id="apps" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Nos Applications</h2>
@@ -139,7 +130,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features */}
       <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Pourquoi Trans ByGagoos ?</h2>
@@ -163,7 +153,6 @@ export const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-20 bg-indigo-600 text-center">
         <h2 className="text-3xl font-bold text-white mb-4">Prêt à lancer votre flotte ?</h2>
         <p className="text-xl text-indigo-100 mb-8">Rejoignez Trans ByGagoos et commencez gratuitement.</p>
