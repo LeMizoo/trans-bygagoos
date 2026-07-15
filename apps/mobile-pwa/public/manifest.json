@@ -1,21 +1,35 @@
 {
-  "name": "Livreur ByGagoos",
-  "short_name": "ByGagoos",
-  "description": "Application livreur Trans ByGagoos",
+  "name": "ByGagoos Ride",
+  "short_name": "ByGagoos Ride",
+  "description": "ByGagoos Ride - Votre chauffeur a Madagascar",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4F46E5",
+  "orientation": "portrait",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
   "icons": [
-    {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
-    },
     {
       "src": "/assets/logo/b-trans.png",
       "sizes": "192x192",
       "type": "image/png"
+    },
+    {
+      "src": "/assets/logo/b-trans.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ByGagoos Ride",
+      "short_name": "ByGagoos Ride",
+      "description": "ByGagoos Ride - Votre chauffeur a Madagascar",
+      "url": "/?action=new-course"
+    },
+    {
+      "name": "ByGagoos Ride",
+      "short_name": "ByGagoos Ride",
+      "url": "/?action=courses"
     }
   ]
 }

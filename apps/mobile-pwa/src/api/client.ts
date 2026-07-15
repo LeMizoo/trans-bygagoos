@@ -1,18 +1,31 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://trans-bygagoos-api.onrender.com/api';
+const API_BASE = 'https://trans-bygagoos-api.onrender.com/api';
 
-export const api = axios.create({
-  baseURL: API_URL,
+const apiClient = axios.create({
+  baseURL: API_BASE,
+  timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 });
 
-export function setAuthToken(token: string) {
-  localStorage.setItem('token', token);
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('chauffeur-token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export function removeAuthToken() {
-  localStorage.removeItem('token');
-  delete api.defaults.headers.common['Authorization'];
-}
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+export { API_BASE };
