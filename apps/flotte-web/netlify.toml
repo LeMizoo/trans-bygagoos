@@ -1,6 +1,6 @@
 [build]
-  command = "npx turbo run build --filter=!@trans/api"
-  publish = "dist"
+  command = "cd apps/flotte-web && npm run build"
+  publish = "apps/flotte-web/dist"
 
 [build.environment]
   NODE_VERSION = "18"

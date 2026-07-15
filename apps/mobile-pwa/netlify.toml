@@ -1,6 +1,6 @@
 [build]
-  command = "npx turbo run build --filter=!@trans/api"
-  publish = "dist"
+  command = "cd apps/mobile-pwa && npm run build"
+  publish = "apps/mobile-pwa/dist"
 
 [build.environment]
   NODE_VERSION = "18"
