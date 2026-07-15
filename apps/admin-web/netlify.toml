@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npx turbo run build --filter=!@trans/api"
   publish = "dist"
 
 [build.environment]
