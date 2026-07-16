@@ -1,98 +1,82 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Truck, 
-  LogOut,
-  Menu,
-  X,
-  ClipboardList,
-  Home,
-  Settings,
-  DollarSign,
-  AlertCircle
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LayoutDashboard, Truck, Users, MapPin, LogOut, Menu, X, Bell, Settings } from 'lucide-react';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+interface LayoutProps { children: React.ReactNode; }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
-    { icon: Users, label: 'Chauffeurs', path: '/chauffeurs' },
-    { icon: Truck, label: 'Véhicules', path: '/vehicules' },
-    { icon: ClipboardList, label: 'Locations', path: '/locations' },
-    { icon: DollarSign, label: 'Finances', path: '/finances' },
-    { icon: Settings, label: 'Paramètres', path: '/parametres' },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/vehicules', label: 'Véhicules', icon: Truck },
+    { path: '/livreurs', label: 'Livreurs', icon: Users },
+    { path: '/suivi', label: 'Suivi GPS', icon: MapPin },
+    { path: '/parametres', label: 'Paramètres', icon: Settings },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <aside className={`
-        fixed top-0 left-0 z-40 w-64 h-screen bg-indigo-700 text-white transition-transform duration-300
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-        lg:translate-x-0
-      `}>
-        <div className="p-6 border-b border-indigo-600">
-          <h1 className="text-2xl font-bold">🚐 Ma Flotte</h1>
-          <p className="text-indigo-200 text-sm mt-1">Gestionnaire</p>
+    <div className="min-h-screen bg-slate-900 flex">
+      <motion.aside
+        initial={{ x: -280 }}
+        animate={{ x: sidebarOpen ? 0 : -280 }}
+        transition={{ duration: 0.3 }}
+        className="fixed top-0 left-0 z-50 h-full w-64 bg-slate-800 border-r border-slate-700 flex flex-col lg:relative lg:translate-x-0"
+      >
+        <div className="p-6 border-b border-slate-700">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Truck className="text-blue-400" />
+            Ma Flotte
+          </h1>
         </div>
-        <nav className="mt-6">
+        <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex items-center px-6 py-3 hover:bg-indigo-600 transition-colors"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <item.icon className="h-5 w-5 mr-3" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          <button
-            onClick={handleLogout}
-            className="flex items-center px-6 py-3 w-full hover:bg-indigo-600 transition-colors text-left border-t border-indigo-600 mt-4"
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            <span>Déconnexion</span>
-          </button>
-        </nav>
-      </aside>
-
-      <div className="lg:ml-64">
-        <header className="bg-white shadow-sm sticky top-0 z-30">
-          <div className="flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-            >
-              {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            <button key={item.path}
+              onClick={() => { navigate(item.path); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                location.pathname === item.path
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+              }`}>
+              <item.icon size={20} /> {item.label}
             </button>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">{user?.nom}</span>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                🟢 En ligne
-              </span>
-            </div>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-slate-700">
+          <button onClick={() => { localStorage.clear(); navigate('/login'); }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+            <LogOut size={20} /> Déconnexion
+          </button>
+        </div>
+      </motion.aside>
+
+      <div className="flex-1 flex flex-col min-h-screen">
+        <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="lg:hidden text-white p-2 hover:bg-slate-700 rounded-lg">
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+          <div className="flex items-center gap-4 ml-auto">
+            <button className="text-slate-400 hover:text-white p-2 hover:bg-slate-700 rounded-lg">
+              <Bell size={20} />
+            </button>
+            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">F</div>
           </div>
         </header>
-
-        <main className="p-6">
-          {children}
+        <main className="flex-1 overflow-auto">
+          <AnimatePresence mode="wait">
+            <motion.div key={location.pathname}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
     </div>
   );
 };
