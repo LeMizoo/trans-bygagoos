@@ -6,6 +6,7 @@ import { CoopModule } from './coop/coop.module';
 import { CommandesModule } from './commandes/commandes.module';
 import { LivreursModule } from './livreurs/livreurs.module';
 import { VehiculesModule } from './vehicules/vehicules.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { VehiculesModule } from './vehicules/vehicules.module';
     CommandesModule,
     LivreursModule,
     VehiculesModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [],

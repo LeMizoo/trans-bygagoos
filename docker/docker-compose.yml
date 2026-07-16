@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: transbygagoos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: transbygagoos
+      POSTGRES_PASSWORD: transbygagoos123
+      POSTGRES_DB: transbygagoos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # API NestJS
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: transbygagoos-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://transbygagoos:transbygagoos123@db:5432/transbygagoos
+      JWT_SECRET: change_this_to_a_strong_secret
+      PORT: 3000
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
