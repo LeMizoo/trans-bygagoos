@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@trans/shared": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.6.5",
     "lucide-react": "^0.309.0",
