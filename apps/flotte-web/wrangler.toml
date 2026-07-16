@@ -1,0 +1,8 @@
+name = "flotte"
+main = "dist/index.html"
+
+[assets]
+directory = "./dist"
+
+[site]
+bucket = "./dist"
