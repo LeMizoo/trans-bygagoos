@@ -1,0 +1,8 @@
+name = "flotte"
+main = "apps/flotte-web/dist/index.html"
+
+[assets]
+directory = "./apps/flotte-web/dist"
+
+[site]
+bucket = "./apps/flotte-web/dist"

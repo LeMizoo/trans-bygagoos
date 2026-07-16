@@ -1,223 +1,180 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  Bike, 
-  Users, 
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Activity,
-  ArrowUp,
-  ArrowDown
-} from 'lucide-react';
-import { api } from '../../api/client';
-import { useAuth } from '../../context/AuthContext';
+import { motion } from 'framer-motion';
+import { Truck, Wrench, MapPin, TrendingUp, Users, Gauge, Battery, AlertTriangle } from 'lucide-react';
+import { apiClient } from '@trans/shared';
+
+interface VehiculeStat {
+  id: string;
+  immatriculation: string;
+  type: string;
+  modele: string;
+  statut: string;
+  kilometrage: number;
+  livreur?: { nom: string };
+}
 
 interface Stats {
   totalVehicules: number;
   disponibles: number;
-  loues: number;
-  enReparation: number;
-  totalChauffeurs: number;
-  actifs: number;
-  locationsEnCours: number;
-  locationsAujourdhui: number;
-  revenusJour: number;
-  revenusMois: number;
-  tauxOccupation: number;
+  enCourse: number;
+  maintenance: number;
+  kmTotal: number;
+  livreursActifs: number;
 }
 
-export const DashboardPage = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<Stats | null>(null);
+export const DashboardPage: React.FC = () => {
+  const [stats, setStats] = useState<Stats>({
+    totalVehicules: 0, disponibles: 0, enCourse: 0, maintenance: 0, kmTotal: 0, livreursActifs: 0,
+  });
+  const [vehicules, setVehicules] = useState<VehiculeStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recentLocations, setRecentLocations] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [vehicules, chauffeurs, locations] = await Promise.all([
-          api.get('/vehicules'),
-          api.get('/livreurs'),
-          api.get('/locations'),
-        ]);
-
-        const totalV = vehicules.data.length;
-        const dispo = vehicules.data.filter((v: any) => v.statut === 'DISPONIBLE').length;
-        const loues = vehicules.data.filter((v: any) => v.statut === 'LOUE').length;
-        const reparation = vehicules.data.filter((v: any) => v.statut === 'REPARATION').length;
-        const totalC = chauffeurs.data.length;
-        const actifs = chauffeurs.data.filter((c: any) => c.actif !== false).length;
-        const enCours = locations.data.filter((l: any) => l.statut === 'EN_COURS').length;
-        const today = new Date().toDateString();
-        const aujourdhui = locations.data.filter((l: any) => 
-          new Date(l.dateDebut).toDateString() === today
-        ).length;
-        const revenusJour = locations.data
-          .filter((l: any) => l.statut === 'TERMINE' && new Date(l.dateFin).toDateString() === today)
-          .reduce((sum: number, l: any) => sum + l.loyerPaye, 0);
-
-        setStats({
-          totalVehicules: totalV,
-          disponibles: dispo,
-          loues: loues,
-          enReparation: reparation,
-          totalChauffeurs: totalC,
-          actifs: actifs,
-          locationsEnCours: enCours,
-          locationsAujourdhui: aujourdhui,
-          revenusJour: revenusJour,
-          revenusMois: 0,
-          tauxOccupation: totalV > 0 ? Math.round((loues / totalV) * 100) : 0,
-        });
-
-        setRecentLocations(locations.data.slice(-5).reverse());
-      } catch (error) {
-        console.error('Erreur:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    loadStats();
   }, []);
+
+  const loadStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const coopId = user.coopId;
+      if (!coopId) return;
+
+      const [vehiculesRes, livreursRes] = await Promise.all([
+        apiClient.get(`/vehicules?coopId=${coopId}`, { headers: { Authorization: `Bearer ${token}` } }),
+        apiClient.get(`/livreurs?coopId=${coopId}`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+
+      const vehs = vehiculesRes.data;
+      setVehicules(vehs);
+      setStats({
+        totalVehicules: vehs.length,
+        disponibles: vehs.filter((v: any) => v.statut === 'DISPONIBLE').length,
+        enCourse: vehs.filter((v: any) => v.statut === 'EN_COURSE').length,
+        maintenance: vehs.filter((v: any) => v.statut === 'MAINTENANCE').length,
+        kmTotal: vehs.reduce((sum: number, v: any) => sum + (v.kilometrage || 0), 0),
+        livreursActifs: livreursRes.data.filter((l: any) => l.actif).length,
+      });
+    } catch (err) {
+      console.error('Erreur chargement stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statutColor = (statut: string) => {
+    switch (statut) {
+      case 'DISPONIBLE': return 'text-green-400 bg-green-500/20';
+      case 'EN_COURSE': return 'text-blue-400 bg-blue-500/20';
+      case 'MAINTENANCE': return 'text-yellow-400 bg-yellow-500/20';
+      default: return 'text-gray-400 bg-gray-500/20';
+    }
+  };
+
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case 'MOTO': return '🏍️';
+      case 'VOITURE': return '🚗';
+      case 'CAMIONNETTE': return '🚐';
+      default: return '🚛';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">📊 Tableau de bord</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Bienvenue {user?.nom} - {new Date().toLocaleDateString('fr-FR', { 
-              weekday: 'long', 
-              day: 'numeric', 
-              month: 'long', 
-              year: 'numeric' 
-            })}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">🟢 Tous les systèmes sont opérationnels</span>
-        </div>
-      </div>
+    <div className="p-6">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl font-bold text-white mb-2">Gestion de Flotte</h1>
+        <p className="text-gray-400 mb-8">Suivi en temps réel de vos véhicules</p>
+      </motion.div>
 
-      {/* Stats principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Revenus aujourd'hui</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats?.revenusJour.toLocaleString()} Ar
-              </p>
-            </div>
-            <div className="bg-green-500 p-3 rounded-lg">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-center text-sm text-green-600">
-            <ArrowUp className="h-4 w-4 mr-1" />
-            +12% vs hier
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Taux d'occupation</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats?.tauxOccupation}%</p>
-            </div>
-            <div className="bg-blue-500 p-3 rounded-lg">
-              <Activity className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <div className="mt-2">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 rounded-full h-2 transition-all duration-500"
-                style={{ width: `${stats?.tauxOccupation}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Locations en cours</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stats?.locationsEnCours}</p>
-            </div>
-            <div className="bg-yellow-500 p-3 rounded-lg">
-              <Clock className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <div className="mt-2 text-sm text-gray-500">
-            {stats?.locationsAujourdhui} nouvelles aujourd'hui
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Véhicules disponibles</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats?.disponibles} / {stats?.totalVehicules}
-              </p>
-            </div>
-            <div className="bg-purple-500 p-3 rounded-lg">
-              <Bike className="h-6 w-6 text-white" />
-            </div>
-          </div>
-          <div className="mt-2 text-sm text-gray-500">
-            {stats?.loues} loués, {stats?.enReparation} en réparation
-          </div>
-        </div>
-      </div>
-
-      {/* Dernières locations */}
-      <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 Dernières locations</h2>
-        <div className="space-y-3">
-          {recentLocations.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Aucune location récente</p>
-          ) : (
-            recentLocations.map((loc: any) => (
-              <div key={loc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-2 h-2 rounded-full ${
-                    loc.statut === 'EN_COURS' ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
-                  }`} />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      Véhicule {loc.vehiculeId?.slice(0, 8)}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(loc.dateDebut).toLocaleString('fr-FR')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    loc.statut === 'EN_COURS' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                  }`}>
-                    {loc.statut === 'EN_COURS' ? '🔄 En cours' : '✅ Terminé'}
-                  </span>
-                  <span className="font-medium text-gray-900">{loc.loyerPaye} Ar</span>
-                </div>
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {[
+          { title: 'Total Véhicules', value: stats.totalVehicules, icon: Truck, color: 'from-indigo-500 to-indigo-600', delay: 0 },
+          { title: 'Disponibles', value: stats.disponibles, icon: Gauge, color: 'from-green-500 to-green-600', delay: 0.1 },
+          { title: 'En Course', value: stats.enCourse, icon: MapPin, color: 'from-blue-500 to-blue-600', delay: 0.2 },
+          { title: 'En Maintenance', value: stats.maintenance, icon: Wrench, color: 'from-yellow-500 to-yellow-600', delay: 0.3 },
+          { title: 'Km Total', value: `${stats.kmTotal.toLocaleString()} km`, icon: TrendingUp, color: 'from-purple-500 to-purple-600', delay: 0.4 },
+          { title: 'Livreurs Actifs', value: stats.livreursActifs, icon: Users, color: 'from-cyan-500 to-cyan-600', delay: 0.5 },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: card.delay, duration: 0.3 }}
+            className={`bg-gradient-to-br ${card.color} rounded-2xl p-6 shadow-lg`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm">{card.title}</p>
+                <p className="text-white text-3xl font-bold mt-1">{card.value}</p>
               </div>
-            ))
-          )}
-        </div>
+              <card.icon className="text-white/40" size={36} />
+            </div>
+          </motion.div>
+        ))}
       </div>
+
+      {/* Liste des véhicules */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="bg-gray-800 rounded-2xl p-6"
+      >
+        <h2 className="text-lg font-semibold text-white mb-4">🛵 État des Véhicules</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="text-gray-400 text-sm border-b border-gray-700">
+                <th className="pb-3">Véhicule</th>
+                <th className="pb-3">Type</th>
+                <th className="pb-3">Modèle</th>
+                <th className="pb-3">Statut</th>
+                <th className="pb-3">Kilométrage</th>
+                <th className="pb-3">Livreur</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vehicules.map((v, i) => (
+                <motion.tr
+                  key={v.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 + i * 0.05 }}
+                  className="border-b border-gray-700/50 hover:bg-gray-750"
+                >
+                  <td className="py-3 text-white font-medium">
+                    {typeIcon(v.type)} {v.immatriculation}
+                  </td>
+                  <td className="py-3 text-gray-400">{v.type}</td>
+                  <td className="py-3 text-gray-400">{v.modele || '-'}</td>
+                  <td className="py-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statutColor(v.statut)}`}>
+                      {v.statut}
+                    </span>
+                  </td>
+                  <td className="py-3 text-gray-400">{v.kilometrage?.toLocaleString()} km</td>
+                  <td className="py-3 text-gray-400">{v.livreur?.nom || '-'}</td>
+                </motion.tr>
+              ))}
+              {vehicules.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">Aucun véhicule trouvé</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   );
 };
