@@ -17,6 +17,26 @@ export class AuthService {
     return { user: userWithoutPassword, token };
   }
 
+  async loginByCode(codeAcces: string, pin: string, coopId?: string) {
+    // Chercher par le début de l'email (ex: KOTO → koto@flotte.mg)
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: 'LIVREUR',
+        ...(coopId ? { coopId } : {}),
+      },
+    });
+
+    const user = users.find(u => u.email.toLowerCase().startsWith(codeAcces.toLowerCase()));
+    if (!user) throw new UnauthorizedException('Code ou PIN incorrect');
+
+    const isValid = await bcrypt.compare(pin, user.password);
+    if (!isValid) throw new UnauthorizedException('Code ou PIN incorrect');
+
+    const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
+    const { password: _, ...userWithoutPassword } = user;
+    return { accessToken: token, chauffeur: userWithoutPassword };
+  }
+
   async register(data: any) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.user.create({

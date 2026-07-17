@@ -1,7 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto, RegisterDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
@@ -12,19 +11,19 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto.email, loginDto.password);
+  async login(@Body() body: { email: string; password: string }) {
+    return this.authService.login(body.email, body.password);
   }
 
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  async register(@Body() body: any) {
+    return this.authService.register(body);
   }
 
   @Post('chauffeur/login')
   @HttpCode(HttpStatus.OK)
   async chauffeurLogin(@Body() body: { codeAcces: string; pin: string; coopId?: string }) {
-    return this.authService.login(body.codeAcces, body.pin);
+    return this.authService.loginByCode(body.codeAcces, body.pin, body.coopId);
   }
 
   @Get('me')
