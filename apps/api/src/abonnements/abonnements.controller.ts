@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { AbonnementsService } from './abonnements.service';
 
 @Controller('abonnements')
@@ -6,7 +6,8 @@ export class AbonnementsController {
   constructor(private readonly abonnementsService: AbonnementsService) {}
 
   @Get()
-  findAll() {
+  findAll(@Query('type') type?: string) {
+    if (type) return this.abonnementsService.findByType(type);
     return this.abonnementsService.findAll();
   }
 
