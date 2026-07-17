@@ -1,56 +1,81 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, Truck } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, Truck, MapPin, User } from 'lucide-react';
 import { api } from '../../api/client';
+
+const statutConfig: any = {
+  EN_ATTENTE: { icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-100', label: 'En attente' },
+  EN_COURS: { icon: Truck, color: 'text-blue-500', bg: 'bg-blue-100', label: 'En cours' },
+  LIVREE: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-100', label: 'Livrée' },
+};
 
 export const CommandesPage = () => {
   const [commandes, setCommandes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    api.get('/commandes').then(res => {
-      setCommandes(Array.isArray(res.data) ? res.data : []);
-    }).finally(() => setLoading(false));
+    api.get('/commandes').then(res => setCommandes(Array.isArray(res.data) ? res.data : [])).finally(() => setLoading(false));
   }, []);
 
-  const statutIcon = (s: string) => {
-    if (s === 'LIVREE') return <CheckCircle size={14} className="text-green-500" />;
-    if (s === 'EN_COURS') return <Truck size={14} className="text-orange-500" />;
-    return <Clock size={14} className="text-gray-400" />;
-  };
+  const filtered = commandes.filter(c => c.client?.toLowerCase().includes(search.toLowerCase()) || c.adresse?.toLowerCase().includes(search.toLowerCase()));
 
-  if (loading) return <div className="p-8 text-center text-gray-400">Chargement...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Chargement...</div>;
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">📦 Commandes</h2>
-        <p className="text-gray-500 text-sm mt-1">{commandes.length} commande(s)</p>
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">📦 Commandes</h2>
+          <p className="text-gray-500 mt-1">{filtered.length} commande(s)</p>
+        </div>
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher client..."
+            className="pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64" />
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b dark:border-gray-700 text-left">
-              <th className="py-3 px-4 font-medium">N°</th>
-              <th className="py-3 px-4 font-medium">Client</th>
-              <th className="py-3 px-4 font-medium">Adresse</th>
-              <th className="py-3 px-4 font-medium">Prix</th>
-              <th className="py-3 px-4 font-medium">Statut</th>
-              <th className="py-3 px-4 font-medium">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {commandes.map(c => (
-              <tr key={c.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <td className="py-3 px-4 font-medium">{c.id?.slice(-6)}</td>
-                <td className="py-3 px-4">{c.client || '-'}</td>
-                <td className="py-3 px-4 text-gray-500">{c.adresse || '-'}</td>
-                <td className="py-3 px-4">{c.prix?.toLocaleString?.() ?? '-'} Ar</td>
-                <td className="py-3 px-4 flex items-center gap-1">{statutIcon(c.statut)} {c.statut}</td>
-                <td className="py-3 px-4 text-gray-500">{c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr') : '-'}</td>
+
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                <th className="text-left py-4 px-6 font-semibold text-sm">N° Commande</th>
+                <th className="text-left py-4 px-6 font-semibold text-sm">Client</th>
+                <th className="text-left py-4 px-6 font-semibold text-sm">Adresse</th>
+                <th className="text-right py-4 px-6 font-semibold text-sm">Montant</th>
+                <th className="text-center py-4 px-6 font-semibold text-sm">Statut</th>
+                <th className="text-left py-4 px-6 font-semibold text-sm">Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {filtered.map(c => {
+                const st = statutConfig[c.statut] || statutConfig.EN_ATTENTE;
+                const StatusIcon = st.icon;
+                return (
+                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="py-4 px-6 font-mono font-bold text-sm">#{c.id?.slice(-8)}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2"><User size={14} className="text-gray-400" /> {c.client || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {c.adresse || '-'}</div>
+                    </td>
+                    <td className="py-4 px-6 text-right font-bold">{(c.prix || 0).toLocaleString()} Ar</td>
+                    <td className="py-4 px-6 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${st.bg} ${st.color}`}>
+                        <StatusIcon size={14} /> {st.label}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      {c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

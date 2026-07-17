@@ -1,53 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, XCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { CreditCard, CheckCircle, XCircle, Calendar, DollarSign } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AbonnementsPage = () => {
+  const [searchParams] = useSearchParams();
+  const type = searchParams.get('type') || 'TOUS';
   const [abonnements, setAbonnements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filtre, setFiltre] = useState('TOUS');
 
   useEffect(() => {
-    const url = filtre === 'TOUS' ? '/abonnements' : `/abonnements?type=${filtre}`;
-    api.get(url)
-      .then(res => setAbonnements(Array.isArray(res.data) ? res.data : []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [filtre]);
+    const url = type === 'TOUS' ? '/abonnements' : `/abonnements?type=${type}`;
+    api.get(url).then(res => setAbonnements(Array.isArray(res.data) ? res.data : [])).finally(() => setLoading(false));
+  }, [type]);
+
+  const title = type === 'FLOTTE' ? '🏍️ Abonnements Flottes' : type === 'COOP' ? '📦 Abonnements Coops' : '💳 Tous les abonnements';
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Chargement...</div>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">💳 Abonnements</h2>
-      <div className="flex gap-2 mb-6">
-        {['TOUS', 'FLOTTE', 'COOP'].map(f => (
-          <button key={f} onClick={() => setFiltre(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${filtre === f ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>
-            {f === 'TOUS' ? 'Tous' : f === 'FLOTTE' ? '🏍️ Flottes' : '📦 Coops'}
-          </button>
-        ))}
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{title}</h2>
+        <p className="text-gray-500 mt-1">{abonnements.length} abonnement(s)</p>
       </div>
-      {loading ? <p className="text-gray-400">Chargement...</p> : (
-        <div className="grid gap-4">
-          {abonnements.map((a: any) => (
-            <div key={a.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-lg">{a.nom}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${a.statut === 'ACTIF' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {a.statut}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-500">
-                <span>Type : {a.type}</span>
-                <span>Formule : {a.formule}</span>
-                <span>Prix : {a.prix?.toLocaleString?.() ?? a.prix} Ar/mois</span>
-                <span>Véhicules max : {a.vehiculesMax ?? '-'}</span>
-                <span>Début : {a.debut}</span>
-                <span>Fin : {a.fin}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+
+      <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <th className="text-left py-4 px-6 font-semibold text-sm">Client</th>
+              <th className="text-left py-4 px-6 font-semibold text-sm">Type</th>
+              <th className="text-left py-4 px-6 font-semibold text-sm">Formule</th>
+              <th className="text-right py-4 px-6 font-semibold text-sm">Prix/mois</th>
+              <th className="text-center py-4 px-6 font-semibold text-sm">Statut</th>
+              <th className="text-left py-4 px-6 font-semibold text-sm">Échéance</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            {abonnements.map(a => (
+              <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td className="py-4 px-6">
+                  <div className="font-bold">{a.nom}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{a.vehiculesMax || 0} véhicules max</div>
+                </td>
+                <td className="py-4 px-6">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${a.type === 'FLOTTE' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                    {a.type}
+                  </span>
+                </td>
+                <td className="py-4 px-6 font-medium">{a.formule}</td>
+                <td className="py-4 px-6 text-right font-bold text-lg">{a.prix?.toLocaleString?.() ?? a.prix} Ar</td>
+                <td className="py-4 px-6 text-center">
+                  {a.statut === 'ACTIF' ? (
+                    <span className="inline-flex items-center gap-1 text-green-600 font-medium text-sm"><CheckCircle size={16} /> Actif</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-red-500 font-medium text-sm"><XCircle size={16} /> {a.statut}</span>
+                  )}
+                </td>
+                <td className="py-4 px-6 text-sm text-gray-500">
+                  <div className="flex items-center gap-1.5"><Calendar size={14} /> {a.fin}</div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
