@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard, ChevronDown, ChevronRight, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface LayoutProps { children: React.ReactNode; }
@@ -10,7 +10,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>(['FLOTTES', 'COOPS']);
+  const [expanded, setExpanded] = useState<string[]>(['FLOTTES', 'COOPS', 'OPERATIONS']);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system';
   });
@@ -33,8 +33,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         { label: 'Liste des flottes', path: '/flottes' },
         { label: 'Abonnements', path: '/abonnements?type=FLOTTE' },
         { label: 'Paramètres', path: '/parametres?type=FLOTTE' },
-        { label: 'Livreurs', path: '/livreurs?type=FLOTTE' },
-        { label: 'Véhicules', path: '/vehicules?type=FLOTTE' },
       ]
     },
     {
@@ -42,8 +40,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         { label: 'Liste des coops', path: '/coops' },
         { label: 'Abonnements', path: '/abonnements?type=COOP' },
         { label: 'Paramètres', path: '/parametres?type=COOP' },
-        { label: 'Livreurs', path: '/livreurs?type=COOP' },
-        { label: 'Véhicules', path: '/vehicules?type=COOP' },
+      ]
+    },
+    {
+      key: 'OPERATIONS', icon: Wrench, label: '🔧 Opérations', children: [
+        { label: 'Livreurs', path: '/livreurs' },
+        { label: 'Véhicules', path: '/vehicules' },
         { label: 'Commandes', path: '/commandes' },
       ]
     },
@@ -106,7 +108,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="flex items-center gap-2 ml-auto">
-              <a href="https://trans-bygagoos.pages.dev" target="_blank" className="text-xs text-gray-400 hover:text-indigo-500 transition-colors hidden sm:block">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Bell size={18} /></button>
               <button onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 {theme === 'dark' ? <Sun size={18} className="text-yellow-400" /> : theme === 'light' ? <Moon size={18} /> : <Monitor size={18} />}
               </button>
