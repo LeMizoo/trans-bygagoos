@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard, ChevronDown, ChevronRight, Wrench } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard, ChevronDown, ChevronRight, Wrench, ScrollText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface LayoutProps { children: React.ReactNode; }
@@ -17,10 +17,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'system') root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
-    else root.classList.toggle('dark', theme === 'dark');
+    if (theme === 'system') {
+      root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
+    } else {
+      root.classList.toggle('dark', theme === 'dark');
+    }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  const cycleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light');
+  };
 
   const toggleExpand = (key: string) => {
     setExpanded(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
@@ -49,11 +56,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         { label: 'Commandes', path: '/commandes' },
       ]
     },
+    { icon: ScrollText, label: '📋 Logs', path: '/logs' },
     { icon: Settings, label: '⚙️ Paramètres généraux', path: '/parametres' },
   ];
 
+  const themeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Monitor;
+  const themeLabel = theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : 'system';
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-950 ${theme === 'dark' ? 'dark' : ''}`}>
       <aside className={`fixed top-0 left-0 z-40 w-64 h-screen bg-indigo-700 dark:bg-gray-900 text-white transition-transform duration-300 overflow-y-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-6 border-b border-indigo-600 dark:border-gray-700">
           <Link to="/dashboard" className="flex items-center gap-2">
@@ -108,9 +119,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="flex items-center gap-2 ml-auto">
+              <span className="text-xs text-gray-400 hidden sm:block">Thème : {themeLabel}</span>
               <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Bell size={18} /></button>
-              <button onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-                {theme === 'dark' ? <Sun size={18} className="text-yellow-400" /> : theme === 'light' ? <Moon size={18} /> : <Monitor size={18} />}
+              <button onClick={cycleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" title={`Thème actuel : ${themeLabel}`}>
+                <themeIcon size={18} className={theme === 'dark' ? 'text-yellow-400' : ''} />
               </button>
             </div>
           </div>
