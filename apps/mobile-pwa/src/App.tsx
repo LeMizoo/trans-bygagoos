@@ -1,23 +1,61 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider, useAuth } from './stores/authStore';
 import LoginPage from './pages/LoginPage';
-import { DashboardPage } from './pages/private/DashboardPage';
-import { SocketTest } from './components/SocketTest';
+import Header from './components/Header';
+import BottomNav from './components/BottomNav';
+import DashboardPage from './pages/DashboardPage';
+import CoursesPage from './pages/CoursesPage';
+import StatsPage from './pages/StatsPage';
+import FinancesPage from './pages/FinancesPage';
+import ProfilPage from './pages/ProfilPage';
+import NotificationsPage from './pages/NotificationsPage';
+import NotificationsPopup from './components/NotificationsPopup';
 
-function App() {
-  const token = localStorage.getItem('token');
+const queryClient = new QueryClient();
 
+export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={token ? <Navigate to="/dashboard" /> : <LoginPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={token ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/test-socket" element={<SocketTest />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
-export default App;
+function AppContent() {
+  const { isLoggedIn, page, showNotif, setPage, setShowNotif } = useAuth();
+
+  if (!isLoggedIn) return <LoginPage />;
+
+  return (
+    <>
+      <Header onNotifications={() => setShowNotif(!showNotif)} />
+      <div className="main-content">
+        {page !== 'accueil' && (
+          <div className="page-title">
+            {{
+              courses: '📋 Mes courses',
+              stats: '📊 Statistiques',
+              versements: '💰 Versements',
+              profil: '👤 Mon profil',
+            }[page]}
+          </div>
+        )}
+        {page === 'accueil' && <DashboardPage />}
+        {page === 'courses' && <CoursesPage />}
+        {page === 'versements' && <FinancesPage />}
+        {page === 'stats' && <StatsPage />}
+        {page === 'profil' && <ProfilPage />}
+        {page === 'notifications' && <NotificationsPage onBack={() => setPage('accueil')} />}
+      </div>
+      {showNotif && (
+        <NotificationsPopup
+          onClose={() => setShowNotif(false)}
+          onViewAll={() => { setShowNotif(false); setPage('notifications'); }}
+        />
+      )}
+      <BottomNav current={page} onChange={setPage} />
+    </>
+  );
+}

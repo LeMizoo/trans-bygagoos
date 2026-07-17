@@ -12,6 +12,8 @@ model User {
   email         String     @unique
   password      String
   nom           String
+  codeAcces     String?      @unique
+  pin           String?
   telephone     String?
   role          String     @default("LIVREUR") // ADMIN_COOP | LIVREUR
   actif         Boolean    @default(true)

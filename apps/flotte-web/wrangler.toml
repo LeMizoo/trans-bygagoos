@@ -1,0 +1,5 @@
+name = "flotte-web"
+compatibility_date = "2026-07-16"
+
+[site]
+bucket = "./dist"
