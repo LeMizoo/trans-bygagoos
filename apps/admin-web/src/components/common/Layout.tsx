@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor, Settings, CreditCard, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface LayoutProps { children: React.ReactNode; }
@@ -10,37 +10,49 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>(['FLOTTES', 'COOPS']);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system';
   });
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'system') {
-      root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
-    } else {
-      root.classList.toggle('dark', theme === 'dark');
-    }
+    if (theme === 'system') root.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
+    else root.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const cycleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light');
+  const toggleExpand = (key: string) => {
+    setExpanded(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
-    { icon: Building2, label: 'Flottes', path: '/flottes' },
-    { icon: CreditCard, label: 'Abonnements', path: '/abonnements' },
-    { icon: Users, label: 'Livreurs', path: '/livreurs' },
-    { icon: Bike, label: 'Véhicules', path: '/vehicules' },
-    { icon: Package, label: 'Commandes', path: '/commandes' },
-    { icon: Settings, label: 'Paramètres', path: '/parametres' },
+  const menuStructure = [
+    { icon: LayoutDashboard, label: '📊 Tableau de bord', path: '/dashboard' },
+    {
+      key: 'FLOTTES', icon: Building2, label: '🏍️ Flottes', children: [
+        { label: 'Liste des flottes', path: '/flottes' },
+        { label: 'Abonnements', path: '/abonnements?type=FLOTTE' },
+        { label: 'Paramètres', path: '/parametres?type=FLOTTE' },
+        { label: 'Livreurs', path: '/livreurs?type=FLOTTE' },
+        { label: 'Véhicules', path: '/vehicules?type=FLOTTE' },
+      ]
+    },
+    {
+      key: 'COOPS', icon: Package, label: '📦 Coops', children: [
+        { label: 'Liste des coops', path: '/coops' },
+        { label: 'Abonnements', path: '/abonnements?type=COOP' },
+        { label: 'Paramètres', path: '/parametres?type=COOP' },
+        { label: 'Livreurs', path: '/livreurs?type=COOP' },
+        { label: 'Véhicules', path: '/vehicules?type=COOP' },
+        { label: 'Commandes', path: '/commandes' },
+      ]
+    },
+    { icon: Settings, label: '⚙️ Paramètres généraux', path: '/parametres' },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <aside className={`fixed top-0 left-0 z-40 w-64 h-screen bg-indigo-700 dark:bg-gray-900 text-white transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <aside className={`fixed top-0 left-0 z-40 w-64 h-screen bg-indigo-700 dark:bg-gray-900 text-white transition-transform duration-300 overflow-y-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="p-6 border-b border-indigo-600 dark:border-gray-700">
           <Link to="/dashboard" className="flex items-center gap-2">
             <img src="/assets/logo/b-trans.png" alt="Logo" className="w-8 h-8 object-contain" />
@@ -50,17 +62,38 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </Link>
         </div>
-        <nav className="mt-4">
-          {menuItems.map((item) => (
-            <Link key={item.path} to={item.path}
-              className={`flex items-center px-6 py-3 hover:bg-indigo-600 dark:hover:bg-gray-800 transition-colors ${location.pathname === item.path ? 'bg-indigo-600 dark:bg-gray-800' : ''}`}
-              onClick={() => setSidebarOpen(false)}>
-              <item.icon className="h-5 w-5 mr-3" /><span>{item.label}</span>
-            </Link>
-          ))}
+        <nav className="mt-2 pb-4">
+          {menuStructure.map((item: any) => {
+            if (item.children) {
+              const isExpanded = expanded.includes(item.key);
+              return (
+                <div key={item.key}>
+                  <button onClick={() => toggleExpand(item.key)}
+                    className="w-full flex items-center justify-between px-6 py-2.5 hover:bg-indigo-600 dark:hover:bg-gray-800 transition-colors text-sm">
+                    <span className="flex items-center gap-3"><item.icon size={18} />{item.label}</span>
+                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+                  {isExpanded && item.children.map((child: any) => (
+                    <Link key={child.path} to={child.path}
+                      className={`flex items-center pl-14 pr-6 py-2 text-xs hover:bg-indigo-600 dark:hover:bg-gray-800 transition-colors ${location.pathname + location.search === child.path ? 'bg-indigo-600 dark:bg-gray-800' : ''}`}
+                      onClick={() => setSidebarOpen(false)}>
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              );
+            }
+            return (
+              <Link key={item.path} to={item.path}
+                className={`flex items-center px-6 py-2.5 hover:bg-indigo-600 dark:hover:bg-gray-800 transition-colors text-sm ${location.pathname === item.path ? 'bg-indigo-600 dark:bg-gray-800' : ''}`}
+                onClick={() => setSidebarOpen(false)}>
+                <item.icon size={18} className="mr-3" />{item.label}
+              </Link>
+            );
+          })}
           <button onClick={() => { logout(); navigate('/login'); }}
-            className="flex items-center px-6 py-3 w-full hover:bg-red-600 transition-colors text-left border-t border-indigo-600 dark:border-gray-700 mt-4">
-            <LogOut className="h-5 w-5 mr-3" /><span>Déconnexion</span>
+            className="flex items-center px-6 py-2.5 w-full hover:bg-red-600 transition-colors text-left border-t border-indigo-600 dark:border-gray-700 mt-4 text-sm">
+            <LogOut size={18} className="mr-3" />Déconnexion
           </button>
         </nav>
       </aside>
@@ -73,11 +106,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <div className="flex items-center gap-2 ml-auto">
-              <Link to="/" target="_blank" className="text-xs text-gray-400 hover:text-indigo-500 transition-colors hidden sm:block">
+              <a href="https://trans-bygagoos.pages.dev" target="_blank" className="text-xs text-gray-400 hover:text-indigo-500 transition-colors hidden sm:block">
                 ← Retour site
-              </Link>
+              </a>
               <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Bell size={18} /></button>
-              <button onClick={cycleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+              <button onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 {theme === 'dark' ? <Sun size={18} className="text-yellow-400" /> : theme === 'light' ? <Moon size={18} /> : <Monitor size={18} />}
               </button>
             </div>
