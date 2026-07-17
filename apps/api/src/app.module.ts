@@ -6,6 +6,8 @@ import { CoopModule } from './coop/coop.module';
 import { CommandesModule } from './commandes/commandes.module';
 import { LivreursModule } from './livreurs/livreurs.module';
 import { VehiculesModule } from './vehicules/vehicules.module';
+import { ParametresModule } from './parametres/parametres.module';
+import { AbonnementsModule } from './abonnements/abonnements.module';
 import { SocketModule } from './socket/socket.module';
 
 @Module({
@@ -15,6 +17,8 @@ import { SocketModule } from './socket/socket.module';
     CoopModule,
     CommandesModule,
     LivreursModule,
+    ParametresModule,
+    AbonnementsModule,
     VehiculesModule,
     SocketModule,
   ],

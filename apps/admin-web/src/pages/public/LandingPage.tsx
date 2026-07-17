@@ -13,9 +13,9 @@ const slides = [
 
 const apps = [
   { icon: Globe, title: 'Trans ByGagoos', desc: 'Supervisez toutes les flottes et coopératives', url: '/login', color: 'bg-indigo-500' },
-  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://trans-bygagoos-flotte.netlify.app', color: 'bg-orange-500' },
-  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://trans-bygagoos-coop.netlify.app', color: 'bg-green-500' },
-  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://trans-bygagoos-pwa.netlify.app', color: 'bg-purple-500' },
+  { icon: Bike, title: 'Ma Flotte ByGagoos', desc: 'Gérez votre flotte de taxi-motos et chauffeurs', url: 'https://flotte-bygagoos.pages.dev', color: 'bg-orange-500' },
+  { icon: Package, title: 'Coop Express ByGagoos', desc: 'Livraison de nourriture, colis, électroménager', url: 'https://coop-bygagoos.pages.dev', color: 'bg-green-500' },
+  { icon: Smartphone, title: 'Livreur ByGagoos', desc: 'Application mobile pour les livreurs', url: 'https://drivers-bygagoos.pages.dev', color: 'bg-purple-500' },
 ];
 
 export const LandingPage = () => {
@@ -55,9 +55,9 @@ export const LandingPage = () => {
                 </button>
                 {loginMenuOpen && (
                   <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl py-2 min-w-[200px] z-50">
-                    <a href="https://trans-bygagoos-flotte.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-orange-50 text-sm">🏍️ Gérant Flotte</a>
-                    <a href="https://trans-bygagoos-coop.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-green-50 text-sm">📦 Gérant Coop</a>
-                    <a href="https://trans-bygagoos-pwa.netlify.app" className="block px-4 py-2 text-gray-700 hover:bg-purple-50 text-sm">📱 Livreur</a>
+                    <a href="https://flotte-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-gray-700 hover:bg-orange-50 text-sm">🏍️ Gérant Flotte</a>
+                    <a href="https://coop-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-gray-700 hover:bg-green-50 text-sm">📦 Gérant Coop</a>
+                    <a href="https://drivers-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block px-4 py-2 text-gray-700 hover:bg-purple-50 text-sm">📱 Livreur</a>
                   </div>
                 )}
               </div>
@@ -73,9 +73,9 @@ export const LandingPage = () => {
           <div className="md:hidden bg-black/80 backdrop-blur-sm px-4 py-4 space-y-3">
             <a href="#apps" className="block text-white py-2">Applications</a>
             <a href="#features" className="block text-white py-2">Fonctionnalités</a>
-            <a href="https://trans-bygagoos-flotte.netlify.app" className="block text-white py-2">🏍️ Connexion Flotte</a>
-            <a href="https://trans-bygagoos-coop.netlify.app" className="block text-white py-2">📦 Connexion Coop</a>
-            <a href="https://trans-bygagoos-pwa.netlify.app" className="block text-white py-2">📱 Connexion Livreur</a>
+            <a href="https://flotte-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block text-white py-2">🏍️ Connexion Flotte</a>
+            <a href="https://coop-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block text-white py-2">📦 Connexion Coop</a>
+            <a href="https://drivers-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer" className="block text-white py-2">📱 Connexion Livreur</a>
             <button onClick={() => navigate('/register')} className="block w-full bg-indigo-600 text-white text-center py-3 rounded-xl font-medium">Inscription</button>
           </div>
         )}

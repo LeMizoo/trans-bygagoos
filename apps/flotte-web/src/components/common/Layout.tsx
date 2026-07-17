@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Truck, Users, MapPin, LogOut, Menu, X, Bell, Settings } from 'lucide-react';
+import { LayoutDashboard, Truck, Users, MapPin, LogOut, Menu, X, Bell, Settings, ArrowLeft } from 'lucide-react';
 
 interface LayoutProps { children: React.ReactNode; }
 
@@ -28,55 +28,52 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <div className="p-6 border-b border-slate-700">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Truck className="text-blue-400" />
-            Ma Flotte
+            🏍️ Ma Flotte
           </h1>
         </div>
+        
+        {/* Lien retour landing page */}
+        <a href="https://trans-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer"
+          className="mx-4 mt-4 flex items-center gap-2 text-xs text-slate-400 hover:text-orange-400 transition-colors">
+          <ArrowLeft size={14} /> Trans ByGagoos
+        </a>
+        
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => (
-            <button key={item.path}
+            <button
+              key={item.path}
               onClick={() => { navigate(item.path); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                location.pathname === item.path
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-              }`}>
-              <item.icon size={20} /> {item.label}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                location.pathname === item.path ? 'bg-orange-500/20 text-orange-400' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+              }`}
+            >
+              <item.icon size={18} />
+              <span>{item.label}</span>
             </button>
           ))}
         </nav>
         <div className="p-4 border-t border-slate-700">
           <button onClick={() => { localStorage.clear(); navigate('/login'); }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
-            <LogOut size={20} /> Déconnexion
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
+            <LogOut size={18} />
+            <span>Déconnexion</span>
           </button>
         </div>
       </motion.aside>
-
+      
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden text-white p-2 hover:bg-slate-700 rounded-lg">
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        <header className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4 lg:px-8">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 text-slate-400 hover:text-white">
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           <div className="flex items-center gap-4 ml-auto">
-            <button className="text-slate-400 hover:text-white p-2 hover:bg-slate-700 rounded-lg">
-              <Bell size={20} />
-            </button>
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">F</div>
+            <button className="p-2 text-slate-400 hover:text-white"><Bell size={18} /></button>
           </div>
         </header>
-        <main className="flex-1 overflow-auto">
-          <AnimatePresence mode="wait">
-            <motion.div key={location.pathname}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              {children}
-            </motion.div>
-          </AnimatePresence>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto">
+          {children}
         </main>
       </div>
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
     </div>
   );
 };

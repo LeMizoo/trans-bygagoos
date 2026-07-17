@@ -1,8 +1,0 @@
-name = "trans-bygagoos-admin"
-main = "dist/index.html"
-
-[assets]
-directory = "./dist"
-
-[site]
-bucket = "./dist"
