@@ -107,9 +107,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </button>
             <div className="flex items-center gap-2 ml-auto">
               <a href="https://trans-bygagoos.pages.dev" target="_blank" className="text-xs text-gray-400 hover:text-indigo-500 transition-colors hidden sm:block">
-                ← Retour site
-              </a>
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><Bell size={18} /></button>
               <button onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 {theme === 'dark' ? <Sun size={18} className="text-yellow-400" /> : theme === 'light' ? <Moon size={18} /> : <Monitor size={18} />}
               </button>
