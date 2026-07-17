@@ -8,6 +8,10 @@ import { LivreursModule } from './livreurs/livreurs.module';
 import { VehiculesModule } from './vehicules/vehicules.module';
 import { ParametresModule } from './parametres/parametres.module';
 import { AbonnementsModule } from './abonnements/abonnements.module';
+import { VersementsModule } from './versements/versements.module';
+import { DepensesModule } from './depenses/depenses.module';
+import { RapportsModule } from './rapports/rapports.module';
+import { UtilisateursModule } from './utilisateurs/utilisateurs.module';
 import { SocketModule } from './socket/socket.module';
 
 @Module({
@@ -19,6 +23,10 @@ import { SocketModule } from './socket/socket.module';
     LivreursModule,
     ParametresModule,
     AbonnementsModule,
+    VersementsModule,
+    DepensesModule,
+    RapportsModule,
+    UtilisateursModule,
     VehiculesModule,
     SocketModule,
   ],
