@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Building2, Package, LogOut, Menu, X, Bike, Bell, Sun, Moon, Monitor,
-  Settings, CreditCard, ChevronDown, ChevronRight, Wrench, ScrollText, DollarSign, MessageSquare,
-  Headphones, Archive, Shield, Receipt, BarChart3, TrendingUp, Calendar, FileText, UserPlus,
+  Settings, CreditCard, ChevronDown, ChevronRight, Wrench, ScrollText, ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,7 +13,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expanded, setExpanded] = useState<string[]>(['FLOTTES', 'COOPS', 'OPERATIONS', 'FINANCES', 'ADMIN']);
+  const [expanded, setExpanded] = useState<string[]>(['FLOTTES', 'COOPS', 'OPERATIONS']);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system';
   });
@@ -51,23 +50,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         { label: 'Commandes', path: '/commandes' },
       ]
     },
-    {
-      key: 'FINANCES', icon: DollarSign, label: '💰 Finances', children: [
-        { label: 'Versements', path: '/versements' },
-        { label: 'Dépenses', path: '/depenses' },
-        { label: 'Rapports', path: '/rapports' },
-      ]
-    },
-    { icon: Bell, label: '📨 Notifications', path: '/notifications' },
-    { icon: Headphones, label: '🆘 Assistance', path: '/assistance' },
-    {
-      key: 'ADMIN', icon: Settings, label: '⚙️ Administration', children: [
-        { label: 'Paramètres généraux', path: '/parametres' },
-        { label: 'Utilisateurs', path: '/utilisateurs' },
-        { label: 'Logs', path: '/logs' },
-        { label: 'Sauvegardes', path: '/sauvegardes' },
-      ]
-    },
+    { icon: ScrollText, label: '📋 Logs', path: '/logs' },
+    { icon: Settings, label: '⚙️ Paramètres généraux', path: '/parametres' },
   ];
 
   const themeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Monitor;
@@ -80,7 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <img src="/assets/logo/b-trans.png" alt="Logo" className="w-8 h-8 object-contain" />
             <div>
               <h1 className="text-lg font-bold">Trans ByGagoos</h1>
-              <p className="text-indigo-200 dark:text-gray-400 text-xs">Administration</p>
+              <p className="text-indigo-200 dark:text-gray-400 text-xs">Super Admin</p>
             </div>
           </Link>
         </div>
@@ -124,12 +108,39 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       
       <div className="lg:ml-64">
+        {/* HEADER AVEC MENU APPS */}
         <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
           <div className="flex items-center justify-between px-4 lg:px-8 h-16">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">{sidebarOpen ? <X size={20} /> : <Menu size={20} />}</button>
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-xs text-gray-400">{user?.nom || 'Admin'}</span>
-              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold">{user?.nom?.charAt(0) || 'A'}</div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mr-2">
+                {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+              {/* Menu rapide apps */}
+              <span className="hidden sm:flex items-center gap-1 text-xs font-medium">
+                <span className="px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg">👑 Admin</span>
+                <a href="https://flotte-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer"
+                  className="px-3 py-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 text-gray-500 hover:text-orange-600 rounded-lg transition-colors flex items-center gap-1">
+                  🏍️ Flotte <ExternalLink size={10} />
+                </a>
+                <a href="https://coop-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer"
+                  className="px-3 py-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-500 hover:text-green-600 rounded-lg transition-colors flex items-center gap-1">
+                  📦 Coop <ExternalLink size={10} />
+                </a>
+                <a href="https://drivers-bygagoos.pages.dev" target="_blank" rel="noopener noreferrer"
+                  className="px-3 py-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 text-gray-500 hover:text-purple-600 rounded-lg transition-colors flex items-center gap-1">
+                  📱 Driver <ExternalLink size={10} />
+                </a>
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative">
+                <Bell size={18} />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 hidden sm:block">{user?.nom || 'Admin'}</span>
+                <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold">{user?.nom?.charAt(0) || 'A'}</div>
+              </div>
             </div>
           </div>
         </header>
