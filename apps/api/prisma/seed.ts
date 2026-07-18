@@ -178,3 +178,5 @@ async function main() {
 main()
   .catch((e) => { console.error('❌ Erreur:', e); process.exit(1); })
   .finally(async () => { await prisma.$disconnect(); });
+
+// Le seed est déjà complet, on va juste insérer des abonnements après

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
 import { AbonnementsService } from './abonnements.service';
 
 @Controller('abonnements')
@@ -19,5 +19,10 @@ export class AbonnementsController {
   @Post()
   create(@Body() data: any) {
     return this.abonnementsService.create(data);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.abonnementsService.update(id, data);
   }
 }

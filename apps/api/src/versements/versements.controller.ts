@@ -6,8 +6,8 @@ export class VersementsController {
   constructor(private readonly service: VersementsService) {}
 
   @Get()
-  findAll(@Query('statut') statut?: string) {
-    return this.service.findAll(statut);
+  findAll() {
+    return this.service.findAll();
   }
 
   @Post()

@@ -1,101 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, CheckCircle, Truck, MapPin, User, DollarSign, Calendar, X, Eye } from 'lucide-react';
+import { Search, Clock, CheckCircle, Truck, MapPin, User, DollarSign, Package } from 'lucide-react';
 import { api } from '../../api/client';
 
-const statutSteps = ['EN_ATTENTE', 'EN_COURS', 'LIVREE'];
 const statutConfig: any = {
-  EN_ATTENTE: { icon: Clock, color: 'bg-yellow-100 text-yellow-700', step: 0 },
-  EN_COURS: { icon: Truck, color: 'bg-blue-100 text-blue-700', step: 1 },
-  LIVREE: { icon: CheckCircle, color: 'bg-green-100 text-green-700', step: 2 },
+  EN_ATTENTE: { icon: Clock, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', label: 'En attente' },
+  EN_COURS: { icon: Truck, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'En cours' },
+  LIVREE: { icon: CheckCircle, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: 'Livrée' },
 };
 
 export const CommandesPage = () => {
   const [commandes, setCommandes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [detail, setDetail] = useState<any>(null);
+  const [filterStatut, setFilterStatut] = useState('TOUS');
 
   useEffect(() => {
-    api.get('/commandes').then(res => setCommandes(Array.isArray(res.data) ? res.data : [])).finally(() => setLoading(false));
+    api.get('/commandes').then(res => {
+      setCommandes(Array.isArray(res.data) ? res.data : (res.data?.items || []));
+    }).finally(() => setLoading(false));
   }, []);
 
-  const avancerStatut = (c: any) => {
-    const idx = statutSteps.indexOf(c.statut);
-    if (idx < statutSteps.length - 1) {
-      setCommandes(prev => prev.map(x => x.id === c.id ? {...x, statut: statutSteps[idx+1]} : x));
-    }
-  };
+  const filtered = commandes.filter(c => {
+    const matchSearch = (c.reference + c.description + c.user?.nom).toLowerCase().includes(search.toLowerCase());
+    const matchStatut = filterStatut === 'TOUS' || c.statut === filterStatut;
+    return matchSearch && matchStatut;
+  });
 
-  const filtered = commandes.filter(c => (c.client||'').toLowerCase().includes(search.toLowerCase()));
+  const enAttente = commandes.filter(c => c.statut === 'EN_ATTENTE').length;
+  const enCours = commandes.filter(c => c.statut === 'EN_COURS').length;
+  const livrees = commandes.filter(c => c.statut === 'LIVREE').length;
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Chargement...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+  );
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-        <div><h2 className="text-3xl font-bold text-gray-900 dark:text-white">Suivi des commandes</h2><p className="text-gray-500 mt-1">{filtered.length} commande(s)</p></div>
-        <div className="relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher client..." className="pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border rounded-xl text-sm w-64" />
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">📋 Suivi des commandes</h2>
+          <p className="text-gray-500 mt-1">{commandes.length} commande(s)</p>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." 
+              className="pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white w-48" />
+          </div>
+          <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}
+            className="px-3 py-2 bg-white dark:bg-gray-800 border rounded-lg text-sm">
+            <option value="TOUS">Tous</option>
+            <option value="EN_ATTENTE">🟡 En attente</option>
+            <option value="EN_COURS">🔵 En cours</option>
+            <option value="LIVREE">🟢 Livrées</option>
+          </select>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {filtered.map(c => {
-          const st = statutConfig[c.statut] || statutConfig.EN_ATTENTE;
-          const StatusIcon = st.icon;
-          return (
-            <div key={c.id} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border hover:shadow-md transition-all">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${st.color} flex items-center justify-center`}><StatusIcon size={20} /></div>
-                  <div><div className="font-bold font-mono text-sm">#{c.id?.slice(-8)}</div><div className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={12} /> {c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr') : '-'}</div></div>
-                </div>
-                <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
-              </div>
-              <div className="flex items-center gap-2 mb-4 px-2">
-                {statutSteps.map((step, i) => (
-                  <div key={step} className="flex-1 flex items-center">
-                    <div className={`w-3 h-3 rounded-full ${i <= st.step ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    {i < statutSteps.length - 1 && <div className={`flex-1 h-0.5 ${i < st.step ? 'bg-green-500' : 'bg-gray-300'}`} />}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="grid grid-cols-3 gap-3 text-sm flex-1">
-                  <div className="flex items-center gap-2 text-gray-500"><User size={15} /> <span className="font-medium">{c.client || '-'}</span></div>
-                  <div className="flex items-center gap-2 text-gray-500"><MapPin size={15} /> {c.adresse || '-'}</div>
-                  <div className="flex items-center gap-2 text-gray-500"><DollarSign size={15} /> <span className="font-bold">{(c.prix||0).toLocaleString()} Ar</span></div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setDetail(c)} className="p-2 hover:bg-indigo-100 rounded-lg text-indigo-600" title="Details"><Eye size={16} /></button>
-                  {c.statut !== 'LIVREE' && (
-                    <button onClick={() => avancerStatut(c)} className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-bold hover:bg-green-200">
-                      Avancer →
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { label: 'En attente', value: enAttente, color: 'bg-yellow-100 text-yellow-700' },
+          { label: 'En cours', value: enCours, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Livrées', value: livrees, color: 'bg-green-100 text-green-700' },
+        ].map(s => (
+          <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl p-4 border text-center">
+            <div className="text-2xl font-bold">{s.value}</div>
+            <div className={`text-xs px-2 py-0.5 rounded-full inline-block mt-1 ${s.color}`}>{s.label}</div>
+          </div>
+        ))}
       </div>
 
-      {/* MODALE DETAIL */}
-      {detail && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold">Commande #{detail.id?.slice(-8)}</h3>
-              <button onClick={() => setDetail(null)} className="p-1 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between"><span className="text-gray-500">Client</span><span className="font-bold">{detail.client || '-'}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Adresse</span><span>{detail.adresse || '-'}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Montant</span><span className="font-bold text-lg">{(detail.prix||0).toLocaleString()} Ar</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Statut</span><span className={`px-2 py-1 rounded-full text-xs font-bold ${(statutConfig[detail.statut]||statutConfig.EN_ATTENTE).color}`}>{(statutConfig[detail.statut]||statutConfig.EN_ATTENTE).label}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Date</span><span>{detail.createdAt ? new Date(detail.createdAt).toLocaleString('fr') : '-'}</span></div>
-            </div>
-          </div>
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border">
+          <Package size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-400 text-lg">Aucune commande trouvée</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(c => {
+            const cfg = statutConfig[c.statut] || statutConfig.EN_ATTENTE;
+            return (
+              <div key={c.id} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg.color}`}>
+                      <cfg.icon size={20} />
+                    </div>
+                    <div>
+                      <div className="font-bold">{c.reference}</div>
+                      <div className="text-sm text-gray-500">{c.description}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">{(c.prix || 0).toLocaleString()} Ar</div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${cfg.color}`}>
+                      {cfg.label}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-4 text-xs text-gray-400">
+                  <span className="flex items-center gap-1"><User size={12} /> {c.user?.nom || 'N/A'}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
