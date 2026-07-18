@@ -6,17 +6,37 @@ export class CoopService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.coop.findMany({ include: { livreurs: true, vehicules: true } });
+    return this.prisma.cooperative.findMany({
+      include: {
+        users: true,
+        vehicules: true
+      }
+    });
   }
 
   async findOne(id: string) {
-    return this.prisma.coop.findUnique({
+    return this.prisma.cooperative.findUnique({
       where: { id },
-      include: { livreurs: true, vehicules: true, commandes: true },
+      include: {
+        users: true,
+        vehicules: true
+      }
     });
   }
 
   async findByAdmin(adminId: string) {
-    return this.prisma.coop.findFirst({ where: { adminId }, include: { livreurs: true, vehicules: true } });
+    return this.prisma.cooperative.findFirst({
+      where: {
+        users: {
+          some: {
+            id: adminId
+          }
+        }
+      },
+      include: {
+        users: true,
+        vehicules: true
+      }
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { LivreursService } from './livreurs.service';
 
 @Controller('livreurs')
@@ -6,27 +6,27 @@ export class LivreursController {
   constructor(private readonly livreursService: LivreursService) {}
 
   @Get()
-  findAll(@Query('coopId') coopId: string) {
-    return this.livreursService.findAll(coopId);
+  async findAll() {
+    return this.livreursService.findAll();
   }
 
   @Get('disponibles')
-  getDisponibles(@Query('coopId') coopId: string) {
-    return this.livreursService.getDisponibles(coopId);
+  async findAvailable(@Query('cooperativeId') cooperativeId: string) {
+    return this.livreursService.findAvailable(cooperativeId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.livreursService.findOne(id);
   }
 
   @Post()
-  create(@Body() data: any) {
-    return this.livreursService.create(data);
+  async create(@Body() body: any) {
+    return this.livreursService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.livreursService.update(id, data);
+  async update(@Param('id') id: string, @Body() body: any) {
+    return this.livreursService.update(id, body);
   }
 }

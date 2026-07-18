@@ -1,16 +1,13 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Param, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtService } from '@nestjs/jwt';
+import { LoginByCodeDto } from './dto/login-by-code.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
   async login(@Body() body: { email: string; password: string }) {
     return this.authService.login(body.email, body.password);
   }
@@ -21,20 +18,24 @@ export class AuthController {
   }
 
   @Post('chauffeur/login')
-  @HttpCode(HttpStatus.OK)
-  async chauffeurLogin(@Body() body: { codeAcces: string; pin: string; coopId?: string }) {
-    return this.authService.loginByCode(body.codeAcces, body.pin, body.coopId);
+  async chauffeurLogin(@Body() loginByCodeDto: LoginByCodeDto) {
+    return this.authService.loginByCode(loginByCodeDto);
+  }
+
+  @Post('livreur/login')
+  async livreurLogin(@Body() loginByCodeDto: LoginByCodeDto) {
+    return this.authService.loginByCode(loginByCodeDto);
   }
 
   @Get('me')
-  async me(@Headers('authorization') auth: string) {
-    if (!auth) throw new UnauthorizedException('Token manquant');
-    try {
-      const token = auth.replace('Bearer ', '');
-      const payload = this.jwtService.verify(token);
-      return { id: payload.sub, email: payload.email, role: payload.role };
-    } catch (e) {
-      throw new UnauthorizedException('Token invalide');
-    }
+  @UseGuards(JwtAuthGuard)
+  async me(@Request() req) {
+    return this.authService.me(req.user.sub);
+  }
+
+  @Post('generate-codes/:userId')
+  @UseGuards(JwtAuthGuard)
+  async generateAccessCodes(@Param('userId') userId: string) {
+    return this.authService.generateAccessCodes(userId);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { CommandesService } from './commandes.service';
 
 @Controller('commandes')
@@ -6,37 +6,37 @@ export class CommandesController {
   constructor(private readonly commandesService: CommandesService) {}
 
   @Get()
-  findAll(@Query('coopId') coopId: string) {
-    return this.commandesService.findAll(coopId);
+  async findAll() {
+    return this.commandesService.findAll();
   }
 
   @Get('livreur/:livreurId')
-  findByLivreur(@Param('livreurId') livreurId: string) {
+  async findByLivreur(@Param('livreurId') livreurId: string) {
     return this.commandesService.findByLivreur(livreurId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.commandesService.findOne(id);
   }
 
   @Post()
-  create(@Body() data: any) {
-    return this.commandesService.create(data);
+  async create(@Body() body: any) {
+    return this.commandesService.create(body);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.commandesService.update(id, data);
+  async update(@Param('id') id: string, @Body() body: any) {
+    return this.commandesService.update(id, body);
   }
 
   @Put(':id/assign')
-  assignLivreur(@Param('id') id: string, @Body() body: { livreurId: string; vehiculeId: string }) {
-    return this.commandesService.assignLivreur(id, body.livreurId, body.vehiculeId);
+  async assignToLivreur(@Param('id') id: string, @Body() body: any) {
+    return this.commandesService.assignToLivreur(id, body.userId);
   }
 
   @Put(':id/statut')
-  updateStatut(@Param('id') id: string, @Body() body: { statut: string }) {
-    return this.commandesService.updateStatut(id, body.statut);
+  async updateStatut(@Param('id') id: string, @Body() body: { statut: string }) {
+    return this.commandesService.update(id, { statut: body.statut });
   }
 }

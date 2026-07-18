@@ -4,108 +4,214 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  password      String
-  nom           String
-  codeAcces     String?      @unique
+  id            String    @id @default(uuid())
+  email         String?   @unique
+  password      String?
+  nom           String?
+  prenom        String?
+  role          String    @default("CHAUFFEUR")
+  statut        String    @default("ACTIF")
+  
+  // Nouveaux champs pour login mobile
+  codeAcces     String?   @unique
   pin           String?
-  telephone     String?
-  role          String     @default("LIVREUR") // ADMIN_COOP | LIVREUR
-  actif         Boolean    @default(true)
-  coopId        String?
-  coop          Coop?      @relation(fields: [coopId], references: [id])
-  coopAdmin     Coop?      @relation("CoopAdmin")
-  vehicule      Vehicule?
+  
+  // Relations
+  cooperativeId String?
+  cooperative   Cooperative? @relation(fields: [cooperativeId], references: [id])
+  flotteId      String?
+  flotte        Flotte?      @relation(fields: [flotteId], references: [id])
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations avec les entités
+  courses       Course[]
+  pointages     Pointage[]
+  depenses      Depense[]
+  versements    Versement[]
   commandes     Commande[]
-  locations     Location[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  logs          Log[]
+  notifications Notification[]
+  assistances   Assistance[]
 }
 
-model Coop {
-  id          String     @id @default(cuid())
-  nom         String
-  description String?
-  adresse     String?
-  telephone   String
-  adminId     String     @unique
-  admin       User       @relation("CoopAdmin", fields: [adminId], references: [id])
-  livreurs    User[]
-  vehicules   Vehicule[]
-  commandes   Commande[]
-  locations   Location[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model Flotte {
+  id        String   @id @default(uuid())
+  nom       String
+  code      String   @unique
+  adresse   String?
+  telephone String?
+  email     String?
+  statut    String   @default("ACTIF")
+  users     User[]
+  motos     Moto[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cooperative {
+  id        String   @id @default(uuid())
+  nom       String
+  code      String   @unique
+  adresse   String?
+  telephone String?
+  email     String?
+  statut    String   @default("ACTIF")
+  users     User[]
+  vehicules Vehicule[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Moto {
+  id           String   @id @default(uuid())
+  immatriculation String @unique
+  marque       String?
+  modele       String?
+  annee        Int?
+  statut       String   @default("ACTIF")
+  flotteId     String
+  flotte       Flotte   @relation(fields: [flotteId], references: [id])
+  courses      Course[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Vehicule {
-  id             String     @id @default(cuid())
-  coopId         String
-  coop           Coop       @relation(fields: [coopId], references: [id])
-  type           String     // MOTO | VOITURE | CAMIONNETTE
-  immatriculation String
-  modele         String?
-  capacite       Int?       // Capacité de charge en kg
-  statut         String     @default("DISPONIBLE") // DISPONIBLE | EN_COURSE | MAINTENANCE
-  livreurId      String?    @unique
-  livreur        User?      @relation(fields: [livreurId], references: [id])
-  kilometrage    Int        @default(0)
-  commandes      Commande[]
-  locations      Location[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id           String   @id @default(uuid())
+  immatriculation String @unique
+  marque       String?
+  modele       String?
+  annee        Int?
+  statut       String   @default("ACTIF")
+  cooperativeId String
+  cooperative  Cooperative @relation(fields: [cooperativeId], references: [id])
+  commandes    Commande[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Course {
+  id        String   @id @default(uuid())
+  depart    String
+  arrivee   String
+  prix      Float
+  statut    String   @default("EN_COURS")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  motoId    String?
+  moto      Moto?    @relation(fields: [motoId], references: [id])
+  dateCourse DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Commande {
-  id              String    @id @default(cuid())
-  coopId          String
-  coop            Coop      @relation(fields: [coopId], references: [id])
-  clientNom       String
-  clientTel       String
-  clientAdresse   String?
-  depart          String
-  arrivee         String
-  description     String
-  type            String    // NOURRITURE | ELECTROMENAGER | COLIS | AUTRE
-  urgence         String    @default("NORMAL") // NORMAL | URGENT | EXPRESS
-  prix            Float
-  paiement        String    @default("A_PAYER") // A_PAYER | PAYE
-  livreurId       String?
-  livreur         User?     @relation(fields: [livreurId], references: [id])
-  vehiculeId      String?
-  vehicule        Vehicule? @relation(fields: [vehiculeId], references: [id])
-  statut          String    @default("EN_ATTENTE") // EN_ATTENTE | ASSIGNEE | EN_COURS | LIVREE | ANNULEE
-  dateCreation    DateTime  @default(now())
-  datePriseEnCharge DateTime?
-  dateLivraison   DateTime?
-  kmDebut         Int?
-  kmFin           Int?
-  distance        Int?
-  notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String   @id @default(uuid())
+  reference   String   @unique
+  description String?
+  prix        Float
+  statut      String   @default("EN_ATTENTE")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  vehiculeId  String?
+  vehicule    Vehicule? @relation(fields: [vehiculeId], references: [id])
+  dateLivraison DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Location {
-  id          String    @id @default(cuid())
-  coopId      String
-  coop        Coop      @relation(fields: [coopId], references: [id])
-  vehiculeId  String
-  vehicule    Vehicule  @relation(fields: [vehiculeId], references: [id])
-  livreurId   String
-  livreur     User      @relation(fields: [livreurId], references: [id])
-  dateDebut   DateTime  @default(now())
-  dateFin     DateTime?
-  kmDebut     Int
-  kmFin       Int?
-  kmParcourus Int?
-  loyerPaye   Float
-  statut      String    @default("EN_COURS") // EN_COURS | TERMINE
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Pointage {
+  id        String   @id @default(uuid())
+  type      String   // ENTREE, SORTIE
+  date      DateTime
+  localisation String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Depense {
+  id          String   @id @default(uuid())
+  type        String
+  montant     Float
+  description String?
+  date        DateTime
+  justificatif String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Versement {
+  id        String   @id @default(uuid())
+  montant   Float
+  mode      String
+  reference String?
+  date      DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  action    String
+  details   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  titre     String
+  message   String
+  type      String
+  lu        Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Assistance {
+  id        String   @id @default(uuid())
+  type      String
+  message   String
+  statut    String   @default("EN_ATTENTE")
+  reponse   String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Parametre {
+  id        String   @id @default(uuid())
+  cle       String   @unique
+  valeur    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Abonnement {
+  id        String   @id @default(uuid())
+  type      String
+  statut    String
+  debut     DateTime
+  fin       DateTime?
+  flotteId  String?
+  cooperativeId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
