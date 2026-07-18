@@ -1,57 +1,22 @@
-import { useState } from 'react';
-import { Search, Calendar, Download, ChevronDown, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { ScrollText, Search, Filter } from 'lucide-react';
 
-type TabKey = 'pointages' | 'courses' | 'versements' | 'depenses' | 'assistance';
-
-interface Tab {
-  key: TabKey;
-  label: string;
-  icon: React.ComponentType<{ size?: number }>;
-}
-
-const tabs: Tab[] = [
-  { key: 'pointages', label: 'Pointages', icon: Calendar },
-  { key: 'courses', label: 'Courses', icon: Search },
-  { key: 'versements', label: 'Versements', icon: Download },
-  { key: 'depenses', label: 'Dépenses', icon: ChevronDown },
-  { key: 'assistance', label: 'Assistance', icon: RefreshCw },
-];
-
-export function JournauxPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('pointages');
-
+export const JournauxPage = () => {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Journaux d'activité</h1>
-      </div>
-
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.key;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                isActive
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-            >
-              {Icon && <Icon size={18} />}
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <p className="text-gray-500 dark:text-gray-400">
-          Affichage des logs pour : <strong>{tabs.find((t) => t.key === activeTab)?.label}</strong>
-        </p>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-6">📋 Journaux</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border">
+        <div className="flex gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="text" placeholder="Rechercher dans les journaux..." className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+            <Filter size={18} /> Filtrer
+          </button>
+        </div>
+        <p className="text-gray-500 text-center py-8">Journal des activités - En développement</p>
       </div>
     </div>
   );
-}
+};

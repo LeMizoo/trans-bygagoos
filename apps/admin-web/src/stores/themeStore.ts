@@ -1,41 +1,46 @@
-import { create } from 'zustand';
-
 type Theme = 'light' | 'dark' | 'system';
 
-interface ThemeStore {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggle: () => void;
-}
-
-const getStoredTheme = (): Theme => {
-  const stored = localStorage.getItem('theme') as Theme;
-  return stored || 'system';
-};
-
-export const useThemeStore = create<ThemeStore>((set, get) => ({
-  theme: getStoredTheme(),
-  setTheme: (theme: Theme) => {
-    localStorage.setItem('theme', theme);
-    set({ theme });
-    applyTheme(theme);
-  },
-  toggle: () => {
-    const current = get().theme;
-    const next = current === 'dark' ? 'light' : 'dark';
-    get().setTheme(next);
-  },
-}));
-
+// Appliquer le thème au DOM
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  if (theme === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.classList.toggle('dark', prefersDark);
+  if (theme === 'dark') {
+    root.classList.add('dark');
+  } else if (theme === 'light') {
+    root.classList.remove('dark');
   } else {
-    root.classList.toggle('dark', theme === 'dark');
+    // system
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
   }
 }
 
-// Appliquer au chargement
-applyTheme(getStoredTheme());
+// Initialiser au chargement
+const storedTheme = (localStorage.getItem('theme') as Theme) || 'system';
+applyTheme(storedTheme);
+
+// Écouter les changements système
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const currentTheme = localStorage.getItem('theme') as Theme || 'system';
+  if (currentTheme === 'system') {
+    applyTheme('system');
+  }
+});
+
+export function getTheme(): Theme {
+  return (localStorage.getItem('theme') as Theme) || 'system';
+}
+
+export function setTheme(theme: Theme) {
+  localStorage.setItem('theme', theme);
+  applyTheme(theme);
+}
+
+export function toggleTheme() {
+  const current = getTheme();
+  const next = current === 'dark' ? 'light' : current === 'light' ? 'system' : 'dark';
+  setTheme(next);
+  return next;
+}

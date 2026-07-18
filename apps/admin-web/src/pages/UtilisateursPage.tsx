@@ -1,84 +1,86 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { Shield, UserPlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
+import { api } from '../api/client';
 
 export function UtilisateursPage() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ nom: '', email: '', password: '', role: 'ADMIN' });
 
-  const { data } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => axios.get(`${API}/users`).then(r => r.data),
+  const { data, isLoading } = useQuery({
+    queryKey: ['utilisateurs'],
+    queryFn: () => api.get('/utilisateurs').then(r => r.data),
   });
 
   const createUser = useMutation({
-    mutationFn: (data: any) => axios.post(`${API}/users`, data),
-    onSuccess: () => { setShowForm(false); qc.invalidateQueries({ queryKey: ['users'] }); },
+    mutationFn: (userData: any) => api.post('/utilisateurs', userData),
+    onSuccess: () => { setShowForm(false); qc.invalidateQueries({ queryKey: ['utilisateurs'] }); },
   });
 
   const deleteUser = useMutation({
-    mutationFn: (id: string) => axios.delete(`${API}/users/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    mutationFn: (id: string) => api.delete(`/utilisateurs/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['utilisateurs'] }),
   });
 
   const users = Array.isArray(data) ? data : [];
 
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64 text-gray-400">Chargement...</div>;
+  }
+
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><Shield size={24} /> Utilisateurs</h1>
-        <button onClick={() => setShowForm(!showForm)} className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
-          <UserPlus size={16} /> Ajouter
+    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Shield size={24} /> Utilisateurs
+          </h1>
+          <p className="text-gray-500 mt-1">{users.length} utilisateur(s)</p>
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          <UserPlus size={18} /> Nouvel utilisateur
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-4">
-          <div className="grid grid-cols-4 gap-3">
-            <input type="text" placeholder="Nom" value={form.nom} onChange={e => setForm({...form, nom: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm" />
-            <input type="email" placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm" />
-            <input type="password" placeholder="Mot de passe" value={form.password} onChange={e => setForm({...form, password: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm" />
-            <select value={form.role} onChange={e => setForm({...form, role: e.target.value})} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg text-sm">
-              <option value="ADMIN">ADMIN</option>
-              <option value="FINANCE">FINANCE</option>
-              <option value="SUPPORT">SUPPORT</option>
-            </select>
-          </div>
-          <button onClick={() => createUser.mutate(form)} disabled={createUser.isPending} className="mt-3 bg-green-500 text-white px-4 py-2 rounded-lg text-sm">Créer</button>
+        <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl border">
+          <input value={form.nom} onChange={e => setForm({...form, nom: e.target.value})} placeholder="Nom"
+            className="w-full mb-2 px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
+          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="Email"
+            className="w-full mb-2 px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
+          <input value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="Mot de passe" type="password"
+            className="w-full mb-2 px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600" />
+          <select value={form.role} onChange={e => setForm({...form, role: e.target.value})}
+            className="w-full mb-3 px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+            <option value="ADMIN">Admin</option>
+            <option value="GERANT_FLOTTE">Gérant Flotte</option>
+            <option value="GERANT_COOP">Gérant Coop</option>
+            <option value="CHAUFFEUR">Chauffeur</option>
+            <option value="LIVREUR">Livreur</option>
+          </select>
+          <button onClick={() => createUser.mutate(form)}
+            className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            Créer l'utilisateur
+          </button>
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-700 text-left bg-gray-50 dark:bg-gray-900">
-              <th className="p-3 text-gray-500 font-medium">Nom</th>
-              <th className="p-3 text-gray-500 font-medium">Email</th>
-              <th className="p-3 text-gray-500 font-medium">Rôle</th>
-              <th className="p-3 text-gray-500 font-medium">Flotte</th>
-              <th className="p-3 text-gray-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u: any) => (
-              <tr key={u.id} className="border-b border-gray-100 dark:border-gray-700">
-                <td className="p-3 font-medium">{u.nom}</td>
-                <td className="p-3 text-gray-500">{u.email}</td>
-                <td className="p-3"><span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs">{u.role}</span></td>
-                <td className="p-3 text-gray-400">{u.flotte?.nom || '-'}</td>
-                <td className="p-3">
-                  <button onClick={() => deleteUser.mutate(u.id)} className="p-1.5 hover:bg-red-50 rounded-lg text-red-400"><Trash2 size={14} /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="space-y-2">
+        {users.map((u: any) => (
+          <div key={u.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 border flex items-center justify-between">
+            <div>
+              <div className="font-bold">{u.nom} {u.prenom}</div>
+              <div className="text-sm text-gray-500">{u.email}</div>
+              <div className="text-xs text-gray-400">{u.role}</div>
+            </div>
+            <button onClick={() => { if (confirm('Supprimer ?')) deleteUser.mutate(u.id); }}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+              <Trash2 size={18} />
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

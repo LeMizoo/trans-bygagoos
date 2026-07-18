@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import axios from 'axios';
 
-const API = "https://trans-bygagoos-api.onrender.com/api/v1";
+const API = import.meta.env.VITE_API_URL || 'https://trans-bygagoos-api.onrender.com';
 
 interface User {
   id: string;
@@ -23,7 +22,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
   login: async (email, password) => {
-    const { data } = await axios.post(`${API}/auth/login`, { email, password });
+    const { data } = await fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    }).then(res => res.json());
     localStorage.setItem('token', data.accessToken);
     localStorage.setItem('user', JSON.stringify(data.user));
     set({ user: data.user, token: data.accessToken });
