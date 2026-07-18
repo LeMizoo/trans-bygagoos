@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { CoopService } from './coop.service';
 
 @Controller('flottes')
@@ -7,6 +7,11 @@ export class FlottesController {
 
   @Get()
   findAll() {
-    return this.coopService.findAll();
+    return this.coopService.findAllFlottes();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.coopService.findOneFlotte(id);
   }
 }

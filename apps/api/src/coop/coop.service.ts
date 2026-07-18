@@ -5,11 +5,38 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CoopService {
   constructor(private prisma: PrismaService) {}
 
+  // Flottes
+  async findAllFlottes() {
+    return this.prisma.flotte.findMany({
+      include: {
+        users: true,
+        motos: true,
+        _count: {
+          select: { users: true, motos: true }
+        }
+      }
+    });
+  }
+
+  async findOneFlotte(id: string) {
+    return this.prisma.flotte.findUnique({
+      where: { id },
+      include: {
+        users: true,
+        motos: true,
+      }
+    });
+  }
+
+  // Coops
   async findAll() {
     return this.prisma.cooperative.findMany({
       include: {
         users: true,
-        vehicules: true
+        vehicules: true,
+        _count: {
+          select: { users: true, vehicules: true }
+        }
       }
     });
   }
