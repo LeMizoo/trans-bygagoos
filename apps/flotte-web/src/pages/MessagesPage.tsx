@@ -17,19 +17,19 @@ export function MessagesPage() {
 
   const { data: conversations } = useQuery({
     queryKey: ['messages-conversations'],
-    queryFn: () => axios.get(`${API}/messages/conversations`).then(r => r.data),
+    queryFn: () => api.get('/messages/conversations`).then(r => r.data),
     refetchInterval: 10000,
   });
 
   // Tous les chauffeurs pour nouveau message
   const { data: chauffeurs } = useQuery({
     queryKey: ['chauffeurs-liste'],
-    queryFn: () => axios.get(`${API}/chauffeurs`).then(r => r.data),
+    queryFn: () => api.get('/chauffeurs`).then(r => r.data),
   });
 
   const { data: messages } = useQuery({
     queryKey: ['messages', selectedChauffeur?.id],
-    queryFn: () => axios.get(`${API}/messages/chauffeur/${selectedChauffeur?.id}`).then(r => r.data),
+    queryFn: () => api.get('/messages/chauffeur/${selectedChauffeur?.id}`).then(r => r.data),
     enabled: !!selectedChauffeur?.id,
     refetchInterval: 5000,
   });

@@ -1,307 +1,199 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search,
-  UserPlus,
-  CheckCircle,
-  XCircle,
-  AlertCircle
-} from 'lucide-react';
+import { Users, Search, Phone, Bike, DollarSign, TrendingUp, Calendar, AlertTriangle, Eye, Edit3, Clock } from 'lucide-react';
 import { api } from '../../api/client';
-import { useAuth } from '../../context/AuthContext';
 
-interface Chauffeur {
-  id: string;
-  nom: string;
-  telephone: string;
-  type: string;
-  actif: boolean;
-  createdAt: string;
-}
-
-export const ChauffeursPage = () => {
-  const { user } = useAuth();
-  const [chauffeurs, setChauffeurs] = useState<Chauffeur[]>([]);
+export const ChauffeursPage: React.FC = () => {
+  const [chauffeurs, setChauffeurs] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [depenses, setDepenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingChauffeur, setEditingChauffeur] = useState<Chauffeur | null>(null);
-  const [formData, setFormData] = useState({
-    nom: '',
-    telephone: '',
-    type: 'LOCATAIRE',
-  });
-  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetchChauffeurs();
-  }, []);
-
-  const fetchChauffeurs = async () => {
-    try {
-      // Utiliser /livreurs au lieu de /chauffeurs
-      const response = await api.get('/livreurs');
-      setChauffeurs(response.data);
-    } catch (error) {
-      console.error('Erreur:', error);
-    } finally {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const flotteId = user.flotteId || user.flotte?.id;
+    
+    if (flotteId) {
+      Promise.all([
+        api.get(`/flottes/${flotteId}`),
+        api.get('/courses'),
+        api.get('/depenses'),
+      ]).then(([flotteRes, coursesRes, depensesRes]) => {
+        const users = flotteRes.data.users || [];
+        setChauffeurs(users.filter((u: any) => u.role === 'CHAUFFEUR'));
+        setCourses(Array.isArray(coursesRes.data) ? coursesRes.data : []);
+        setDepenses(Array.isArray(depensesRes.data) ? depensesRes.data : []);
+      }).finally(() => setLoading(false));
+    } else {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      if (editingChauffeur) {
-        await api.put(`/livreurs/${editingChauffeur.id}`, formData);
-      } else {
-        await api.post('/livreurs', {
-          ...formData,
-          coopId: user?.coopId || 'cmriwp6kv000112lu4u746aw9',
-        });
-      }
-      setShowModal(false);
-      setEditingChauffeur(null);
-      setFormData({ nom: '', telephone: '', type: 'LOCATAIRE' });
-      fetchChauffeurs();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'enregistrement');
-    }
-  };
-
-  const handleEdit = (chauffeur: Chauffeur) => {
-    setEditingChauffeur(chauffeur);
-    setFormData({
-      nom: chauffeur.nom,
-      telephone: chauffeur.telephone,
-      type: chauffeur.type,
+  // Calculer les stats par chauffeur
+  const chauffeursWithStats = chauffeurs.map(c => {
+    const coursesChauffeur = courses.filter(co => co.userId === c.id);
+    const todayCourses = coursesChauffeur.filter(co => new Date(co.dateCourse).toDateString() === new Date().toDateString());
+    const weekCourses = coursesChauffeur.filter(co => {
+      const d = new Date(co.dateCourse);
+      const now = new Date();
+      const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+      return d >= weekAgo;
     });
-    setShowModal(true);
-  };
+    const monthCourses = coursesChauffeur.filter(co => {
+      const d = new Date(co.dateCourse);
+      return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+    });
+    const depensesChauffeur = depenses.filter(d => d.userId === c.id);
+    const todayDepenses = depensesChauffeur.filter(d => new Date(d.date).toDateString() === new Date().toDateString());
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce chauffeur ?')) {
-      try {
-        await api.delete(`/livreurs/${id}`);
-        fetchChauffeurs();
-      } catch (error) {
-        console.error('Erreur:', error);
-      }
-    }
-  };
+    return {
+      ...c,
+      nbCoursesJour: todayCourses.length,
+      caJour: todayCourses.reduce((s, co) => s + (co.prix || 0), 0),
+      commissionJour: Math.round(todayCourses.reduce((s, co) => s + (co.prix || 0), 0) * 0.2),
+      nbCoursesSemaine: weekCourses.length,
+      caSemaine: weekCourses.reduce((s, co) => s + (co.prix || 0), 0),
+      nbCoursesMois: monthCourses.length,
+      caMois: monthCourses.reduce((s, co) => s + (co.prix || 0), 0),
+      commissionMois: Math.round(monthCourses.reduce((s, co) => s + (co.prix || 0), 0) * 0.2),
+      depensesJour: todayDepenses.reduce((s, d) => s + (d.montant || 0), 0),
+      depensesMois: depensesChauffeur.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).reduce((s, d) => s + (d.montant || 0), 0),
+      gainNetJour: Math.round(todayCourses.reduce((s, co) => s + (co.prix || 0), 0) * 0.2) - todayDepenses.reduce((s, d) => s + (d.montant || 0), 0),
+      gainNetMois: Math.round(monthCourses.reduce((s, co) => s + (co.prix || 0), 0) * 0.2) - depensesChauffeur.filter(d => new Date(d.date).getMonth() === new Date().getMonth()).reduce((s, d) => s + (d.montant || 0), 0),
+    };
+  });
 
-  const toggleActif = async (id: string, actif: boolean) => {
-    try {
-      await api.put(`/livreurs/${id}/actif`, { actif: !actif });
-      fetchChauffeurs();
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
-  };
-
-  const filteredChauffeurs = chauffeurs.filter(c =>
-    c.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.telephone?.includes(searchTerm)
+  const filtered = chauffeursWithStats.filter(c => 
+    c.nom?.toLowerCase().includes(search.toLowerCase()) ||
+    c.prenom?.toLowerCase().includes(search.toLowerCase()) ||
+    c.codeAcces?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
+  // Totaux
+  const totalCAJour = filtered.reduce((s, c) => s + c.caJour, 0);
+  const totalCommissionJour = filtered.reduce((s, c) => s + c.commissionJour, 0);
+  const totalGainNetJour = filtered.reduce((s, c) => s + c.gainNetJour, 0);
+  const totalCoursesJour = filtered.reduce((s, c) => s + c.nbCoursesJour, 0);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+    </div>
+  );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 lg:p-8 max-w-full mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">👨 Chauffeurs</h1>
-          <p className="text-gray-500 text-sm mt-1">Gérez vos chauffeurs</p>
+          <h2 className="text-3xl font-bold">👤 Gestion des chauffeurs</h2>
+          <p className="text-gray-500">{filtered.length} chauffeur(s) actif(s)</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingChauffeur(null);
-            setFormData({ nom: '', telephone: '', type: 'LOCATAIRE' });
-            setShowModal(true);
-          }}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
-        >
-          <UserPlus className="h-5 w-5 mr-2" />
-          Ajouter un chauffeur
-        </button>
-      </div>
-
-      {/* Barre de recherche */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un chauffeur..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." 
+              className="pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 w-56" />
+          </div>
         </div>
       </div>
 
-      {/* Liste des chauffeurs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Mini Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Chauffeurs actifs', value: filtered.length, icon: Users, color: 'bg-orange-100 text-orange-700' },
+          { label: 'CA aujourd\'hui', value: `${totalCAJour.toLocaleString()} Ar`, icon: DollarSign, color: 'bg-green-100 text-green-700' },
+          { label: 'Commission jour', value: `${totalCommissionJour.toLocaleString()} Ar`, icon: TrendingUp, color: 'bg-amber-100 text-amber-700' },
+          { label: 'Gain net jour', value: `${totalGainNetJour.toLocaleString()} Ar`, icon: DollarSign, color: totalGainNetJour >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' },
+        ].map((s, i) => (
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 border text-center">
+            <s.icon size={20} className={`mx-auto mb-1 ${s.color} p-1 rounded-lg`} />
+            <div className="text-xl font-bold">{s.value}</div>
+            <div className="text-xs text-gray-400">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tableau */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400">
+                <th className="text-left py-3 px-4 font-semibold">Chauffeur</th>
+                <th className="text-center py-3 px-4 font-semibold">Code</th>
+                <th className="text-center py-3 px-4 font-semibold">📅 Aujourd'hui</th>
+                <th className="text-center py-3 px-4 font-semibold">📆 Semaine</th>
+                <th className="text-center py-3 px-4 font-semibold">📅 Mois</th>
+                <th className="text-center py-3 px-4 font-semibold">💰 Gain net/jour</th>
+                <th className="text-center py-3 px-4 font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredChauffeurs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    Aucun chauffeur trouvé
-                  </td>
-                </tr>
+            <tbody className="divide-y">
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="py-12 text-center text-gray-400">Aucun chauffeur</td></tr>
               ) : (
-                filteredChauffeurs.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <span className="text-indigo-600 font-medium text-sm">
-                            {c.nom?.charAt(0) || '?'}
-                          </span>
-                        </div>
-                        <span className="ml-3 font-medium text-gray-900">{c.nom}</span>
+                filtered.map(c => (
+                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-bold">{c.nom} {c.prenom}</div>
+                      <div className="text-xs text-gray-400">📱 {c.telephone || 'N/A'}</div>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="font-mono font-bold text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">{c.codeAcces || '---'}</span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="font-bold text-amber-600">{c.commissionJour.toLocaleString()} Ar</div>
+                      <div className="text-xs text-gray-400">{c.nbCoursesJour} courses</div>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="font-bold">{c.caSemaine.toLocaleString()} Ar</div>
+                      <div className="text-xs text-gray-400">{c.nbCoursesSemaine} courses</div>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className="font-bold">{c.commissionMois.toLocaleString()} Ar</div>
+                      <div className="text-xs text-gray-400">{c.nbCoursesMois} courses</div>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <div className={`font-bold ${c.gainNetJour >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {c.gainNetJour.toLocaleString()} Ar
                       </div>
+                      <div className="text-xs text-gray-400">📊 {c.gainNetMois.toLocaleString()} Ar/mois</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {c.telephone}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        c.type === 'LOCATAIRE' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {c.type === 'LOCATAIRE' ? '📌 Locataire' : '📋 Salarié'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => toggleActif(c.id, c.actif)}
-                        className={`px-2 py-1 text-xs rounded-full flex items-center ${
-                          c.actif ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {c.actif ? (
-                          <><CheckCircle className="h-3 w-3 mr-1" /> Actif</>
-                        ) : (
-                          <><XCircle className="h-3 w-3 mr-1" /> Inactif</>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(c)}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                    <td className="py-3 px-4 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button className="p-1.5 hover:bg-gray-100 rounded-lg" title="Voir"><Eye size={14} /></button>
+                        <button className="p-1.5 hover:bg-amber-100 rounded-lg text-amber-600" title="Modifier"><Edit3 size={14} /></button>
+                        <button className="p-1.5 hover:bg-blue-100 rounded-lg text-blue-600" title="Pointages"><Clock size={14} /></button>
                       </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
+            {filtered.length > 0 && (
+              <tfoot>
+                <tr className="bg-orange-50/50 dark:bg-orange-900/10 font-bold">
+                  <td className="py-3 px-4">TOTAUX</td>
+                  <td className="py-3 px-4 text-center">-</td>
+                  <td className="py-3 px-4 text-center text-amber-600">{totalCommissionJour.toLocaleString()} Ar</td>
+                  <td className="py-3 px-4 text-center">{filtered.reduce((s, c) => s + c.caSemaine, 0).toLocaleString()} Ar</td>
+                  <td className="py-3 px-4 text-center">{filtered.reduce((s, c) => s + c.commissionMois, 0).toLocaleString()} Ar</td>
+                  <td className="py-3 px-4 text-center">{totalGainNetJour.toLocaleString()} Ar</td>
+                  <td className="py-3 px-4 text-center">-</td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>
 
-      {/* Modal d'ajout/modification */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {editingChauffeur ? 'Modifier le chauffeur' : 'Ajouter un chauffeur'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                <input
-                  type="text"
-                  value={formData.nom}
-                  onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
-                <input
-                  type="tel"
-                  value={formData.telephone}
-                  onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="LOCATAIRE">📍 Locataire</option>
-                  <option value="SALARIE">📋 Salarié</option>
-                </select>
-              </div>
-
-              {error && (
-                <div className="flex items-center space-x-2 bg-red-50 border border-red-200 rounded-lg p-3">
-                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditingChauffeur(null);
-                    setError('');
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                  {editingChauffeur ? 'Modifier' : 'Ajouter'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Légende */}
+      <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border text-sm text-gray-500 flex flex-wrap gap-4">
+        <span>🟢 <b>Gain net positif</b> = Commission - Dépenses</span>
+        <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">CODE</span>
+        <span>= Code d'accès application</span>
+        <span>📅 = Aujourd'hui | 📆 = Cette semaine | 📅 = Ce mois</span>
+      </div>
     </div>
   );
 };

@@ -1,124 +1,138 @@
-import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { MapPin, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
-
-const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
-
-const typeLabels: Record<string, string> = {
-  NORMALE: '🚖 Course normale',
-  ADY_VAROTRA: '🛺 Ady Varotra',
-  LOCATION_JOURNALIERE: '📅 Location',
-};
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, User, Bike, DollarSign, Filter, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { api } from '../api/client';
 
 export function CoursesPage() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('tous');
+  const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(1);
   const limit = 15;
 
-  const { data: allCourses } = useQuery({
-    queryKey: ['courses'],
-    queryFn: () => axios.get(`${API}/courses?flotteId=${JSON.parse(localStorage.getItem("user")||"{}")?.flotteId||""}`).then(r => r.data),
-    refetchInterval: 10000,
-  });
+  useEffect(function() {
+    api.get('/courses').then(function(res) {
+      setCourses(Array.isArray(res.data) ? res.data : []);
+    }).finally(function() { setLoading(false); });
+  }, []);
 
-  const { data: stats } = useQuery({
-    queryKey: ['courses-stats'],
-    queryFn: () => axios.get(`${API}/courses/stats`).then(r => r.data),
-  });
-
-  const courses = Array.isArray(allCourses) ? allCourses : [];
-  
-  const filtered = courses.filter((c: any) => {
-    const matchSearch = !search || 
-      c.chauffeur?.nom?.toLowerCase().includes(search.toLowerCase()) ||
-      c.moto?.immatriculation?.toLowerCase().includes(search.toLowerCase());
-    const matchType = typeFilter === 'tous' || c.type === typeFilter;
+  var filtered = courses.filter(function(c: any) {
+    var matchSearch = (c.depart + c.arrivee + c.user?.nom).toLowerCase().includes(search.toLowerCase());
+    var matchType = !typeFilter || c.statut === typeFilter;
     return matchSearch && matchType;
   });
 
-  const totalPages = Math.ceil(filtered.length / limit);
-  const paginated = filtered.slice((page - 1) * limit, page * limit);
+  var totalPages = Math.ceil(filtered.length / limit);
+  var paginated = filtered.slice((page - 1) * limit, page * limit);
+  var totalCA = filtered.reduce(function(s: number, c: any) { return s + (c.prix || 0); }, 0);
+  var totalCommission = Math.round(totalCA * 0.2);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <MapPin size={24} className="text-primary" /> Courses
-        </h1>
-        <span className="text-sm text-gray-500">{courses.length} courses</span>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <div className="text-2xl font-bold text-primary">{stats?.coursesAujourdhui || 0}</div>
-          <div className="text-xs text-gray-500">Aujourd'hui</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">{(stats?.caAujourdhui || 0).toLocaleString()} Ar</div>
-          <div className="text-xs text-gray-500">CA aujourd'hui</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-          <div className="text-2xl font-bold text-orange-600">{(stats?.commissionAujourdhui || 0).toLocaleString()} Ar</div>
-          <div className="text-xs text-gray-500">Commission</div>
+    <div className="p-6 lg:p-8 max-w-full mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold">🛵 Gestion des courses</h2>
+          <p className="text-gray-500">{filtered.length} course(s) trouvée(s)</p>
         </div>
       </div>
 
       {/* Filtres */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
-        </div>
-        {['tous', 'NORMALE', 'ADY_VAROTRA', 'LOCATION_JOURNALIERE'].map(t => (
-          <button key={t} onClick={() => { setTypeFilter(t); setPage(1); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${typeFilter === t ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-            {t === 'tous' ? 'Tous' : typeLabels[t] || t}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border mb-6">
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Recherche</label>
+            <div className="relative">
+              <Search size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input value={search} onChange={function(e) { setSearch(e.target.value); }} placeholder="Départ, arrivée..."
+                className="pl-8 pr-3 py-2 border rounded-lg dark:bg-gray-700 text-sm w-48" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Statut</label>
+            <select value={typeFilter} onChange={function(e) { setTypeFilter(e.target.value); }}
+              className="p-2 border rounded-lg dark:bg-gray-700 text-sm">
+              <option value="">Tous</option>
+              <option value="TERMINE">✅ Terminée</option>
+              <option value="EN_COURS">🔵 En cours</option>
+              <option value="ANNULEE">❌ Annulée</option>
+            </select>
+          </div>
+          <button onClick={function() { setSearch(''); setTypeFilter(''); }}
+            className="flex items-center gap-1 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200">
+            <RotateCcw size={14} /> Réinitialiser
           </button>
-        ))}
+        </div>
+      </div>
+
+      {/* Mini Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        {[
+          { label: 'Courses trouvées', value: filtered.length, icon: MapPin },
+          { label: 'CA total', value: totalCA.toLocaleString() + ' Ar', icon: DollarSign },
+          { label: 'Commission (20%)', value: totalCommission.toLocaleString() + ' Ar', icon: Bike },
+        ].map(function(s: any, i: number) {
+          return (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 border text-center">
+              <s.icon size={20} className="mx-auto mb-1 text-orange-500" />
+              <div className="text-xl font-bold">{s.value}</div>
+              <div className="text-xs text-gray-400">{s.label}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Tableau */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead><tr className="bg-gray-50 dark:bg-gray-700 text-left text-gray-500 dark:text-gray-400">
-            <th className="p-3">Date</th><th className="p-3">Chauffeur</th><th className="p-3">Moto</th><th className="p-3">Type</th><th className="p-3 text-right">Distance</th><th className="p-3 text-right">Prix</th><th className="p-3 text-right">Commission</th>
-          </tr></thead>
-          <tbody className="divide-y dark:divide-gray-700">
-            {paginated.map((c: any) => (
-              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="p-3 text-xs">{new Date(c.createdAt).toLocaleString('fr')}</td>
-                <td className="p-3 font-medium">{c.chauffeur?.nom}</td>
-                <td className="p-3">{c.moto?.immatriculation}</td>
-                <td className="p-3"><span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-600 rounded text-xs">{typeLabels[c.type] || c.type}</span></td>
-                <td className="p-3 text-right">{c.distance > 0 ? `${c.distance} km` : '-'}</td>
-                <td className="p-3 text-right font-medium">{c.prix?.toLocaleString()} Ar</td>
-                <td className="p-3 text-right text-orange-600">{c.commission?.toLocaleString()} Ar</td>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400">
+                <th className="text-left py-3 px-4">Date</th>
+                <th className="text-left py-3 px-4">Chauffeur</th>
+                <th className="text-left py-3 px-4">Trajet</th>
+                <th className="text-center py-3 px-4">Statut</th>
+                <th className="text-right py-3 px-4">Prix</th>
+                <th className="text-right py-3 px-4">Commission</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between p-3 border-t dark:border-gray-700">
-            <span className="text-xs text-gray-500">Page {page}/{totalPages}</span>
-            <div className="flex gap-1">
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50"><ChevronLeft size={16} /></button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = page > 3 ? page - 3 + i : i + 1;
-                if (p > totalPages) return null;
-                return <button key={p} onClick={() => setPage(p)} className={`w-8 h-8 rounded text-sm ${p === page ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}>{p}</button>;
-              })}
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50"><ChevronRight size={16} /></button>
-            </div>
-          </div>
-        )}
+            </thead>
+            <tbody className="divide-y">
+              {paginated.length === 0 ? (
+                <tr><td colSpan={6} className="py-12 text-center text-gray-400">Aucune course</td></tr>
+              ) : (
+                paginated.map(function(c: any) {
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-4 text-xs">{new Date(c.dateCourse).toLocaleDateString('fr') + ' ' + new Date(c.dateCourse).toLocaleTimeString('fr', {hour:'2-digit',minute:'2-digit'})}</td>
+                      <td className="py-3 px-4"><User size={14} className="inline mr-1" />{c.user?.nom || 'N/A'}</td>
+                      <td className="py-3 px-4"><MapPin size={14} className="inline mr-1 text-green-500" />{c.depart} → <MapPin size={14} className="inline mr-1 text-red-500" />{c.arrivee}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={'px-2 py-1 rounded-full text-xs font-bold ' + (c.statut === 'TERMINE' ? 'bg-green-100 text-green-700' : c.statut === 'EN_COURS' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700')}>
+                          {c.statut}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-amber-600">{(c.prix || 0).toLocaleString()} Ar</td>
+                      <td className="py-3 px-4 text-right">{Math.round((c.prix || 0) * 0.2).toLocaleString()} Ar</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button onClick={function() { setPage(function(p: number) { return Math.max(1, p - 1); }); }} disabled={page === 1}
+            className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50"><ChevronLeft size={20} /></button>
+          <span className="text-sm">Page {page}/{totalPages}</span>
+          <button onClick={function() { setPage(function(p: number) { return Math.min(totalPages, p + 1); }); }} disabled={page === totalPages}
+            className="p-2 hover:bg-gray-100 rounded-lg disabled:opacity-50"><ChevronRight size={20} /></button>
+        </div>
+      )}
     </div>
   );
 }

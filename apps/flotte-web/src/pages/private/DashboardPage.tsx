@@ -1,180 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Truck, Wrench, MapPin, TrendingUp, Users, Gauge, Battery, AlertTriangle } from 'lucide-react';
-import { apiClient } from '@trans/shared';
-
-interface VehiculeStat {
-  id: string;
-  immatriculation: string;
-  type: string;
-  modele: string;
-  statut: string;
-  kilometrage: number;
-  livreur?: { nom: string };
-}
-
-interface Stats {
-  totalVehicules: number;
-  disponibles: number;
-  enCourse: number;
-  maintenance: number;
-  kmTotal: number;
-  livreursActifs: number;
-}
+import { Bike, Users, MapPin, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
+import { api } from '../../api/client';
 
 export const DashboardPage: React.FC = () => {
-  const [stats, setStats] = useState<Stats>({
-    totalVehicules: 0, disponibles: 0, enCourse: 0, maintenance: 0, kmTotal: 0, livreursActifs: 0,
-  });
-  const [vehicules, setVehicules] = useState<VehiculeStat[]>([]);
+  const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStats();
+    // Récupérer le profil pour avoir le flotteId
+    api.get('/auth/me').then(meRes => {
+      const flotteId = meRes.data.flotteId || meRes.data.flotte?.id;
+      if (flotteId) {
+        localStorage.setItem('user', JSON.stringify(meRes.data));
+        Promise.all([
+          api.get(`/flottes/${flotteId}`),
+          api.get('/courses/today'),
+        ]).then(([flotteRes, coursesRes]) => {
+          const f = flotteRes.data;
+          const courses = Array.isArray(coursesRes.data) ? coursesRes.data : [];
+          setStats({
+            flotteNom: f.nom,
+            totalMotos: f.motos?.length || f._count?.motos || 0,
+            totalChauffeurs: f.users?.filter((u: any) => u.role === 'CHAUFFEUR').length || 0,
+            coursesToday: courses.length,
+            revenuToday: courses.reduce((s: number, c: any) => s + (c.prix || 0), 0),
+            motosActives: f.motos?.filter((m: any) => m.statut === 'ACTIF').length || 0,
+          });
+        });
+      }
+    }).finally(() => setLoading(false));
   }, []);
 
-  const loadStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const coopId = user.coopId;
-      if (!coopId) return;
+  if (loading) return (
+    <div className="flex items-center justify-center h-96">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+    </div>
+  );
 
-      const [vehiculesRes, livreursRes] = await Promise.all([
-        apiClient.get(`/vehicules?coopId=${coopId}`, { headers: { Authorization: `Bearer ${token}` } }),
-        apiClient.get(`/livreurs?coopId=${coopId}`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-
-      const vehs = vehiculesRes.data;
-      setVehicules(vehs);
-      setStats({
-        totalVehicules: vehs.length,
-        disponibles: vehs.filter((v: any) => v.statut === 'DISPONIBLE').length,
-        enCourse: vehs.filter((v: any) => v.statut === 'EN_COURSE').length,
-        maintenance: vehs.filter((v: any) => v.statut === 'MAINTENANCE').length,
-        kmTotal: vehs.reduce((sum: number, v: any) => sum + (v.kilometrage || 0), 0),
-        livreursActifs: livreursRes.data.filter((l: any) => l.actif).length,
-      });
-    } catch (err) {
-      console.error('Erreur chargement stats:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const statutColor = (statut: string) => {
-    switch (statut) {
-      case 'DISPONIBLE': return 'text-green-400 bg-green-500/20';
-      case 'EN_COURSE': return 'text-blue-400 bg-blue-500/20';
-      case 'MAINTENANCE': return 'text-yellow-400 bg-yellow-500/20';
-      default: return 'text-gray-400 bg-gray-500/20';
-    }
-  };
-
-  const typeIcon = (type: string) => {
-    switch (type) {
-      case 'MOTO': return '🏍️';
-      case 'VOITURE': return '🚗';
-      case 'CAMIONNETTE': return '🚐';
-      default: return '🚛';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
-      </div>
-    );
-  }
+  const s = stats;
 
   return (
-    <div className="p-6">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-white mb-2">Gestion de Flotte</h1>
-        <p className="text-gray-400 mb-8">Suivi en temps réel de vos véhicules</p>
-      </motion.div>
+    <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-l-4 border-l-orange-500">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">🏍️ {s.flotteNom || 'Ma Flotte'}</h2>
+        <p className="text-gray-500 text-sm mt-1">Tableau de bord - Gérant Flotte</p>
+      </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { title: 'Total Véhicules', value: stats.totalVehicules, icon: Truck, color: 'from-indigo-500 to-indigo-600', delay: 0 },
-          { title: 'Disponibles', value: stats.disponibles, icon: Gauge, color: 'from-green-500 to-green-600', delay: 0.1 },
-          { title: 'En Course', value: stats.enCourse, icon: MapPin, color: 'from-blue-500 to-blue-600', delay: 0.2 },
-          { title: 'En Maintenance', value: stats.maintenance, icon: Wrench, color: 'from-yellow-500 to-yellow-600', delay: 0.3 },
-          { title: 'Km Total', value: `${stats.kmTotal.toLocaleString()} km`, icon: TrendingUp, color: 'from-purple-500 to-purple-600', delay: 0.4 },
-          { title: 'Livreurs Actifs', value: stats.livreursActifs, icon: Users, color: 'from-cyan-500 to-cyan-600', delay: 0.5 },
+          { label: 'Motos', value: s.totalMotos || 0, icon: Bike, color: 'bg-orange-100 text-orange-700' },
+          { label: 'Actives', value: s.motosActives || 0, icon: CheckCircle, color: 'bg-green-100 text-green-700' },
+          { label: 'Chauffeurs', value: s.totalChauffeurs || 0, icon: Users, color: 'bg-blue-100 text-blue-700' },
+          { label: 'Courses/jour', value: s.coursesToday || 0, icon: MapPin, color: 'bg-purple-100 text-purple-700' },
+          { label: 'Revenu/jour', value: `${(s.revenuToday || 0).toLocaleString()} Ar`, icon: DollarSign, color: 'bg-amber-100 text-amber-700' },
+          { label: 'Alerts', value: 0, icon: AlertTriangle, color: 'bg-red-100 text-red-700' },
         ].map((card, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: card.delay, duration: 0.3 }}
-            className={`bg-gradient-to-br ${card.color} rounded-2xl p-6 shadow-lg`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/80 text-sm">{card.title}</p>
-                <p className="text-white text-3xl font-bold mt-1">{card.value}</p>
-              </div>
-              <card.icon className="text-white/40" size={36} />
-            </div>
-          </motion.div>
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 border text-center">
+            <card.icon size={20} className={`mx-auto mb-2 ${card.color} p-1 rounded-lg`} />
+            <div className="text-xl font-bold">{card.value}</div>
+            <div className="text-xs text-gray-400">{card.label}</div>
+          </div>
         ))}
       </div>
 
-      {/* Liste des véhicules */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-gray-800 rounded-2xl p-6"
-      >
-        <h2 className="text-lg font-semibold text-white mb-4">🛵 État des Véhicules</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-gray-400 text-sm border-b border-gray-700">
-                <th className="pb-3">Véhicule</th>
-                <th className="pb-3">Type</th>
-                <th className="pb-3">Modèle</th>
-                <th className="pb-3">Statut</th>
-                <th className="pb-3">Kilométrage</th>
-                <th className="pb-3">Livreur</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vehicules.map((v, i) => (
-                <motion.tr
-                  key={v.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + i * 0.05 }}
-                  className="border-b border-gray-700/50 hover:bg-gray-750"
-                >
-                  <td className="py-3 text-white font-medium">
-                    {typeIcon(v.type)} {v.immatriculation}
-                  </td>
-                  <td className="py-3 text-gray-400">{v.type}</td>
-                  <td className="py-3 text-gray-400">{v.modele || '-'}</td>
-                  <td className="py-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statutColor(v.statut)}`}>
-                      {v.statut}
-                    </span>
-                  </td>
-                  <td className="py-3 text-gray-400">{v.kilometrage?.toLocaleString()} km</td>
-                  <td className="py-3 text-gray-400">{v.livreur?.nom || '-'}</td>
-                </motion.tr>
-              ))}
-              {vehicules.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">Aucun véhicule trouvé</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border text-center">
+        <p className="text-gray-400">🚀 Dashboard Flotte v2.0</p>
+      </div>
     </div>
   );
 };

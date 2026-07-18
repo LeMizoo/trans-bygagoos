@@ -10,7 +10,7 @@ export function NotificationsAdminPage() {
 
   const { data } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => axios.get(`${API}/notifications`).then(r => r.data),
+    queryFn: () => api.get('/notifications`).then(r => r.data),
     refetchInterval: 15000,
   });
 

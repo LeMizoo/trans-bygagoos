@@ -1,29 +1,24 @@
-import { BarChart3, FileText, Download } from 'lucide-react';
+import React from 'react';
+import { BarChart3, Download } from 'lucide-react';
 
-export function RapportsPage() {
+export const RapportsPage: React.FC = () => {
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Rapports</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
-          <FileText size={48} className="mx-auto mb-3 text-primary" />
-          <h3 className="font-semibold">Rapport journalier</h3>
-          <p className="text-sm text-gray-500">Courses, CA, commissions du jour</p>
-          <button className="mt-3 px-4 py-2 bg-primary text-white rounded-lg text-sm flex items-center gap-2 mx-auto"><Download size={14} /> Exporter PDF</button>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
-          <BarChart3 size={48} className="mx-auto mb-3 text-green-500" />
-          <h3 className="font-semibold">Rapport mensuel</h3>
-          <p className="text-sm text-gray-500">Synthèse du mois en cours</p>
-          <button className="mt-3 px-4 py-2 bg-green-500 text-white rounded-lg text-sm flex items-center gap-2 mx-auto"><Download size={14} /> Exporter Excel</button>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
-          <FileText size={48} className="mx-auto mb-3 text-purple-500" />
-          <h3 className="font-semibold">Rapport chauffeurs</h3>
-          <p className="text-sm text-gray-500">Performance par chauffeur</p>
-          <button className="mt-3 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm flex items-center gap-2 mx-auto"><Download size={14} /> Exporter CSV</button>
-        </div>
+    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6">📈 Rapports</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { title: 'Rapport journalier', desc: 'Courses et revenus du jour', icon: BarChart3 },
+          { title: 'Rapport mensuel', desc: 'Statistiques du mois en cours', icon: BarChart3 },
+          { title: 'Dépenses', desc: 'Récapitulatif des dépenses', icon: Download },
+          { title: 'Versements', desc: 'Versements des chauffeurs', icon: Download },
+        ].map((r, i) => (
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-6 border hover:shadow-md transition-all cursor-pointer">
+            <r.icon size={32} className="text-orange-500 mb-4" />
+            <h3 className="font-bold text-lg">{r.title}</h3>
+            <p className="text-sm text-gray-500">{r.desc}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
-}
+};

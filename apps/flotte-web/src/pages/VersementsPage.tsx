@@ -1,79 +1,105 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { Check, X, Clock } from 'lucide-react';
-const API = "https://trans-bygagoos-api.onrender.com/api/v1";
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from 'react';
+import { DollarSign, Check, X, Clock, User, Calendar } from 'lucide-react';
+import { api } from '../api/client';
 
 export function VersementsPage() {
-  const queryClient = useQueryClient();
+  const [versements, setVersements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState('');
 
-  const { data: versements } = useQuery({
-    queryKey: ['versements'],
-    queryFn: () => axios.get(`${API}/versements`).then((r) => r.data),
-    refetchInterval: 10000,
-  });
+  function loadVersements() {
+    api.get('/versements').then(function(res) {
+      setVersements(Array.isArray(res.data) ? res.data : []);
+    }).finally(function() { setLoading(false); });
+  }
 
-  const validerMutation = useMutation({
-    mutationFn: (id: string) => axios.put(`${API}/versements/${id}/valider`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versements'] }),
-  });
+  useEffect(function() { loadVersements(); }, []);
 
-  const refuserMutation = useMutation({
-    mutationFn: (id: string) => axios.put(`${API}/versements/${id}/refuser`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['versements'] }),
-  });
+  function valider(id: string) {
+    api.put('/versements/' + id, { statut: 'VALIDE' }).then(function() {
+      setMsg('✅ Versement accepté - Notification envoyée au chauffeur');
+      loadVersements();
+      setTimeout(function() { setMsg(''); }, 3000);
+    });
+  }
 
-  const statutBadge = (statut: string) => {
-    switch (statut) {
-      case 'VALIDE': return <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs flex items-center gap-1"><Check size={12} /> Validé</span>;
-      case 'REFUSE': return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs flex items-center gap-1"><X size={12} /> Refusé</span>;
-      default: return <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs flex items-center gap-1"><Clock size={12} /> En attente</span>;
-    }
-  };
+  function refuser(id: string) {
+    var motif = prompt('Motif du refus :');
+    api.put('/versements/' + id, { statut: 'REFUSE', commentaire: motif || '' }).then(function() {
+      setMsg('❌ Versement refusé');
+      loadVersements();
+      setTimeout(function() { setMsg(''); }, 3000);
+    });
+  }
+
+  var enAttente = versements.filter(function(v: any) { return !v.statut || v.statut === 'EN_ATTENTE'; });
+  var valides = versements.filter(function(v: any) { return v.statut === 'VALIDE'; });
+  var total = versements.reduce(function(s: number, v: any) { return s + (v.montant || 0); }, 0);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Versements</h1>
-
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 text-left text-sm text-gray-500">
-                <th className="p-3 font-medium">Date</th>
-                <th className="p-3 font-medium">Chauffeur</th>
-                <th className="p-3 font-medium text-right">Solde dû</th>
-                <th className="p-3 font-medium text-right">Montant versé</th>
-                <th className="p-3 font-medium">Statut</th>
-                <th className="p-3 font-medium text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {versements?.map((v: any) => (
-                <tr key={v.id} className="hover:bg-gray-50 text-sm">
-                  <td className="p-3">{new Date(v.createdAt).toLocaleDateString('fr-FR')}</td>
-                  <td className="p-3 font-medium">{v.chauffeur?.nom}</td>
-                  <td className="p-3 text-right">{v.montantDu.toLocaleString()} Ar</td>
-                  <td className="p-3 text-right font-medium text-primary">{v.montantVerse.toLocaleString()} Ar</td>
-                  <td className="p-3">{statutBadge(v.statut)}</td>
-                  <td className="p-3">
-                    {v.statut === 'EN_ATTENTE' && (
-                      <div className="flex justify-center gap-2">
-                        <button onClick={() => validerMutation.mutate(v.id)} className="p-1.5 bg-green-50 text-green-600 rounded hover:bg-green-100" title="Valider">
-                          <Check size={16} />
-                        </button>
-                        <button onClick={() => refuserMutation.mutate(v.id)} className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Refuser">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-3xl font-bold">💵 Demandes de versement</h2>
+        <p className="text-gray-500">{enAttente.length} en attente · {valides.length} validé(s) · Total: {total.toLocaleString()} Ar</p>
       </div>
+
+      {msg && <div className={'mb-4 p-3 rounded-xl ' + (msg.startsWith('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>{msg}</div>}
+
+      {versements.length === 0 ? (
+        <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border">
+          <DollarSign size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-400">Aucune demande de versement</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {versements.map(function(v: any) {
+            var estEnAttente = !v.statut || v.statut === 'EN_ATTENTE';
+            return (
+              <div key={v.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 border flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={'w-10 h-10 rounded-xl flex items-center justify-center ' + (v.statut === 'VALIDE' ? 'bg-green-100' : v.statut === 'REFUSE' ? 'bg-red-100' : 'bg-yellow-100')}>
+                    <DollarSign size={20} className={v.statut === 'VALIDE' ? 'text-green-600' : 'text-yellow-600'} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-green-600">+{(v.montant || 0).toLocaleString()} Ar</div>
+                    <div className="text-sm text-gray-500">{v.mode || 'N/A'} · {v.reference || 'N/A'}</div>
+                    <div className="text-xs text-gray-400 flex items-center gap-1">
+                      <User size={12} /> {v.user?.nom || 'N/A'} · <Calendar size={12} /> {v.date ? new Date(v.date).toLocaleDateString('fr') : 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {estEnAttente ? (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Clock size={12} /> En attente
+                    </span>
+                  ) : v.statut === 'VALIDE' ? (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Check size={12} /> Accepté
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold flex items-center gap-1">
+                      <X size={12} /> Refusé
+                    </span>
+                  )}
+                  {estEnAttente && (
+                    <>
+                      <button onClick={function() { valider(v.id); }} className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200" title="Accepter">
+                        <Check size={16} />
+                      </button>
+                      <button onClick={function() { refuser(v.id); }} className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200" title="Refuser">
+                        <X size={16} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

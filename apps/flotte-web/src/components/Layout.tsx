@@ -36,7 +36,7 @@ export function Layout() {
 
   const { data: flotte } = useQuery({
     queryKey: ['flotte-layout', user?.coopId],
-    queryFn: () => axios.get(`${API}/coops/${user?.coopId}`).then(r => r.data),
+    queryFn: () => api.get('/coops/${user?.coopId}`).then(r => r.data),
     enabled: !!user?.coopId,
   });
 

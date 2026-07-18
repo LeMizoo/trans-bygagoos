@@ -1,220 +1,179 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { Receipt, Plus, Edit, Trash2, X, Save, Search } from 'lucide-react';
-import { useState } from 'react';
-
-const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
+import React, { useState, useEffect } from 'react';
+import { Receipt, Plus, X, Save, Trash2, Search } from 'lucide-react';
+import { api } from '../api/client';
 
 const categories = [
-  { value: 'CARBURANT', label: '⛽ Carburant', icon: '⛽' },
-  { value: 'ENTRETIEN', label: '🔧 Entretien', icon: '🔧' },
-  { value: 'PIECE', label: '🔩 Pièces', icon: '🔩' },
-  { value: 'ASSURANCE', label: '🛡️ Assurance', icon: '🛡️' },
-  { value: 'PNEU', label: '🛞 Pneu', icon: '🛞' },
-  { value: 'REPARATION', label: '🔨 Réparation', icon: '🔨' },
-  { value: 'AUTRE', label: '📝 Autre', icon: '📝' },
+  { nom: '⛽ Carburant', couleur: '#e74c3c' },
+  { nom: '🔧 Entretien', couleur: '#3498db' },
+  { nom: '🔩 Pièces', couleur: '#f39c12' },
+  { nom: '🛡️ Assurance', couleur: '#9b59b6' },
+  { nom: '🛞 Pneu', couleur: '#1abc9c' },
+  { nom: '🔨 Réparation', couleur: '#e67e22' },
+  { nom: '📦 Divers', couleur: '#7f8c8d' },
 ];
 
 export function DepensesPage() {
-  const queryClient = useQueryClient();
+  const [depenses, setDepenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [categorieFilter, setCategorieFilter] = useState('tous');
-  const [page, setPage] = useState(1);
   const [msg, setMsg] = useState('');
-  const [form, setForm] = useState({
-    description: '', montant: 0, categorie: 'CARBURANT',
-    motoId: '', litres: 0, station: '',
-  });
+  const [form, setForm] = useState({ type: 'CARBURANT', montant: '', description: '', date: new Date().toISOString().split('T')[0] });
 
-  const { data } = useQuery({
-    queryKey: ['depenses', page, categorieFilter],
-    queryFn: () => axios.get(`${API}/depenses?page=${page}&categorie=${categorieFilter}`).then(r => r.data),
-    refetchInterval: 15000,
-  });
+  useEffect(function() {
+    loadDepenses();
+  }, []);
 
-  const { data: stats } = useQuery({
-    queryKey: ['depenses-stats'],
-    queryFn: () => axios.get(`${API}/depenses/stats?periode=mois`).then(r => r.data),
-  });
+  function loadDepenses() {
+    api.get('/depenses').then(function(res) {
+      setDepenses(Array.isArray(res.data) ? res.data : []);
+    }).finally(function() { setLoading(false); });
+  }
 
-  const { data: motos } = useQuery({
-    queryKey: ['motos-liste'],
-    queryFn: () => axios.get(`${API}/motos`).then(r => r.data),
-  });
-
-  const items = data?.items || [];
-  const totalPages = data?.pages || 1;
-  const filtered = items.filter((d: any) =>
-    !search || d.description?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const saveMutation = useMutation({
-    mutationFn: () => editId
-      ? axios.put(`${API}/depenses/${editId}`, form)
-      : axios.post(`${API}/depenses`, form),
-    onSuccess: () => {
-      setMsg(editId ? '✅ Modifiée' : '✅ Ajoutée');
-      setShowForm(false); setEditId(null);
-      setForm({ description: '', montant: 0, categorie: 'CARBURANT', motoId: '', litres: 0, station: '' });
-      queryClient.invalidateQueries({ queryKey: ['depenses'] });
-      queryClient.invalidateQueries({ queryKey: ['depenses-stats'] });
-    },
-    onError: (err: any) => setMsg('❌ ' + (err.response?.data?.message || 'Erreur')),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => axios.delete(`${API}/depenses/${id}`),
-    onSuccess: () => { setMsg('🗑️ Supprimée'); queryClient.invalidateQueries({ queryKey: ['depenses'] }); },
-  });
-
-  const openEdit = (d: any) => {
-    setForm({
-      description: d.description, montant: d.montant, categorie: d.categorie,
-      motoId: d.motoId || '', litres: d.litres || 0, station: d.station || '',
+  function addDepense(e: any) {
+    e.preventDefault();
+    api.post('/depenses', form).then(function() {
+      setMsg('✅ Dépense ajoutée');
+      setShowForm(false);
+      setForm({ type: 'CARBURANT', montant: '', description: '', date: new Date().toISOString().split('T')[0] });
+      loadDepenses();
+      setTimeout(function() { setMsg(''); }, 3000);
+    }).catch(function() {
+      setMsg('❌ Erreur');
     });
-    setEditId(d.id);
-    setShowForm(true);
-  };
+  }
+
+  function deleteDepense(id: string) {
+    if (confirm('Supprimer cette dépense ?')) {
+      api.delete('/depenses/' + id).then(function() {
+        setMsg('✅ Dépense supprimée');
+        loadDepenses();
+      });
+    }
+  }
+
+  var filtered = depenses.filter(function(d: any) {
+    return (d.description + d.type).toLowerCase().includes(search.toLowerCase());
+  });
+
+  var totalMois = depenses.filter(function(d: any) {
+    return new Date(d.date).getMonth() === new Date().getMonth();
+  }).reduce(function(s: number, d: any) { return s + (d.montant || 0); }, 0);
+
+  var totalGeneral = depenses.reduce(function(s: number, d: any) { return s + (d.montant || 0); }, 0);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Receipt size={24} className="text-primary" /> Dépenses
-        </h1>
-        <button onClick={() => { setEditId(null); setForm({ description: '', montant: 0, categorie: 'CARBURANT', motoId: '', litres: 0, station: '' }); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium"><Plus size={16} /> Nouvelle</button>
-      </div>
-
-      {msg && <div className={`p-3 rounded-lg text-sm ${msg.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{msg}</div>}
-
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-red-200 p-4 text-center">
-            <div className="text-2xl font-bold text-red-500">{stats.totalDepenses?.toLocaleString()} Ar</div>
-            <div className="text-xs text-gray-500">Total {stats.periode}</div>
+    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h2 className="text-3xl font-bold">💰 Dépenses globales</h2>
+          <p className="text-gray-500">
+            <span className="text-green-600 font-bold">Ce mois : {totalMois.toLocaleString()} Ar</span> · 
+            <span className="text-amber-600 font-bold ml-2">Total : {totalGeneral.toLocaleString()} Ar</span>
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input value={search} onChange={function(e) { setSearch(e.target.value); }} placeholder="Rechercher..."
+              className="pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 w-48" />
           </div>
-          {stats.parCategorie?.slice(0, 3).map((c: any) => (
-            <div key={c.categorie} className="bg-white dark:bg-gray-800 rounded-xl border p-4 text-center">
-              <div className="text-lg font-bold text-gray-700 dark:text-gray-300">{c.montant?.toLocaleString()} Ar</div>
-              <div className="text-xs text-gray-500">{c.label || c.categorie}</div>
-            </div>
-          ))}
+          <button onClick={function() { setShowForm(!showForm); }}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+            <Plus size={18} /> Ajouter
+          </button>
         </div>
-      )}
-
-      {/* Filtres */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
-        </div>
-        <select value={categorieFilter} onChange={e => { setCategorieFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600">
-          <option value="tous">Toutes catégories</option>
-          {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
       </div>
+
+      {msg && <div className={'mb-4 p-3 rounded-xl ' + (msg.startsWith('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>{msg}</div>}
 
       {/* Formulaire */}
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 space-y-4">
-          <h3 className="font-semibold text-lg">{editId ? 'Modifier' : 'Ajouter'} une dépense</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-lg"><Plus size={18} className="inline mr-2" />Ajouter une dépense</h3>
+            <button onClick={function() { setShowForm(false); }}><X size={20} /></button>
+          </div>
+          <form onSubmit={addDepense} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-500">Description *</label>
-              <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" placeholder="Ex: Plein essence" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Montant (Ar) *</label>
-              <input type="number" value={form.montant} onChange={e => setForm({ ...form, montant: Number(e.target.value) })}
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Catégorie</label>
-              <select value={form.categorie} onChange={e => setForm({ ...form, categorie: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700">
-                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              <label className="text-sm font-semibold">Catégorie</label>
+              <select value={form.type} onChange={function(e) { setForm({...form, type: e.target.value}); }}
+                className="w-full p-3 border rounded-xl dark:bg-gray-700">
+                {categories.map(function(c: any) {
+                  return <option key={c.nom} value={c.nom.split(' ')[1] || c.nom}>{c.nom}</option>;
+                })}
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500">Moto</label>
-              <select value={form.motoId} onChange={e => setForm({ ...form, motoId: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700">
-                <option value="">Toutes</option>
-                {Array.isArray(motos) && motos.map((m: any) => (
-                  <option key={m.id} value={m.id}>{m.immatriculation}</option>
-                ))}
-              </select>
+              <label className="text-sm font-semibold">Montant (Ar)</label>
+              <input type="number" value={form.montant} onChange={function(e) { setForm({...form, montant: e.target.value}); }}
+                placeholder="ex: 25000" required className="w-full p-3 border rounded-xl dark:bg-gray-700" />
             </div>
-            {form.categorie === "CARBURANT" && (
-              <>
-                <div>
-                  <label className="text-xs text-gray-500">Litres</label>
-                  <input type="number" step="0.1" value={form.litres} onChange={e => setForm({ ...form, litres: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">Station</label>
-                  <input value={form.station} onChange={e => setForm({ ...form, station: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" placeholder="Ex: Total Ankorondrano" />
-                </div>
-              </>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => saveMutation.mutate()} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm"><Save size={14} /> Enregistrer</button>
-            <button onClick={() => setShowForm(false)} className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg text-sm"><X size={14} /> Annuler</button>
-          </div>
+            <div>
+              <label className="text-sm font-semibold">Date</label>
+              <input type="date" value={form.date} onChange={function(e) { setForm({...form, date: e.target.value}); }}
+                className="w-full p-3 border rounded-xl dark:bg-gray-700" />
+            </div>
+            <div>
+              <label className="text-sm font-semibold">Description</label>
+              <input type="text" value={form.description} onChange={function(e) { setForm({...form, description: e.target.value}); }}
+                placeholder="Détail..." className="w-full p-3 border rounded-xl dark:bg-gray-700" />
+            </div>
+            <div className="md:col-span-2">
+              <button type="submit" className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700">
+                <Save size={18} /> Enregistrer
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
-      {/* Liste */}
-      <div className="space-y-2">
-        {filtered.map((d: any) => (
-          <div key={d.id} className="bg-white dark:bg-gray-800 rounded-xl border p-4 flex items-center justify-between hover:shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-lg">
-                {categories.find(c => c.value === d.categorie)?.icon || '📝'}
-              </div>
-              <div>
-                <p className="font-medium">{d.description}</p>
-                <p className="text-xs text-gray-500">
-                  {categories.find(c => c.value === d.categorie)?.label || d.categorie}
-                  {d.moto?.immatriculation && ` · 🏍️ ${d.moto.immatriculation}`}
-                  {d.litres > 0 && ` · ${d.litres}L`}
-                  {d.station && ` · ${d.station}`}
-                  {' · '}{new Date(d.date).toLocaleDateString('fr')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-red-500">-{d.montant?.toLocaleString()} Ar</span>
-              <button onClick={() => openEdit(d)} className="p-1.5 bg-orange-100 dark:bg-orange-500/10 text-orange-600 rounded-lg"><Edit size={14} /></button>
-              <button onClick={() => { if (confirm('Supprimer ?')) deleteMutation.mutate(d.id); }} className="p-1.5 bg-red-100 dark:bg-red-500/10 text-red-600 rounded-lg"><Trash2 size={14} /></button>
-            </div>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center text-gray-400 py-12">Aucune dépense</div>
-        )}
+      {/* Tableau */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-orange-50 dark:bg-orange-900/20 text-orange-700">
+                <th className="text-left py-3 px-4">Date</th>
+                <th className="text-left py-3 px-4">Catégorie</th>
+                <th className="text-left py-3 px-4">Description</th>
+                <th className="text-right py-3 px-4">Montant</th>
+                <th className="text-center py-3 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filtered.length === 0 ? (
+                <tr><td colSpan={5} className="py-12 text-center text-gray-400">Aucune dépense</td></tr>
+              ) : (
+                filtered.map(function(d: any) {
+                  return (
+                    <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-4">{new Date(d.date).toLocaleDateString('fr')}</td>
+                      <td className="py-3 px-4">{d.type || 'AUTRE'}</td>
+                      <td className="py-3 px-4">{d.description || '-'}</td>
+                      <td className="py-3 px-4 text-right font-bold text-red-600">-{(d.montant || 0).toLocaleString()} Ar</td>
+                      <td className="py-3 px-4 text-center">
+                        <button onClick={function() { deleteDepense(d.id); }} className="p-1.5 hover:bg-red-100 rounded-lg text-red-500">
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-gray-50 dark:bg-gray-700/50 font-bold">
+                <td className="py-3 px-4" colSpan={3}>Total affiché :</td>
+                <td className="py-3 px-4 text-right text-red-600">{filtered.reduce(function(s: number, d: any) { return s + (d.montant || 0); }, 0).toLocaleString()} Ar</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 rounded text-sm ${page === i + 1 ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700'}`}>{i + 1}</button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

@@ -1,156 +1,50 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Bike, Search, Plus, Edit, Trash2, X, Save, User } from 'lucide-react';
-import { useState } from 'react';
-
-const API = 'https://trans-bygagoos-api.onrender.com/api/v1';
+import React, { useState, useEffect } from 'react';
+import { Bike, Search } from 'lucide-react';
+import { api } from '../api/client';
 
 export function MotosPage() {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [msg, setMsg] = useState('');
-  const [form, setForm] = useState({
-    immatriculation: '', marque: '', modele: '', cylindree: '', couleur: '', typeVehicule: 'TAXI_MOTO', typeVehicule: 'TAXI_MOTO',
-    kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '',
-    proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '',
-  });
+  const [motos, setMotos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: motos } = useQuery({
-    queryKey: ['motos'],
-    queryFn: () => axios.get(`${API}/motos?flotteId=${JSON.parse(localStorage.getItem("user")||"{}")?.flotteId||""}`).then(r => r.data),
-    refetchInterval: 15000,
-  });
-  const nbMotos = Array.isArray(motos) ? motos.length : 0;
-  const flotteId = JSON.parse(localStorage.getItem("user")||"{}")?.flotteId;
-  const { data: flotte } = useQuery({ queryKey: ["flotte-motos", flotteId], queryFn: () => axios.get(`${API}/flottes/${flotteId}`).then(r => r.data), enabled: !!flotteId });
-  const limiteMotos = flotte?.abonnement === "GRATUIT" ? 1 : flotte?.abonnement === "2_5" ? 5 : flotte?.abonnement === "6_10" ? 10 : 999;
-  const peutAjouter = nbMotos < limiteMotos;
-
-  const { data: chauffeurs } = useQuery({
-    queryKey: ['chauffeurs-sans-moto'],
-    queryFn: () => axios.get(`${API}/chauffeurs`).then(r => r.data?.filter((c: any) => !c.motoId)),
-  });
-
-  const liste = Array.isArray(motos) ? motos : [];
-  const filtered = liste.filter((m: any) =>
-    !search || m.immatriculation?.toLowerCase().includes(search.toLowerCase()) || m.marque?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const saveMutation = useMutation({
-    mutationFn: () => editId
-      ? axios.put(`${API}/motos/${editId}`, form)
-      : axios.post(`${API}/motos`, { ...form, flotteId: JSON.parse(localStorage.getItem("user")||"{}")?.flotteId }),
-    onSuccess: () => {
-      setMsg(editId ? '✅ Moto modifiée' : '✅ Moto ajoutée');
-      setShowForm(false); setEditId(null);
-      setForm({ immatriculation: '', typeVehicule: 'TAXI_MOTO', marque: '', modele: '', cylindree: '', couleur: '', typeVehicule: 'TAXI_MOTO', typeVehicule: 'TAXI_MOTO', kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '', proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '' });
-      queryClient.invalidateQueries({ queryKey: ['motos'] });
-    },
-    onError: (err: any) => setMsg("❌ " + (err.response?.data?.message || err.response?.data?.error || err.message || "Erreur")),
-  });
-
-  const assignMutation = useMutation({
-    mutationFn: ({ motoId, chauffeurId }: { motoId: string; chauffeurId: string }) =>
-      axios.post(`${API}/motos/${motoId}/assigner`, { chauffeurId }),
-    onSuccess: () => { setMsg('✅ Moto assignée'); queryClient.invalidateQueries({ queryKey: ['motos'] }); },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => axios.delete(`${API}/motos/${id}`),
-    onSuccess: () => { setMsg('🗑️ Moto supprimée'); queryClient.invalidateQueries({ queryKey: ['motos'] }); },
-  });
-
-  const openEdit = (m: any) => {
-    setForm({
-      immatriculation: m.immatriculation || '', marque: m.marque || '', modele: m.modele || '',
-      cylindree: m.cylindree || '', couleur: m.couleur || '', kmActuel: m.kmActuel || 0,
-      prixAchat: m.prixAchat || 0, dateAchat: m.dateAchat?.split('T')[0] || '',
-      numMoteur: m.numMoteur || '', numChassis: m.numChassis || '',
-      proprietaireNom: m.proprietaireNom || '', proprietaireTelephone: m.proprietaireTelephone || '', proprietaireCin: m.proprietaireCin || '',
-    });
-    setEditId(m.id);
-    setShowForm(true);
-  };
-
-  const handleNouvelleMoto = () => {
-    if (!peutAjouter) {
-      setMsg("🚫 Limite atteinte : votre plan " + (flotte?.abonnement || "GRATUIT") + " autorise seulement " + limiteMotos + " moto(s). Passez au plan supérieur.");
-      return;
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const flotteId = user.flotteId || user.flotte?.id;
+    if (flotteId) {
+      api.get('/flottes/' + flotteId).then(function(res) {
+        setMotos(res.data.motos || []);
+      }).finally(function() { setLoading(false); });
+    } else {
+      setLoading(false);
     }
-    setEditId(null);
-    setForm({ typeVehicule: 'TAXI_MOTO', immatriculation: '', typeVehicule: 'TAXI_MOTO', marque: '', modele: '', cylindree: '', couleur: '', typeVehicule: 'TAXI_MOTO', typeVehicule: 'TAXI_MOTO', kmActuel: 0, prixAchat: 0, dateAchat: '', numMoteur: '', numChassis: '', proprietaireNom: '', proprietaireTelephone: '', proprietaireCin: '' });
-    setShowForm(true);
-  };
+  }, []);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><Bike size={24} className="text-primary" /> Motos</h1>
-      {!peutAjouter && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">🚫 Vous avez atteint la limite de {limiteMotos} moto(s) pour votre plan {flotte?.abonnement || "GRATUIT"}. <a href="/abonnements" className="underline font-bold">Changer de plan →</a></div>}
-        <button onClick={handleNouvelleMoto}
-          className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl text-sm font-medium"><Plus size={16} /> Nouvelle</button>
-      </div>
-
-      {msg && <div className={`p-3 rounded-lg text-sm ${msg.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{msg}</div>}
-
-      <div className="relative max-w-xs">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600" />
-      </div>
-
-      {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6 space-y-4">
-          <h3 className="font-semibold text-lg">{editId ? 'Modifier' : 'Ajouter'} une moto</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="text-xs text-gray-500">Type de véhicule</label><select value={form.typeVehicule || "TAXI_MOTO"} onChange={e => setForm({ ...form, typeVehicule: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700"><option value="TAXI_MOTO">🏍️ Taxi Moto</option><option value="TAXI">🚗 Taxi</option><option value="BUS">🚌 Bus</option></select></div>
-            <div><label className="text-xs text-gray-500">Type de véhicule</label><select value={form.typeVehicule || "TAXI_MOTO"} onChange={e => setForm({ ...form, typeVehicule: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700"><option value="TAXI_MOTO">🏍️ Moto</option><option value="TAXI">🚗 Voiture</option><option value="BUS">🚌 Bus</option></select></div>
-            <div><label className="text-xs text-gray-500">Immatriculation *</label><input value={form.immatriculation} onChange={e => setForm({ ...form, immatriculation: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Marque</label><input value={form.marque} onChange={e => setForm({ ...form, marque: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Modèle</label><input value={form.modele} onChange={e => setForm({ ...form, modele: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Cylindrée</label><input value={form.cylindree} onChange={e => setForm({ ...form, cylindree: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Couleur</label><input value={form.couleur} onChange={e => setForm({ ...form, couleur: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Km actuels</label><input type="number" value={form.kmActuel} onChange={e => setForm({ ...form, kmActuel: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Prix achat</label><input type="number" value={form.prixAchat} onChange={e => setForm({ ...form, prixAchat: Number(e.target.value) })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Date achat</label><input type="date" value={form.dateAchat} onChange={e => setForm({ ...form, dateAchat: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">N° Moteur</label><input value={form.numMoteur} onChange={e => setForm({ ...form, numMoteur: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">N° Châssis</label><input value={form.numChassis} onChange={e => setForm({ ...form, numChassis: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Propriétaire nom</label><input value={form.proprietaireNom} onChange={e => setForm({ ...form, proprietaireNom: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-            <div><label className="text-xs text-gray-500">Propriétaire tél</label><input value={form.proprietaireTelephone} onChange={e => setForm({ ...form, proprietaireTelephone: e.target.value })} className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700" /></div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => saveMutation.mutate()} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm"><Save size={14} /> Enregistrer</button>
-            <button onClick={() => setShowForm(false)} className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg text-sm"><X size={14} /> Annuler</button>
-          </div>
+    <div className="p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold">🏍️ Motos</h2>
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input placeholder="Rechercher..." className="pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 w-48" />
         </div>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((m: any) => (
-          <div key={m.id} className="bg-white dark:bg-gray-800 rounded-xl border p-4 card-animate">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{m.typeVehicule === "TAXI" ? "🚗 Taxi" : m.typeVehicule === "BUS" ? "🚌 Bus" : "🏍️ Moto"}</span>
-              <h3 className="font-semibold">{m.immatriculation}</h3>
-              <div className="flex gap-1">
-                <button onClick={() => openEdit(m)} className="p-1.5 bg-orange-100 text-orange-600 rounded-lg"><Edit size={14} /></button>
-                <button onClick={() => { if (confirm('Supprimer ?')) deleteMutation.mutate(m.id); }} className="p-1.5 bg-red-100 text-red-600 rounded-lg"><Trash2 size={14} /></button>
+      </div>
+      <p className="text-gray-500 mb-4">{motos.length} moto(s)</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {motos.map(function(m: any) {
+          return (
+            <div key={m.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 border flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                <Bike size={24} className="text-orange-600" />
+              </div>
+              <div>
+                <div className="font-bold">{m.marque} {m.modele}</div>
+                <div className="text-sm text-gray-500">{m.immatriculation} · {m.annee}</div>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">{m.statut || 'ACTIF'}</span>
               </div>
             </div>
-            <p className="text-sm text-gray-500">{m.marque} {m.modele} · {m.kmActuel?.toLocaleString()} km</p>
-            {m.chauffeur ? (
-              <div className="flex items-center gap-2 mt-2 text-sm text-gray-600"><User size={14} /> {m.chauffeur?.nom}</div>
-            ) : (
-              <select onChange={e => e.target.value && assignMutation.mutate({ motoId: m.id, chauffeurId: e.target.value })}
-                className="mt-2 w-full px-2 py-1 border rounded text-xs dark:bg-gray-700">
-                <option value="">+ Assigner chauffeur</option>
-                {chauffeurs?.filter((c: any) => !c.motoId).map((c: any) => <option key={c.id} value={c.id}>{c.nom} ({c.codeAcces})</option>)}
-              </select>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

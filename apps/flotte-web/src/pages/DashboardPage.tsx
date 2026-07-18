@@ -13,7 +13,7 @@ export function DashboardPage() {
 
   const { data: maFlotte } = useQuery({
     queryKey: ['ma-flotte', user?.flotteId],
-    queryFn: () => axios.get(`${API}/flottes/${user?.flotteId}`).then(r => r.data),
+    queryFn: () => api.get('/flottes/${user?.flotteId}`).then(r => r.data),
     enabled: !!user?.flotteId,
   });
 
