@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Settings, Save, Sun, Moon, Monitor, Globe, ToggleLeft, Edit3, Percent, DollarSign, Bike, Users } from 'lucide-react';
+import { Settings, Save, Sun, Moon, Monitor, Globe, ToggleLeft, Percent, Bike, Users } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const ParametresPage = () => {
@@ -13,34 +13,65 @@ export const ParametresPage = () => {
   const [params, setParams] = useState<any>({});
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'system');
 
-  // Plans Flotte
-  const [plansFlotte, setPlansFlotte] = useState([
-    { nom: 'Fremium', prix: 0, vehiculesMax: 1, chauffeursMax: 1, actif: true },
-    { nom: 'Basic', prix: 15000, vehiculesMax: 5, chauffeursMax: 10, actif: true },
-    { nom: 'Standard', prix: 35000, vehiculesMax: 20, chauffeursMax: 50, actif: true },
-    { nom: 'Premium', prix: 75000, vehiculesMax: 100, chauffeursMax: 200, actif: true },
-  ]);
-  const [reductionFlotte, setReductionFlotte] = useState(7);
-
-  // Plans Coop
-  const [plansCoop, setPlansCoop] = useState([
-    { nom: 'Fremium', prix: 0, vehiculesMax: 1, livreursMax: 2, actif: true },
-    { nom: 'Basic', prix: 20000, vehiculesMax: 5, livreursMax: 15, actif: true },
-    { nom: 'Standard', prix: 45000, vehiculesMax: 20, livreursMax: 60, actif: true },
-    { nom: 'Premium', prix: 90000, vehiculesMax: 100, livreursMax: 300, actif: true },
-  ]);
-  const [reductionCoop, setReductionCoop] = useState(7);
+  // Plans - chargés depuis l'API
+  const [plansFlotte, setPlansFlotte] = useState<any[]>([]);
+  const [plansCoop, setPlansCoop] = useState<any[]>([]);
+  const [reductionFlotte, setReductionFlotte] = useState(0);
+  const [reductionCoop, setReductionCoop] = useState(0);
 
   useEffect(() => {
-    api.get('/parametres').then(res => setParams(res.data || {})).finally(() => setLoading(false));
+    // Charger les paramètres depuis l'API
+    api.get('/parametres').then(res => {
+      const data = res.data || {};
+      setParams(data);
+      
+      // Plans Flotte depuis l'API ou valeurs par défaut
+      setPlansFlotte(data.plansFlotte || [
+        { nom: 'Fremium', prix: 0, vehiculesMax: 1, chauffeursMax: 1, actif: true },
+        { nom: 'Basic', prix: 15000, vehiculesMax: 5, chauffeursMax: 10, actif: true },
+        { nom: 'Standard', prix: 35000, vehiculesMax: 20, chauffeursMax: 50, actif: true },
+        { nom: 'Premium', prix: 75000, vehiculesMax: 100, chauffeursMax: 200, actif: true },
+      ]);
+      setReductionFlotte(data.reductionAnnuelleFlotte ?? 7);
+
+      // Plans Coop
+      setPlansCoop(data.plansCoop || [
+        { nom: 'Fremium', prix: 0, vehiculesMax: 1, livreursMax: 2, actif: true },
+        { nom: 'Basic', prix: 20000, vehiculesMax: 5, livreursMax: 15, actif: true },
+        { nom: 'Standard', prix: 45000, vehiculesMax: 20, livreursMax: 60, actif: true },
+        { nom: 'Premium', prix: 90000, vehiculesMax: 100, livreursMax: 300, actif: true },
+      ]);
+      setReductionCoop(data.reductionAnnuelleCoop ?? 7);
+    }).finally(() => setLoading(false));
   }, []);
 
-  const save = (section: string) => {
-    if (section === 'theme') {
-      localStorage.setItem('theme', theme);
-      document.documentElement.classList.toggle('dark', theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
+  const save = async (section: string) => {
+    try {
+      if (section === 'theme') {
+        localStorage.setItem('theme', theme);
+        document.documentElement.classList.toggle('dark', theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
+      }
+      
+      // Sauvegarder via l'API
+      const payload: any = {};
+      if (type === 'FLOTTE') {
+        payload.plansFlotte = plansFlotte;
+        payload.reductionAnnuelleFlotte = reductionFlotte;
+      } else if (type === 'COOP') {
+        payload.plansCoop = plansCoop;
+        payload.reductionAnnuelleCoop = reductionCoop;
+      } else {
+        payload.monnaie = params.monnaie;
+        payload.langue = params.langue;
+        payload.notificationsActives = params.notificationsActives;
+        payload.maintenanceMode = params.maintenanceMode;
+      }
+      
+      await api.put('/parametres', payload);
+      setMsg(`✅ ${section} sauvegardé avec succès`);
+    } catch {
+      setMsg('❌ Erreur lors de la sauvegarde');
     }
-    setMsg(`✅ ${section} sauvegardé`);
     setTimeout(() => setMsg(''), 3000);
   };
 
@@ -57,55 +88,57 @@ export const ParametresPage = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{emoji} {title}</h2>
-          <p className="text-gray-500 mt-1">Configuration des plans d'abonnement</p>
+          <p className="text-gray-500 mt-1">Plans d'abonnement modifiables</p>
         </div>
         <button onClick={() => save(section)} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-700">
           <Save size={18} /> Enregistrer
         </button>
       </div>
-      {msg && <div className="mb-6 p-4 bg-green-100 text-green-700 rounded-xl text-sm font-medium">{msg}</div>}
+      {msg && <div className={`mb-6 p-4 rounded-xl text-sm font-medium ${msg.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{msg}</div>}
 
-      {/* Plans */}
       <div className="space-y-4 mb-8">
-        <h3 className="font-bold text-lg flex items-center gap-2"><DollarSign size={20} /> Plans mensuels</h3>
+        <h3 className="font-bold text-lg">📋 Plans mensuels</h3>
         {plans.map((plan: any, i: number) => (
           <div key={plan.nom} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border flex flex-wrap items-center gap-4">
             <div className="w-24 font-bold text-lg">{plan.nom}</div>
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2">
               <input type="number" value={plan.prix} onChange={e => updatePlan(plans, setPlans, i, 'prix', parseInt(e.target.value) || 0)}
                 className="w-28 p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center font-bold text-lg" />
               <span className="text-sm text-gray-400">Ar/mois</span>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Bike size={16} className="text-gray-400" />
+              <div className="flex items-center gap-1.5">
+                <Bike size={15} className="text-gray-400" />
                 <input type="number" value={plan.vehiculesMax} onChange={e => updatePlan(plans, setPlans, i, 'vehiculesMax', parseInt(e.target.value) || 0)}
-                  className="w-20 p-2 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center text-sm" />
+                  className="w-16 p-2 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center text-sm" />
                 <span className="text-xs text-gray-400">véhicules</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Users size={16} className="text-gray-400" />
+              <div className="flex items-center gap-1.5">
+                <Users size={15} className="text-gray-400" />
                 <input type="number" value={isFlotte ? plan.chauffeursMax : plan.livreursMax} onChange={e => updatePlan(plans, setPlans, i, isFlotte ? 'chauffeursMax' : 'livreursMax', parseInt(e.target.value) || 0)}
-                  className="w-20 p-2 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center text-sm" />
+                  className="w-16 p-2 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center text-sm" />
                 <span className="text-xs text-gray-400">{isFlotte ? 'chauffeurs' : 'livreurs'}</span>
               </div>
             </div>
             <button onClick={() => updatePlan(plans, setPlans, i, 'actif', null)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold ${plan.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {plan.actif ? 'Actif' : 'Inactif'}
+              {plan.actif ? '✅ Actif' : '❌ Inactif'}
             </button>
           </div>
         ))}
       </div>
 
-      {/* Réduction annuelle */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border">
         <h3 className="font-bold text-lg flex items-center gap-2 mb-4"><Percent size={20} /> Réduction abonnement annuel</h3>
         <div className="flex items-center gap-3">
           <input type="number" value={reduction} onChange={e => setReduction(parseInt(e.target.value) || 0)}
             className="w-24 p-3 bg-gray-50 dark:bg-gray-900 border rounded-xl text-center font-bold text-xl" min={0} max={100} />
           <span className="text-lg font-bold">%</span>
-          <span className="text-sm text-gray-400">de réduction pour les abonnements annuels</span>
+          <span className="text-sm text-gray-400">pour les abonnements annuels</span>
+        </div>
+        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+          💡 <strong>Exemple :</strong> Plan Standard à {plans[2]?.prix?.toLocaleString() || 0} Ar/mois → 
+          <strong className="text-green-600"> {(plans[2]?.prix * 12 * (1 - reduction/100))?.toLocaleString() || 0} Ar</strong>/an (avec -{reduction}%)
         </div>
       </div>
     </div>
@@ -121,7 +154,7 @@ export const ParametresPage = () => {
         <div><h2 className="text-3xl font-bold text-gray-900 dark:text-white">⚙️ Paramètres généraux</h2><p className="text-gray-500 mt-1">Configuration de la plateforme</p></div>
         <button onClick={() => save('Paramètres généraux')} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-indigo-700"><Save size={18} /> Enregistrer</button>
       </div>
-      {msg && <div className="mb-6 p-4 bg-green-100 text-green-700 rounded-xl text-sm font-medium">{msg}</div>}
+      {msg && <div className={`mb-6 p-4 rounded-xl text-sm font-medium ${msg.includes('✅') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{msg}</div>}
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border mb-6">
         <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Sun size={20} /> Thème</h3>
