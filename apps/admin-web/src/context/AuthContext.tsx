@@ -29,8 +29,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (token) {
       setAuthToken(token);
       api.get('/auth/me')
-        .then(res => setUser(res.data))
-        .catch(() => { removeAuthToken(); setUser(null); })
+        .then(res => {
+          console.log('✅ Auth vérifié:', res.data);
+          setUser(res.data);
+        })
+        .catch((err) => {
+          console.log('❌ Token invalide, déconnexion');
+          removeAuthToken();
+          setUser(null);
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -41,11 +48,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data;
+      console.log('📨 Réponse login:', response.data);
+      
+      // Gérer les deux formats de réponse
+      const userData = response.data.user;
+      const token = response.data.token || response.data.access_token;
+      
+      if (!token) throw new Error('Token manquant dans la réponse');
+      if (!userData) throw new Error('User manquant dans la réponse');
+      
       setAuthToken(token);
-      setUser(user);
+      setUser(userData);
+      console.log('✅ Login réussi:', userData.email);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur de connexion');
+      const message = err.response?.data?.message || err.message || 'Erreur de connexion';
+      console.error('❌ Erreur login:', message);
+      setError(message);
       throw err;
     }
   };
@@ -54,9 +72,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       const response = await api.post('/auth/register', data);
-      const { user, token } = response.data;
-      setAuthToken(token);
-      setUser(user);
+      const userData = response.data.user || response.data;
+      const token = response.data.token || response.data.access_token;
+      
+      if (token) setAuthToken(token);
+      if (userData) setUser(userData);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erreur d\'inscription');
       throw err;
