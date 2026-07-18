@@ -54,7 +54,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { icon: Settings, label: '⚙️ Paramètres généraux', path: '/parametres' },
   ];
 
-  const themeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Monitor;
+  const ThemeIcon = theme === 'dark' ? Sun : theme === 'light' ? Moon : Monitor;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -97,7 +97,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-indigo-600 dark:border-gray-700 bg-indigo-700 dark:bg-gray-900">
           <button onClick={() => setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-indigo-600 dark:hover:bg-gray-800 text-xs mb-2 transition-colors">
-            <themeIcon size={16} /> {theme === 'dark' ? 'Mode clair' : theme === 'light' ? 'Mode système' : 'Mode sombre'}
+            <ThemeIcon size={16} /> {theme === 'dark' ? 'Mode clair' : theme === 'light' ? 'Mode système' : 'Mode sombre'}
           </button>
           <button onClick={() => { logout(); navigate('/login'); }}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-xs">
